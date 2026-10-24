@@ -1,0 +1,21 @@
+/* First viewport entry only. Independent translate leaves module transforms alone. */
+[data-scroll-reveal="pending"] {
+  opacity: 0;
+  translate: 0 32px;
+}
+[data-scroll-reveal="entering"] {
+  opacity: 1;
+  translate: none;
+  transition: opacity 800ms ease var(--reveal-delay, 0ms),
+              translate 800ms cubic-bezier(.16, 1, .3, 1) var(--reveal-delay, 0ms);
+  will-change: opacity, translate;
+}
+@media (max-width: 760px) {
+  [data-scroll-reveal="pending"] { translate: 0 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-reveal] { opacity: 1; translate: none; transition: none; will-change: auto; }
+}
+@media print {
+  [data-scroll-reveal] { opacity: 1; translate: none; transition: none; }
+}

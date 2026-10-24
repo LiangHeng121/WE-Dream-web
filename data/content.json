@@ -1,0 +1,1958 @@
+{
+  "version": 1,
+  "language": "en",
+  "results": [
+    {
+      "key": "id",
+      "label": "Familiar tasks",
+      "level": "ID",
+      "value": 90.0,
+      "baselineValue": 47.8,
+      "baselineLabel": "Cosmos3",
+      "trials": 90,
+      "conditions": 9,
+      "trialsPerCondition": 10,
+      "gainPoints": 42.2,
+      "progress": 96.0,
+      "paperPage": 6,
+      "paperLocator": "Table I",
+      "metric": "Success rate",
+      "unit": "%",
+      "model": "WE-Dream-10k",
+      "baselineSelection": "Strongest evaluated external baseline within this setting",
+      "sourceUrl": "assets/paper.pdf#page=6",
+      "aggregation": "Equal average over tasks or conditions; ten trials per task or condition."
+    },
+    {
+      "key": "l1",
+      "label": "New conditions",
+      "level": "L1",
+      "value": 86.7,
+      "baselineValue": 35.0,
+      "baselineLabel": "Cosmos3",
+      "trials": 60,
+      "conditions": 6,
+      "trialsPerCondition": 10,
+      "gainPoints": 51.7,
+      "progress": 93.9,
+      "paperPage": 7,
+      "paperLocator": "Figure 8a",
+      "metric": "Success rate",
+      "unit": "%",
+      "model": "WE-Dream-10k",
+      "baselineSelection": "Strongest evaluated external baseline within this setting",
+      "sourceUrl": "assets/paper.pdf#page=7",
+      "aggregation": "Equal average over tasks or conditions; ten trials per task or condition."
+    },
+    {
+      "key": "l2",
+      "label": "New skill combinations",
+      "level": "L2",
+      "value": 72.5,
+      "baselineValue": 7.5,
+      "baselineLabel": "DreamZero",
+      "trials": 40,
+      "conditions": 4,
+      "trialsPerCondition": 10,
+      "gainPoints": 65.0,
+      "progress": 84.6,
+      "paperPage": 7,
+      "paperLocator": "Figure 8b",
+      "metric": "Success rate",
+      "unit": "%",
+      "model": "WE-Dream-10k",
+      "baselineSelection": "Strongest evaluated external baseline within this setting",
+      "sourceUrl": "assets/paper.pdf#page=7",
+      "aggregation": "Equal average over tasks or conditions; ten trials per task or condition."
+    }
+  ],
+  "resultNotes": {
+    "public": "Results on our real-robot benchmark. Success requires completing every task stage. Each task or condition uses ten trials; averages weight them equally.",
+    "source": "WE-Dream paper draft, pages 6–8.",
+    "metricDistinction": "Task progress measures the fraction of stages completed and is not a success rate."
+  },
+  "scaling": {
+    "label": "More human experience, stronger task performance",
+    "metric": "ID success rate",
+    "unit": "%",
+    "points": [
+      {
+        "hours": 2000,
+        "value": 81.1
+      },
+      {
+        "hours": 5000,
+        "value": 86.7
+      },
+      {
+        "hours": 10000,
+        "value": 90.0
+      }
+    ],
+    "trialsPerModel": 90,
+    "sourceUrl": "assets/paper.pdf#page=6",
+    "paperLocator": "Figure 6",
+    "note": "Nominal data scales; the public/in-house source mix changes with scale."
+  },
+  "counts": {
+    "id": 36,
+    "l1": 15,
+    "l2": 4,
+    "longHorizon": 2,
+    "total": 57
+  },
+  "project": {
+    "name": "WE-Dream",
+    "title": "Generalizable Humanoid World-Action Models with Latent-Action Pretraining and Routed Attention",
+    "fullTitle": "WE-Dream: Generalizable Humanoid World-Action Models with Latent-Action Pretraining and Routed Attention",
+    "tagline": "From human experience to humanoid action.",
+    "description": "A world-action model that learns from human video to perform household tasks, adapt to new conditions, and compose learned skills.",
+    "heroLine": "One policy. Whole-body skills. New possibilities.",
+    "paperUrl": "assets/paper.pdf",
+    "authors": [],
+    "affiliations": [],
+    "links": {
+      "paper": "assets/paper.pdf",
+      "code": null,
+      "models": null,
+      "dataset": null
+    },
+    "facts": [
+      {
+        "value": "16B",
+        "label": "parameter policy",
+        "sourcePage": 1
+      },
+      {
+        "value": "Up to 10k h",
+        "label": "human-video pretraining",
+        "sourcePage": 1
+      },
+      {
+        "value": "9",
+        "label": "household task families",
+        "sourcePage": 5
+      }
+    ],
+    "deployment": {
+      "label": "Action-only inference",
+      "gpu": "One RTX 5090",
+      "latencyMs": 260,
+      "jointLatencyMs": 751,
+      "speedup": 2.9,
+      "actionStreamHz": 30,
+      "description": "Action-only inference with quantization and real-time chunking supports continuous whole-body action execution.",
+      "sourcePage": 8,
+      "measurement": "Mean server-side latency as reported in the paper draft; the 30 Hz value is the action execution stream."
+    }
+  },
+  "groups": {
+    "id": [
+      {
+        "key": "pnp",
+        "label": "Pick & place",
+        "taskLabel": "Pick & place",
+        "title": "Pick up. Place precisely.",
+        "description": "Move objects into their matching containers with coordinated reaching and grasping.",
+        "taskNumber": "T1",
+        "skills": [
+          "Top-down grasp",
+          "Placement"
+        ],
+        "result": {
+          "successRate": 100,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
+            "title": "An eggplant into a box",
+            "description": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "task_summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "promptExact": null,
+            "promptDisplay": "pick up the eggplant and place it into the transparent box",
+            "promptText": "pick up the eggplant and place it into the transparent box",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 18.67,
+            "level": "ID",
+            "category": "household",
+            "task": "pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+            "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg"
+          },
+          {
+            "id": "1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV",
+            "title": "A banana into a box",
+            "description": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "task_summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "promptExact": null,
+            "promptDisplay": "pick up the banana and place it into the wooden box",
+            "promptText": "pick up the banana and place it into the wooden box",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 21.13,
+            "level": "ID",
+            "category": "household",
+            "task": "pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV.mp4",
+            "poster": "assets/media/curated/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV.jpg"
+          },
+          {
+            "id": "1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__",
+            "title": "Grapes into a bowl",
+            "description": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "task_summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "promptExact": null,
+            "promptDisplay": "pick up the green grapes and place it into the green bowl",
+            "promptText": "pick up the green grapes and place it into the green bowl",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 19.29,
+            "level": "ID",
+            "category": "household",
+            "task": "pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__.mp4",
+            "poster": "assets/media/curated/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__.jpg"
+          },
+          {
+            "id": "1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I",
+            "title": "A toy into a bowl",
+            "description": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "task_summary": "Move objects into their matching containers with coordinated reaching and grasping.",
+            "promptExact": null,
+            "promptDisplay": "pick up the gray hippo toy and place it into the orange bowl",
+            "promptText": "pick up the gray hippo toy and place it into the orange bowl",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 17.13,
+            "level": "ID",
+            "category": "household",
+            "task": "pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I.mp4",
+            "poster": "assets/media/curated/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I.jpg"
+          }
+        ]
+      },
+      {
+        "key": "chair",
+        "label": "Push a chair",
+        "taskLabel": "Push a chair",
+        "title": "Make room at the table.",
+        "description": "Coordinate the hands and body to guide a chair under the table.",
+        "taskNumber": "T2",
+        "skills": [
+          "Grasp",
+          "Walking",
+          "Pushing"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm",
+            "title": "Move a chair from the right",
+            "description": "Coordinate the hands and body to guide a chair under the table.",
+            "summary": "Coordinate the hands and body to guide a chair under the table.",
+            "task_summary": "Coordinate the hands and body to guide a chair under the table.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair, turn right, and push it under the table",
+            "promptText": "grasp the backrest of the chair, turn right, and push it under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 28.92,
+            "level": "ID",
+            "category": "household",
+            "task": "chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm.mp4",
+            "poster": "assets/media/curated/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm.jpg"
+          },
+          {
+            "id": "1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn",
+            "title": "Push the chair straight ahead",
+            "description": "Coordinate the hands and body to guide a chair under the table.",
+            "summary": "Coordinate the hands and body to guide a chair under the table.",
+            "task_summary": "Coordinate the hands and body to guide a chair under the table.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair and push it straight under the table",
+            "promptText": "grasp the backrest of the chair and push it straight under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 23.29,
+            "level": "ID",
+            "category": "household",
+            "task": "chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn.mp4",
+            "poster": "assets/media/curated/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn.jpg"
+          },
+          {
+            "id": "1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY",
+            "title": "Turn left with the chair",
+            "description": "Coordinate the hands and body to guide a chair under the table.",
+            "summary": "Coordinate the hands and body to guide a chair under the table.",
+            "task_summary": "Coordinate the hands and body to guide a chair under the table.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptText": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 21.67,
+            "level": "ID",
+            "category": "household",
+            "task": "chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY.mp4",
+            "poster": "assets/media/curated/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY.jpg"
+          },
+          {
+            "id": "1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu",
+            "title": "Move a chair from the left",
+            "description": "Coordinate the hands and body to guide a chair under the table.",
+            "summary": "Coordinate the hands and body to guide a chair under the table.",
+            "task_summary": "Coordinate the hands and body to guide a chair under the table.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptText": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 28.88,
+            "level": "ID",
+            "category": "household",
+            "task": "chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu.mp4",
+            "poster": "assets/media/curated/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu.jpg"
+          }
+        ]
+      },
+      {
+        "key": "pillow",
+        "label": "Arrange a pillow",
+        "taskLabel": "Arrange a pillow",
+        "title": "From the floor to the bed.",
+        "description": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+        "taskNumber": "T3",
+        "skills": [
+          "Kneeling",
+          "Bimanual lift",
+          "Placement"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob",
+            "title": "A pillow by the kitchen island",
+            "description": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "task_summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the white pillow near the kitchen island and turn left and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the white pillow near the kitchen island and turn left and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 43.54,
+            "level": "ID",
+            "category": "household",
+            "task": "pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
+            "poster": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.jpg"
+          },
+          {
+            "id": "1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb",
+            "title": "A pillow by the laundry basket",
+            "description": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "task_summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the beige pillow near the laundry basket and turn around and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the beige pillow near the laundry basket and turn around and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 50.63,
+            "level": "ID",
+            "category": "household",
+            "task": "pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb.mp4",
+            "poster": "assets/media/curated/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb.jpg"
+          },
+          {
+            "id": "1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD",
+            "title": "Return a white pillow from the shoe rack",
+            "description": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "task_summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the white pillow near the shoe rack and turn around and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the white pillow near the shoe rack and turn around and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 52.75,
+            "level": "ID",
+            "category": "household",
+            "task": "pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD.mp4",
+            "poster": "assets/media/curated/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD.jpg"
+          },
+          {
+            "id": "1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I",
+            "title": "Arrange a beige pillow by the bed",
+            "description": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "task_summary": "Kneel, lift a pillow with both arms, turn, and place it at the head of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the beige pillow near the bed and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the beige pillow near the bed and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 47.46,
+            "level": "ID",
+            "category": "household",
+            "task": "pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I.mp4",
+            "poster": "assets/media/curated/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I.jpg"
+          }
+        ]
+      },
+      {
+        "key": "cloth",
+        "label": "Collect clothes",
+        "taskLabel": "Collect clothes",
+        "title": "Gather, turn, and put away.",
+        "description": "Handle soft clothing and place it in the laundry basket.",
+        "taskNumber": "T4",
+        "skills": [
+          "Cloth handling",
+          "Turning",
+          "Basket placement"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
+            "title": "Collect a gray shirt",
+            "description": "Handle soft clothing and place it in the laundry basket.",
+            "summary": "Handle soft clothing and place it in the laundry basket.",
+            "task_summary": "Handle soft clothing and place it in the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "gather up the gray shirt and turn right and put it into the laundry basket",
+            "promptText": "gather up the gray shirt and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1puOhktSpme4E-M6At185A0rK9V-ax5ez/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 23.29,
+            "level": "ID",
+            "category": "household",
+            "task": "cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+            "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg"
+          },
+          {
+            "id": "161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU",
+            "title": "Collect a yellow shirt",
+            "description": "Handle soft clothing and place it in the laundry basket.",
+            "summary": "Handle soft clothing and place it in the laundry basket.",
+            "task_summary": "Handle soft clothing and place it in the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "gather up the yellow shirt and turn right and put it into the laundry basket",
+            "promptText": "gather up the yellow shirt and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 27.25,
+            "level": "ID",
+            "category": "household",
+            "task": "cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU.mp4",
+            "poster": "assets/media/curated/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU.jpg"
+          },
+          {
+            "id": "1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q",
+            "title": "Collect black trousers",
+            "description": "Handle soft clothing and place it in the laundry basket.",
+            "summary": "Handle soft clothing and place it in the laundry basket.",
+            "task_summary": "Handle soft clothing and place it in the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "gather up the black trousers and turn right and put it into the laundry basket",
+            "promptText": "gather up the black trousers and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 30.63,
+            "level": "ID",
+            "category": "household",
+            "task": "cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q.mp4",
+            "poster": "assets/media/curated/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q.jpg"
+          },
+          {
+            "id": "1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC",
+            "title": "Collect two garments",
+            "description": "Handle soft clothing and place it in the laundry basket.",
+            "summary": "Handle soft clothing and place it in the laundry basket.",
+            "task_summary": "Handle soft clothing and place it in the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "gather up the yellow shirt and gray shirt and turn right and put them into the laundry basket",
+            "promptText": "gather up the yellow shirt and gray shirt and turn right and put them into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 27.71,
+            "level": "ID",
+            "category": "household",
+            "task": "cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC.mp4",
+            "poster": "assets/media/curated/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC.jpg"
+          }
+        ]
+      },
+      {
+        "key": "rubbish",
+        "label": "Dispose of rubbish",
+        "taskLabel": "Dispose of rubbish",
+        "title": "Hands and feet, working together.",
+        "description": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+        "taskNumber": "T5",
+        "skills": [
+          "Grasp",
+          "Turning",
+          "Pedal opening",
+          "Release"
+        ],
+        "result": {
+          "successRate": 100,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
+            "title": "Throw away a paper ball",
+            "description": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "task_summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "promptExact": null,
+            "promptDisplay": "pick up the paper ball and turn left and throw it into the trash can",
+            "promptText": "pick up the paper ball and turn left and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 32.67,
+            "level": "ID",
+            "category": "household",
+            "task": "rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+            "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg"
+          },
+          {
+            "id": "17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI",
+            "title": "Dispose of a snack box",
+            "description": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "task_summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "promptExact": null,
+            "promptDisplay": "pick up the red snack box and turn left and throw it into the trash can",
+            "promptText": "pick up the red snack box and turn left and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 26.92,
+            "level": "ID",
+            "category": "household",
+            "task": "rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI.mp4",
+            "poster": "assets/media/curated/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI.jpg"
+          },
+          {
+            "id": "13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5",
+            "title": "Dispose of a foil bag",
+            "description": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "task_summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "promptExact": null,
+            "promptDisplay": "pick up the foil bag and turn right and throw it into the trash can",
+            "promptText": "pick up the foil bag and turn right and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 35.46,
+            "level": "ID",
+            "category": "household",
+            "task": "rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5.mp4",
+            "poster": "assets/media/curated/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5.jpg"
+          },
+          {
+            "id": "1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6",
+            "title": "Dispose of a snack bag",
+            "description": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "task_summary": "Pick up rubbish, turn toward the bin, and coordinate disposal with the foot pedal.",
+            "promptExact": null,
+            "promptDisplay": "pick up the snack bag and turn right and throw it into the trash can",
+            "promptText": "pick up the snack bag and turn right and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 30.25,
+            "level": "ID",
+            "category": "household",
+            "task": "rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6.mp4",
+            "poster": "assets/media/curated/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6.jpg"
+          }
+        ]
+      },
+      {
+        "key": "shoe",
+        "label": "Retrieve shoes",
+        "taskLabel": "Retrieve shoes",
+        "title": "Reach low. Move with balance.",
+        "description": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+        "taskNumber": "T6",
+        "skills": [
+          "Kneeling",
+          "Hook grasp",
+          "Turning",
+          "Placement"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
+            "title": "Retrieve purple shoes",
+            "description": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "task_summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, hook the purple shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptText": "kneel down, hook the purple shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 50.96,
+            "level": "ID",
+            "category": "household",
+            "task": "shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+            "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg"
+          },
+          {
+            "id": "1B9vOpFZ821vqLgPA2At9andIS6LCqPdt",
+            "title": "Retrieve beige shoes",
+            "description": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "task_summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, hook the beige shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptText": "kneel down, hook the beige shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 51.29,
+            "level": "ID",
+            "category": "household",
+            "task": "shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt.mp4",
+            "poster": "assets/media/curated/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt.jpg"
+          },
+          {
+            "id": "1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT",
+            "title": "Retrieve blue shoes",
+            "description": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "task_summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, hook the blue shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptText": "kneel down, hook the blue shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 50.54,
+            "level": "ID",
+            "category": "household",
+            "task": "shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT.mp4",
+            "poster": "assets/media/curated/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT.jpg"
+          },
+          {
+            "id": "1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4",
+            "title": "Retrieve brown shoes",
+            "description": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "task_summary": "Kneel at the shoe rack, retrieve a pair of shoes, and place them at the foot of the bed.",
+            "promptExact": null,
+            "promptDisplay": "Kneel down, pick up the brown shoes from the shoe rack, turn around, and place them at the foot of the bed.",
+            "promptText": "Kneel down, pick up the brown shoes from the shoe rack, turn around, and place them at the foot of the bed.",
+            "promptStatus": "provisional",
+            "captionType": "provisional_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 45.0,
+            "level": "ID",
+            "category": "household",
+            "task": "shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4.mp4",
+            "poster": "assets/media/curated/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4.jpg"
+          }
+        ]
+      },
+      {
+        "key": "clean",
+        "label": "Sweep a table",
+        "taskLabel": "Sweep a table",
+        "title": "Two hands. One coordinated task.",
+        "description": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+        "taskNumber": "T7",
+        "skills": [
+          "Tool use",
+          "Bimanual coordination",
+          "Sweeping"
+        ],
+        "result": {
+          "successRate": 80,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-",
+            "title": "Sweep up plastic pieces",
+            "description": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "task_summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "promptExact": null,
+            "promptDisplay": "hold the dustpan and sweep the black plastic pieces into it with the brush",
+            "promptText": "hold the dustpan and sweep the black plastic pieces into it with the brush",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-/view?usp=drivesdk",
+            "skills": [
+              "Tool use",
+              "Bimanual coordination",
+              "Sweeping"
+            ],
+            "duration": 38.63,
+            "level": "ID",
+            "category": "household",
+            "task": "clean",
+            "taskLabel": "Sweep a table",
+            "src": "assets/media/curated/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-.mp4",
+            "poster": "assets/media/curated/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-.jpg"
+          },
+          {
+            "id": "1suyd-flRSr28kzpX8E95G8Lh9wWLNmox",
+            "title": "Sweep up bottle caps",
+            "description": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "task_summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "promptExact": null,
+            "promptDisplay": "hold the dustpan and sweep the yellow and green bottle caps into it with the brush",
+            "promptText": "hold the dustpan and sweep the yellow and green bottle caps into it with the brush",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox/view?usp=drivesdk",
+            "skills": [
+              "Tool use",
+              "Bimanual coordination",
+              "Sweeping"
+            ],
+            "duration": 38.08,
+            "level": "ID",
+            "category": "household",
+            "task": "clean",
+            "taskLabel": "Sweep a table",
+            "src": "assets/media/curated/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox.mp4",
+            "poster": "assets/media/curated/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox.jpg"
+          },
+          {
+            "id": "15l6senzjyaf8JleY7duy__bwyt09rKHZ",
+            "title": "Sweep up paper scraps",
+            "description": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "task_summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "promptExact": null,
+            "promptDisplay": "hold the dustpan and sweep the white paper scraps into it with the brush",
+            "promptText": "hold the dustpan and sweep the white paper scraps into it with the brush",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/15l6senzjyaf8JleY7duy__bwyt09rKHZ/view?usp=drivesdk",
+            "skills": [
+              "Tool use",
+              "Bimanual coordination",
+              "Sweeping"
+            ],
+            "duration": 35.46,
+            "level": "ID",
+            "category": "household",
+            "task": "clean",
+            "taskLabel": "Sweep a table",
+            "src": "assets/media/curated/15l6senzjyaf8JleY7duy__bwyt09rKHZ.mp4",
+            "poster": "assets/media/curated/15l6senzjyaf8JleY7duy__bwyt09rKHZ.jpg"
+          },
+          {
+            "id": "1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z",
+            "title": "Collect scattered bottle caps",
+            "description": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "task_summary": "Hold a dustpan in one hand and sweep loose objects into it with the other.",
+            "promptExact": null,
+            "promptDisplay": "hold the dustpan and sweep the yellow and green bottle caps into it with the brush",
+            "promptText": "hold the dustpan and sweep the yellow and green bottle caps into it with the brush",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z/view?usp=drivesdk",
+            "skills": [
+              "Tool use",
+              "Bimanual coordination",
+              "Sweeping"
+            ],
+            "duration": 55.83,
+            "level": "ID",
+            "category": "household",
+            "task": "clean",
+            "taskLabel": "Sweep a table",
+            "src": "assets/media/curated/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z.mp4",
+            "poster": "assets/media/curated/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z.jpg"
+          }
+        ]
+      },
+      {
+        "key": "cabinet",
+        "label": "Retrieve from a cabinet",
+        "taskLabel": "Retrieve from a cabinet",
+        "title": "Open, retrieve, and deliver.",
+        "description": "Open the cabinet, retrieve an object, and bring it to the table.",
+        "taskNumber": "T8",
+        "skills": [
+          "Door opening",
+          "Grasp",
+          "Turning",
+          "Placement"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+            "title": "Retrieve a purple flower",
+            "description": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "task_summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "promptExact": null,
+            "promptDisplay": "open the top-left door of the cabinet, grab the purple flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptText": "open the top-left door of the cabinet, grab the purple flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k/view?usp=drivesdk",
+            "skills": [
+              "Door opening",
+              "Grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 42.13,
+            "level": "ID",
+            "category": "household",
+            "task": "cabinet",
+            "taskLabel": "Retrieve from a cabinet",
+            "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+            "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg"
+          },
+          {
+            "id": "1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE",
+            "title": "Retrieve a pink flower",
+            "description": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "task_summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "promptExact": null,
+            "promptDisplay": "open the top-left door of the cabinet, grab the pink flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptText": "open the top-left door of the cabinet, grab the pink flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE/view?usp=drivesdk",
+            "skills": [
+              "Door opening",
+              "Grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 51.21,
+            "level": "ID",
+            "category": "household",
+            "task": "cabinet",
+            "taskLabel": "Retrieve from a cabinet",
+            "src": "assets/media/curated/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE.mp4",
+            "poster": "assets/media/curated/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE.jpg"
+          },
+          {
+            "id": "1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4",
+            "title": "Retrieve a white flower",
+            "description": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "task_summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "promptExact": null,
+            "promptDisplay": "open the top-left door of the cabinet, grab the white flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptText": "open the top-left door of the cabinet, grab the white flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4/view?usp=drivesdk",
+            "skills": [
+              "Door opening",
+              "Grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 47.42,
+            "level": "ID",
+            "category": "household",
+            "task": "cabinet",
+            "taskLabel": "Retrieve from a cabinet",
+            "src": "assets/media/curated/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4.mp4",
+            "poster": "assets/media/curated/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4.jpg"
+          },
+          {
+            "id": "160ZBx56pCieA8lbANSPMNFcyr5imSt0j",
+            "title": "Retrieve an orange flower",
+            "description": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "task_summary": "Open the cabinet, retrieve an object, and bring it to the table.",
+            "promptExact": null,
+            "promptDisplay": "open the top-left door of the cabinet, grab the orange flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptText": "open the top-left door of the cabinet, grab the orange flower, close the cabinet door, turn left, and place it at the top-right corner of the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/160ZBx56pCieA8lbANSPMNFcyr5imSt0j/view?usp=drivesdk",
+            "skills": [
+              "Door opening",
+              "Grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 45.83,
+            "level": "ID",
+            "category": "household",
+            "task": "cabinet",
+            "taskLabel": "Retrieve from a cabinet",
+            "src": "assets/media/curated/160ZBx56pCieA8lbANSPMNFcyr5imSt0j.mp4",
+            "poster": "assets/media/curated/160ZBx56pCieA8lbANSPMNFcyr5imSt0j.jpg"
+          }
+        ]
+      },
+      {
+        "key": "storage",
+        "label": "Store in a drawer",
+        "taskLabel": "Store in a drawer",
+        "title": "A complete storage sequence.",
+        "description": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+        "taskNumber": "T9",
+        "skills": [
+          "Lateral grasp",
+          "Drawer opening",
+          "Placement",
+          "Closing"
+        ],
+        "result": {
+          "successRate": 80,
+          "trials": 10,
+          "paperPage": 6,
+          "paperLocator": "Table I"
+        },
+        "clips": [
+          {
+            "id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
+            "title": "Store a transparent bottle",
+            "description": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "task_summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "promptExact": null,
+            "promptDisplay": "grasp the transparent bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptText": "grasp the transparent bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1Sml4e99CtNVVS4kI231B92NRn0GUcquE/view?usp=drivesdk",
+            "skills": [
+              "Lateral grasp",
+              "Drawer opening",
+              "Placement",
+              "Closing"
+            ],
+            "duration": 41.21,
+            "level": "ID",
+            "category": "household",
+            "task": "storage",
+            "taskLabel": "Store in a drawer",
+            "src": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+            "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg"
+          },
+          {
+            "id": "1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ",
+            "title": "Store a silver can",
+            "description": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "task_summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "promptExact": null,
+            "promptDisplay": "grasp the silver can, open the top drawer of the kitchen island, place the can inside, and close the drawer",
+            "promptText": "grasp the silver can, open the top drawer of the kitchen island, place the can inside, and close the drawer",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ/view?usp=drivesdk",
+            "skills": [
+              "Lateral grasp",
+              "Drawer opening",
+              "Placement",
+              "Closing"
+            ],
+            "duration": 47.0,
+            "level": "ID",
+            "category": "household",
+            "task": "storage",
+            "taskLabel": "Store in a drawer",
+            "src": "assets/media/curated/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ.mp4",
+            "poster": "assets/media/curated/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ.jpg"
+          },
+          {
+            "id": "1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2",
+            "title": "Store a yellow bottle",
+            "description": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "task_summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "promptExact": null,
+            "promptDisplay": "grasp the yellow bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptText": "grasp the yellow bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2/view?usp=drivesdk",
+            "skills": [
+              "Lateral grasp",
+              "Drawer opening",
+              "Placement",
+              "Closing"
+            ],
+            "duration": 42.83,
+            "level": "ID",
+            "category": "household",
+            "task": "storage",
+            "taskLabel": "Store in a drawer",
+            "src": "assets/media/curated/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2.mp4",
+            "poster": "assets/media/curated/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2.jpg"
+          },
+          {
+            "id": "1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E",
+            "title": "Store a green bottle",
+            "description": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "task_summary": "Grasp a bottle or can, open the kitchen-island drawer, put it inside, and close the drawer.",
+            "promptExact": null,
+            "promptDisplay": "grasp the green drink bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptText": "grasp the green drink bottle, open the top drawer of the kitchen island, place the bottle inside, and close the drawer",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E/view?usp=drivesdk",
+            "skills": [
+              "Lateral grasp",
+              "Drawer opening",
+              "Placement",
+              "Closing"
+            ],
+            "duration": 50.75,
+            "level": "ID",
+            "category": "household",
+            "task": "storage",
+            "taskLabel": "Store in a drawer",
+            "src": "assets/media/curated/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E.mp4",
+            "poster": "assets/media/curated/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E.jpg"
+          }
+        ]
+      }
+    ],
+    "l1": [
+      {
+        "key": "position",
+        "label": "Position",
+        "title": "A new position. A new route.",
+        "description": "The task stays familiar while the basket, chair, or robot starting layout changes.",
+        "clips": [
+          {
+            "id": "1S49dEAznQzIsN_HqaitC5nLONS7QkKJD",
+            "title": "Clothes, a different route",
+            "description": "Collect clothes with the laundry basket in a different position.",
+            "summary": "Collect clothes with the laundry basket in a different position.",
+            "task_summary": "Collect clothes with the laundry basket in a different position.",
+            "promptExact": null,
+            "promptDisplay": "gather up the white shirt and turn right and put it into the laundry basket",
+            "promptText": "gather up the white shirt and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 58.79,
+            "level": "L1",
+            "category": "position",
+            "task": "position_cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD.mp4",
+            "poster": "assets/media/curated/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD.jpg"
+          },
+          {
+            "id": "1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT",
+            "title": "Clothes, a new basket position",
+            "description": "Collect clothes with the laundry basket in a different position.",
+            "summary": "Collect clothes with the laundry basket in a different position.",
+            "task_summary": "Collect clothes with the laundry basket in a different position.",
+            "promptExact": null,
+            "promptDisplay": "gather up the gray shirt and turn right and put it into the laundry basket",
+            "promptText": "gather up the gray shirt and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 30.75,
+            "level": "L1",
+            "category": "position",
+            "task": "position_cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT.mp4",
+            "poster": "assets/media/curated/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT.jpg"
+          },
+          {
+            "id": "193K297UfnmKiRArGEl_-0hrvhFdp5QJr",
+            "title": "Clothes, another basket position",
+            "description": "Collect clothes with the laundry basket in a different position.",
+            "summary": "Collect clothes with the laundry basket in a different position.",
+            "task_summary": "Collect clothes with the laundry basket in a different position.",
+            "promptExact": null,
+            "promptDisplay": "gather up the black trousers and turn right and put it into the laundry basket",
+            "promptText": "gather up the black trousers and turn right and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/193K297UfnmKiRArGEl_-0hrvhFdp5QJr/view?usp=drivesdk",
+            "skills": [
+              "Cloth handling",
+              "Turning",
+              "Basket placement"
+            ],
+            "duration": 40.67,
+            "level": "L1",
+            "category": "position",
+            "task": "position_cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/193K297UfnmKiRArGEl_-0hrvhFdp5QJr.mp4",
+            "poster": "assets/media/curated/193K297UfnmKiRArGEl_-0hrvhFdp5QJr.jpg"
+          },
+          {
+            "id": "1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA",
+            "title": "Reposition a chair from a new starting point",
+            "description": "Guide the chair under the table from a changed starting layout.",
+            "summary": "Guide the chair under the table from a changed starting layout.",
+            "task_summary": "Guide the chair under the table from a changed starting layout.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptText": "grasp the backrest of the chair, turn left, and push it under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 29.92,
+            "level": "L1",
+            "category": "position",
+            "task": "position_chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA.mp4",
+            "poster": "assets/media/curated/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA.jpg"
+          },
+          {
+            "id": "1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5",
+            "title": "Chair, another starting layout",
+            "description": "Guide the chair under the table from a changed starting layout.",
+            "summary": "Guide the chair under the table from a changed starting layout.",
+            "task_summary": "Guide the chair under the table from a changed starting layout.",
+            "promptExact": null,
+            "promptDisplay": "grasp the backrest of the chair, turn right, and push it under the table",
+            "promptText": "grasp the backrest of the chair, turn right, and push it under the table",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Walking",
+              "Pushing"
+            ],
+            "duration": 29.33,
+            "level": "L1",
+            "category": "position",
+            "task": "position_chair",
+            "taskLabel": "Push a chair",
+            "src": "assets/media/curated/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5.mp4",
+            "poster": "assets/media/curated/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5.jpg"
+          }
+        ]
+      },
+      {
+        "key": "object",
+        "label": "Object",
+        "title": "Different objects. Familiar skills.",
+        "description": "The policy adapts its learned actions to replacement pillows, soft objects, and shoes.",
+        "clips": [
+          {
+            "id": "1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW",
+            "title": "Transfer a different soft object",
+            "description": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "task_summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the white bear plush toy near the kitchen island, turn left, and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the white bear plush toy near the kitchen island, turn left, and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 62.17,
+            "level": "L1",
+            "category": "object",
+            "task": "object_pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW.mp4",
+            "poster": "assets/media/curated/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW.jpg"
+          },
+          {
+            "id": "1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM",
+            "title": "Transfer a white plush toy from beside the bed",
+            "description": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "task_summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the white bear plush toy near the bed and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the white bear plush toy near the bed and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 57.54,
+            "level": "L1",
+            "category": "object",
+            "task": "object_pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM.mp4",
+            "poster": "assets/media/curated/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM.jpg"
+          },
+          {
+            "id": "18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR",
+            "title": "A new object at another location",
+            "description": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "task_summary": "Adapt the learned lifting-and-placement skill to a different soft object.",
+            "promptExact": null,
+            "promptDisplay": "kneel down and scoop up the green pillow near the shoe rack, turn around, and put it at the head of the bed",
+            "promptText": "kneel down and scoop up the green pillow near the shoe rack, turn around, and put it at the head of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Bimanual lift",
+              "Placement"
+            ],
+            "duration": 53.42,
+            "level": "L1",
+            "category": "object",
+            "task": "object_pillow",
+            "taskLabel": "Arrange a pillow",
+            "src": "assets/media/curated/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR.mp4",
+            "poster": "assets/media/curated/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR.jpg"
+          },
+          {
+            "id": "10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM",
+            "title": "Retrieve a different pair of shoes",
+            "description": "Retrieve a different pair of shoes and bring them to the bed.",
+            "summary": "Retrieve a different pair of shoes and bring them to the bed.",
+            "task_summary": "Retrieve a different pair of shoes and bring them to the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, hook the white shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptText": "kneel down, hook the white shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 46.5,
+            "level": "L1",
+            "category": "object",
+            "task": "object_shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM.mp4",
+            "poster": "assets/media/curated/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM.jpg"
+          },
+          {
+            "id": "1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT",
+            "title": "Retrieve pink shoes",
+            "description": "Retrieve a different pair of shoes and bring them to the bed.",
+            "summary": "Retrieve a different pair of shoes and bring them to the bed.",
+            "task_summary": "Retrieve a different pair of shoes and bring them to the bed.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, hook the pink shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptText": "kneel down, hook the pink shoes on the first tier of the shoe rack, turn around, kneel down again, and place them at the foot of the bed",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Hook grasp",
+              "Turning",
+              "Placement"
+            ],
+            "duration": 41.08,
+            "level": "L1",
+            "category": "object",
+            "task": "object_shoe",
+            "taskLabel": "Retrieve shoes",
+            "src": "assets/media/curated/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT.mp4",
+            "poster": "assets/media/curated/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT.jpg"
+          }
+        ]
+      },
+      {
+        "key": "background",
+        "label": "Background",
+        "title": "Beyond the training room.",
+        "description": "Pick and place and rubbish disposal move into different surroundings.",
+        "clips": [
+          {
+            "id": "1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut",
+            "title": "Pick and place in a new setting",
+            "description": "Perform pick and place outside the training-room setting.",
+            "summary": "Perform pick and place outside the training-room setting.",
+            "task_summary": "Perform pick and place outside the training-room setting.",
+            "promptExact": null,
+            "promptDisplay": "pick up the green grapes and place it into the green bowl",
+            "promptText": "pick up the green grapes and place it into the green bowl",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 20.46,
+            "level": "L1",
+            "category": "background",
+            "task": "background_pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut.mp4",
+            "poster": "assets/media/curated/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut.jpg"
+          },
+          {
+            "id": "1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY",
+            "title": "Place an eggplant in a new setting",
+            "description": "Perform pick and place outside the training-room setting.",
+            "summary": "Perform pick and place outside the training-room setting.",
+            "task_summary": "Perform pick and place outside the training-room setting.",
+            "promptExact": null,
+            "promptDisplay": "pick up the eggplant and place it into the transparent box",
+            "promptText": "pick up the eggplant and place it into the transparent box",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 13.92,
+            "level": "L1",
+            "category": "background",
+            "task": "background_pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY.mp4",
+            "poster": "assets/media/curated/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY.jpg"
+          },
+          {
+            "id": "1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl",
+            "title": "Move a toy in a new setting",
+            "description": "Perform pick and place outside the training-room setting.",
+            "summary": "Perform pick and place outside the training-room setting.",
+            "task_summary": "Perform pick and place outside the training-room setting.",
+            "promptExact": null,
+            "promptDisplay": "pick up the gray hippo toy and place it into the orange bowl",
+            "promptText": "pick up the gray hippo toy and place it into the orange bowl",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl/view?usp=drivesdk",
+            "skills": [
+              "Top-down grasp",
+              "Placement"
+            ],
+            "duration": 20.04,
+            "level": "L1",
+            "category": "background",
+            "task": "background_pnp",
+            "taskLabel": "Pick & place",
+            "src": "assets/media/curated/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl.mp4",
+            "poster": "assets/media/curated/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl.jpg"
+          },
+          {
+            "id": "1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV",
+            "title": "Dispose of a snack box in a new setting",
+            "description": "Carry out rubbish disposal in a different room.",
+            "summary": "Carry out rubbish disposal in a different room.",
+            "task_summary": "Carry out rubbish disposal in a different room.",
+            "promptExact": null,
+            "promptDisplay": "pick up the red snack box and turn right and throw it into the trash can",
+            "promptText": "pick up the red snack box and turn right and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 28.79,
+            "level": "L1",
+            "category": "background",
+            "task": "background_rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV.mp4",
+            "poster": "assets/media/curated/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV.jpg"
+          },
+          {
+            "id": "1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP",
+            "title": "Dispose of a foil bag in a new setting",
+            "description": "Carry out rubbish disposal in a different room.",
+            "summary": "Carry out rubbish disposal in a different room.",
+            "task_summary": "Carry out rubbish disposal in a different room.",
+            "promptExact": null,
+            "promptDisplay": "pick up the foil bag and turn right and throw it into the trash can",
+            "promptText": "pick up the foil bag and turn right and throw it into the trash can",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP/view?usp=drivesdk",
+            "skills": [
+              "Grasp",
+              "Turning",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 35.96,
+            "level": "L1",
+            "category": "background",
+            "task": "background_rubbish",
+            "taskLabel": "Dispose of rubbish",
+            "src": "assets/media/curated/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.mp4",
+            "poster": "assets/media/curated/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.jpg"
+          }
+        ]
+      }
+    ],
+    "l2": [
+      {
+        "key": "discard-bottle",
+        "label": "Discard a bottle",
+        "title": "Discard a bottle",
+        "description": "Retrieve a bottle from the cabinet, carry it to the bin, and use the foot pedal to dispose of it.",
+        "skills": [
+          "Cabinet access",
+          "Lateral grasp",
+          "Pedal opening",
+          "Release"
+        ],
+        "result": {
+          "successRate": 60,
+          "trials": 10,
+          "paperPage": 7,
+          "paperLocator": "Figure 8b"
+        },
+        "clips": [
+          {
+            "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako",
+            "title": "Discard a bottle",
+            "description": "Retrieve a bottle from the cabinet, carry it to the bin, and use the foot pedal to dispose of it.",
+            "summary": "Retrieve a bottle from the cabinet, carry it to the bin, and use the foot pedal to dispose of it.",
+            "task_summary": "Retrieve a bottle from the cabinet, carry it to the bin, and use the foot pedal to dispose of it.",
+            "promptExact": null,
+            "promptDisplay": "Open the cabinet, take out the bottle, close the door, and throw the bottle into the trash can.",
+            "promptText": "Open the cabinet, take out the bottle, close the door, and throw the bottle into the trash can.",
+            "promptStatus": "provisional",
+            "captionType": "provisional_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako/view?usp=drivesdk",
+            "skills": [
+              "Cabinet access",
+              "Lateral grasp",
+              "Pedal opening",
+              "Release"
+            ],
+            "duration": 46.58,
+            "level": "L2",
+            "category": "composition",
+            "task": "cabinet_storage_rubbish",
+            "taskLabel": "Discard a bottle",
+            "src": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
+            "poster": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.jpg"
+          }
+        ]
+      },
+      {
+        "key": "pack-chips",
+        "label": "Pack chips",
+        "title": "Pack chips",
+        "description": "Combine a lateral grasp with placing a cylindrical chip container into a box.",
+        "skills": [
+          "Lateral grasp",
+          "Container placement"
+        ],
+        "result": {
+          "successRate": 90,
+          "trials": 10,
+          "paperPage": 7,
+          "paperLocator": "Figure 8b"
+        },
+        "clips": [
+          {
+            "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT",
+            "title": "Pack chips",
+            "description": "Combine a lateral grasp with placing a cylindrical chip container into a box.",
+            "summary": "Grasp the chips and place them into the grocery bag.",
+            "task_summary": "Grasp the chips and place them into the grocery bag.",
+            "promptExact": null,
+            "promptDisplay": "grasp the chip box and place it into the grocery bag",
+            "promptText": "grasp the chip box and place it into the grocery bag",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT/view?usp=drivesdk",
+            "skills": [
+              "Lateral grasp",
+              "Container placement"
+            ],
+            "duration": 23.08,
+            "level": "L2",
+            "category": "composition",
+            "task": "pnp_storage_chip",
+            "taskLabel": "Pack chips",
+            "src": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
+            "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg"
+          }
+        ]
+      },
+      {
+        "key": "collect-clothes",
+        "label": "Collect clothes",
+        "title": "Collect clothes",
+        "description": "Kneel to gather clothes, then carry them to the laundry basket.",
+        "skills": [
+          "Kneeling",
+          "Cloth handling",
+          "Basket placement"
+        ],
+        "result": {
+          "successRate": 60,
+          "trials": 10,
+          "paperPage": 7,
+          "paperLocator": "Figure 8b"
+        },
+        "clips": [
+          {
+            "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
+            "title": "Collect clothes",
+            "description": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "summary": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "task_summary": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
+            "promptText": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Cloth handling",
+              "Basket placement"
+            ],
+            "duration": 35.17,
+            "level": "L2",
+            "category": "composition",
+            "task": "shoe_cloth_cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+            "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg"
+          }
+        ]
+      },
+      {
+        "key": "organize-medicine",
+        "label": "Organize medicine",
+        "title": "Organize medicine",
+        "description": "Retrieve medicine from the cabinet and place it in a container.",
+        "skills": [
+          "Cabinet access",
+          "Retrieval",
+          "Container placement"
+        ],
+        "result": {
+          "successRate": 80,
+          "trials": 10,
+          "paperPage": 7,
+          "paperLocator": "Figure 8b"
+        },
+        "clips": [
+          {
+            "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD",
+            "title": "Organize medicine",
+            "description": "Retrieve medicine from the cabinet and place it in a container.",
+            "summary": "Retrieve medicine from the cabinet and place it in a container.",
+            "task_summary": "Retrieve medicine from the cabinet and place it in a container.",
+            "promptExact": null,
+            "promptDisplay": "open the left cabinet door, grasp the medicine bottle, turn left, and place it into the first-aid basket",
+            "promptText": "open the left cabinet door, grasp the medicine bottle, turn left, and place it into the first-aid basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD/view?usp=drivesdk",
+            "skills": [
+              "Cabinet access",
+              "Retrieval",
+              "Container placement"
+            ],
+            "duration": 45.17,
+            "level": "L2",
+            "category": "composition",
+            "task": "cabinet_pnp_medicine",
+            "taskLabel": "Organize medicine",
+            "src": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
+            "poster": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.jpg"
+          }
+        ]
+      }
+    ]
+  },
+  "longHorizon": [
+    {
+      "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE",
+      "title": "Put the bedroom in order",
+      "description": "Put shoes on the rack, collect clothes into the laundry basket, and return a pillow to the bed.",
+      "summary": "Put shoes on the rack, collect clothes into the laundry basket, and return a pillow to the bed.",
+      "task_summary": "Put shoes on the rack, collect clothes into the laundry basket, and return a pillow to the bed.",
+      "promptExact": null,
+      "promptDisplay": "Put the shoes on the rack, collect the clothes into the laundry basket, and place the pillow on the bed.",
+      "promptText": "Put the shoes on the rack, collect the clothes into the laundry basket, and place the pillow on the bed.",
+      "promptStatus": "provisional",
+      "captionType": "provisional_instruction",
+      "captionLabel": "Prompt",
+      "sourceUrl": "https://drive.google.com/file/d/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE/view?usp=drivesdk",
+      "skills": [
+        "Grasping",
+        "Walking",
+        "Turning",
+        "Placement"
+      ],
+      "steps": [
+        "Shoes onto the rack",
+        "Clothes into the basket",
+        "Pillow onto the bed"
+      ],
+      "duration": 69.21000000000001,
+      "level": "long-horizon",
+      "category": "extended-demonstration",
+      "task": "bedroom-tidying",
+      "taskLabel": "Put the bedroom in order",
+      "src": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
+      "poster": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.jpg"
+    },
+    {
+      "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA",
+      "title": "Clear and organize the table",
+      "description": "Gather fruit into a basket, dispose of packaging, and put the basket away in the cabinet.",
+      "summary": "Gather fruit into a basket, dispose of packaging, and put the basket away in the cabinet.",
+      "task_summary": "Gather fruit into a basket, dispose of packaging, and put the basket away in the cabinet.",
+      "promptExact": null,
+      "promptDisplay": "Put the fruit in the basket, throw away the packaging, and store the basket in the cabinet.",
+      "promptText": "Put the fruit in the basket, throw away the packaging, and store the basket in the cabinet.",
+      "promptStatus": "provisional",
+      "captionType": "provisional_instruction",
+      "captionLabel": "Prompt",
+      "sourceUrl": "https://drive.google.com/file/d/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA/view?usp=drivesdk",
+      "skills": [
+        "Grasping",
+        "Walking",
+        "Turning",
+        "Placement"
+      ],
+      "steps": [
+        "Fruit into the basket",
+        "Packaging into the bin",
+        "Basket into the cabinet"
+      ],
+      "duration": 81.58,
+      "level": "long-horizon",
+      "category": "extended-demonstration",
+      "task": "table-tidying",
+      "taskLabel": "Clear and organize the table",
+      "src": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
+      "poster": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.jpg"
+    }
+  ]
+}

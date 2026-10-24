@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="WE-Dream: Generalizable Humanoid World-Action Models with Latent-Action Pretraining and Routed Attention. Explore the method, data, and real-world robot demonstrations.">
+  <title>WE-Dream — From human experience to humanoid action</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="modules/hero-wall.css">
+  <link rel="stylesheet" href="modules/demo-deck.css">
+  <link rel="stylesheet" href="modules/stage-player.css">
+  <link rel="stylesheet" href="modules/skill-mix.css">
+  <link rel="stylesheet" href="modules/method-figure.css">
+  <link rel="stylesheet" href="modules/dataset-films.css">
+  <link rel="stylesheet" href="modules/results-explorer.css">
+  <link rel="stylesheet" href="modules/scroll-reveal.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#method">Skip to content</a>
+  <header class="site-header" id="site-header">
+    <a class="wordmark" href="#top" aria-label="WE-Dream home">WE-Dream</a>
+    <nav aria-label="Main navigation">
+      <a href="#method">Method</a><a href="#dataset">Data</a><a href="#in-domain">Demos</a><a href="#results">Results</a><a href="#long-horizon">Long horizon</a>
+    </nav>
+    <a class="nav-paper" href="assets/paper.pdf" target="_blank" rel="noopener">Read the paper <span aria-hidden="true">↗</span></a>
+    <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav"><span></span><span></span></button>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden><a href="#method">Method</a><a href="#dataset">Data</a><a href="#in-domain">Demos</a><a href="#results">Results</a><a href="#long-horizon">Long horizon</a><a href="assets/paper.pdf" target="_blank" rel="noopener">Paper ↗</a></nav>
+  <main>
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-wall"><div class="wall-drift"><div class="wall-camera" aria-label="40 complete robot demonstrations"></div></div></div><div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="eyebrow hero-eyebrow"><span class="live-dot"></span>GENERALIZABLE HUMANOID WORLD–ACTION MODELS</p>
+        <h1 id="hero-title" aria-label="WE-Dream"><span class="hero-brand-we">WE-</span><span class="hero-brand-dream">Dream</span></h1>
+        <p class="hero-paper-title">Generalizable Humanoid World-Action Models</p><p class="hero-subtitle">with Latent-Action Pretraining and Routed Attention</p>
+        <div class="hero-actions"><a href="assets/paper.pdf" class="button button-primary" target="_blank" rel="noopener">Paper <span aria-hidden="true">↗</span></a><button id="wall-explore" class="button button-secondary">Explore the wall <span aria-hidden="true">↗</span></button></div>
+      </div>
+      <button id="wall-back" class="wall-back" hidden>Back to title ↗</button><p class="wall-focus-label">Choose a window. Watch the complete action.</p><div class="hero-bottom"><span class="hero-index">40 COMPLETE DEMOS · ONE WORLD–ACTION MODEL</span><button class="motion-toggle" id="motion-toggle" aria-label="Pause background animation"><span aria-hidden="true">Ⅱ</span> Pause motion</button><a href="#method" class="scroll-cue" aria-label="Scroll to method">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a></div>
+    </section>
+    <div class="project-bar wrap"><p>Latent-action pretraining <span>×</span> Routed attention</p><div class="authors" id="authors" hidden></div><a href="assets/paper.pdf" target="_blank" rel="noopener" class="quiet-link">Research paper ↗</a></div>
+    <section id="method" class="section wrap" aria-labelledby="method-title">
+      <div class="section-heading"><p class="eyebrow"><span class="section-number">01 /</span> THE METHOD</p><div class="heading-row"><h2 id="method-title">From human experience<br><em>to real-time control.</em></h2></div></div>
+      <div id="method-root"></div>
+    </section>
+    <section id="dataset" class="section dataset-section" aria-labelledby="dataset-title"><div class="wrap">
+      <div class="section-heading"><p class="eyebrow"><span class="section-number">02 /</span> THE DATA</p><div class="heading-row"><h2 id="dataset-title">Human experience.<br><em>Robot demonstrations.</em></h2><p class="section-intro">Two stages of learning, connected by actions. Explore the data behind pretraining and robot adaptation.</p></div></div>
+      <div id="dataset-root"></div>
+    </div></section>
+    <div class="demo-chapter"><div class="wrap"><p class="eyebrow">FROM LEARNING TO DOING</p><h2>A world of <em>possibilities.</em></h2><p>Everyday skills. Changing environments. New combinations.</p><div class="chapter-links"><a href="#in-domain">01 &nbsp; Everyday skills <span>↘</span></a><a href="#level-one">02 &nbsp; Changing conditions <span>↘</span></a><a href="#level-two">03 &nbsp; Composing skills <span>↘</span></a></div></div><span class="chapter-orbit" aria-hidden="true"></span></div>
+    <section id="in-domain" class="section gallery-section" aria-labelledby="id-title"><div class="section-heading wrap"><p class="eyebrow"><span class="section-number">03 /</span> IN-DOMAIN</p><div class="heading-row"><h2 id="id-title">Everyday<br><em>whole-body skills.</em></h2><p class="section-intro">Nine everyday tasks, from putting away a pillow to opening a cabinet. Choose a skill and watch it unfold.</p></div></div><div id="id-gallery" class="gallery-root"></div></section>
+    <section id="level-one" class="section alt-section gallery-section" aria-labelledby="l1-title"><div><div class="section-heading wrap"><p class="eyebrow"><span class="section-number">04 /</span> L1 · GENERALIZATION</p><div class="heading-row"><h2 id="l1-title">Generalization.<br><em>Across changing conditions.</em></h2><p class="section-intro">Move the target. Change the object. Rebuild the scene. Explore how learned skills transfer across changing conditions.</p></div></div><div id="l1-gallery" class="gallery-root"></div></div></section>
+    <section id="level-two" class="section gallery-section" aria-labelledby="l2-title"><div class="section-heading wrap"><p class="eyebrow"><span class="section-number">05 /</span> L2 · SKILL COMPOSITION</p><div class="heading-row"><h2 id="l2-title">Familiar skills.<br><em>Unseen compositions.</em></h2><p class="section-intro">Four unseen task compositions bring previously learned skills together into new sequences.</p></div></div><div id="l2-gallery" class="gallery-root"></div></section>
+    <section id="results" class="section results-section" aria-labelledby="results-title"><div class="wrap"><div class="section-heading"><p class="eyebrow"><span class="section-number">06 /</span> REAL-WORLD EVALUATION</p><div class="heading-row"><h2 id="results-title">Real-world<br><em>performance.</em></h2><p class="section-intro">Evaluated on a Unitree G1 with Dex3-1 hands, across familiar tasks, changing conditions, and unseen compositions.</p></div></div><div id="results-root"></div></div></section>
+    <section id="long-horizon" class="section long-section" aria-labelledby="long-title"><div class="section-heading wrap"><p class="eyebrow"><span class="section-number">07 /</span> LONG-HORIZON</p><div class="heading-row"><h2 id="long-title">Long-horizon <em>task execution.</em></h2><p class="section-intro">Two extended real-world routines, learned with dedicated demonstrations. Follow the robot through each complete sequence.</p></div></div><div id="long-gallery" class="gallery-root"></div></section>
+    <section id="resources" class="resources-section"><div class="wrap resources-inner"><div><p class="eyebrow">EXPLORE THE RESEARCH</p><h2>Paper &amp;<br><em>resources.</em></h2></div><a class="paper-card" href="assets/paper.pdf" target="_blank" rel="noopener"><span class="eyebrow">RESEARCH PAPER <span aria-hidden="true">↗</span></span><p>WE-Dream: Generalizable Humanoid World-Action Models with Latent-Action Pretraining and Routed Attention</p><span class="paper-link">Read the full paper <span aria-hidden="true">→</span></span></a></div></section>
+  </main>
+  <footer class="wrap"><a class="footer-brand" href="#top">WE-Dream</a><p>From human experience to humanoid action.</p><a href="#top" aria-label="Back to top">Back to top ↑</a></footer>
+  <details class="website-credits wrap"><summary>Website credits</summary><p>Background video presentation adapted from <a href="https://roboverseorg.github.io/ViTacFormerPage/" target="_blank" rel="noopener">ViTacFormer</a> (<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>), with original mosaic and camera interactions. The template lineage includes <a href="https://nerfies.github.io/" target="_blank" rel="noopener">NeRFies</a>, RoboPoint, UMI on Legs, and SkillBlender. The demonstration reel adapts the <a href="https://github.com/physical-superintelligence-lab/Psi0/tree/website" target="_blank" rel="noopener">Psi0 website</a> carousel under its documented reuse permission. Additional design references: <a href="https://wb-wam.github.io/" target="_blank" rel="noopener">WB-WAM</a>, <a href="https://jingliangli.com/tactile-force-survey/" target="_blank" rel="noopener">Tactile Force Survey</a>. See <a href="vendor/README.md" target="_blank">source notices</a>.</p></details>
+  <div id="load-error" role="alert" hidden>Unable to load the demonstrations. Please refresh the page.</div>
+  <noscript><p class="noscript-message">Enable JavaScript to explore the interactive method and demonstration library. <a href="assets/paper.pdf">The paper is available here.</a></p></noscript>
+</body>
+</html>

@@ -1,0 +1,744 @@
+{
+  "version": 1,
+  "annotation_type": "editorial_navigation",
+  "note": "Stage boundaries are approximate navigation markers based on visual review of the full recording and exact-seek key frames. They are not frame-accurate state labels, control logs, or verified task prompts. Related videos illustrate the corresponding basic skill, not identical object or scene conditions.",
+  "clips": {
+    "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4": {
+      "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
+      "title": "Collect clothes",
+      "level": "L2",
+      "duration": 35.17,
+      "src": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+      "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg",
+      "stages": [
+        {
+          "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-stage-1",
+          "start": 0,
+          "end": 8.05,
+          "label": "Approach the rack",
+          "skills": [
+            {
+              "key": "shoe",
+              "label": "Kneeling · from shoe retrieval",
+              "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
+              "src": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
+              "source_task": "Retrieve shoes"
+            }
+          ],
+          "skill_labels": [
+            "Kneeling · from shoe retrieval"
+          ],
+          "related_clip_ids": [
+            "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos"
+          ],
+          "poster": "assets/media/chapters-curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-01.jpg",
+          "source_start": 0,
+          "source_end": 10
+        },
+        {
+          "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-stage-2",
+          "start": 8.05,
+          "end": 18.05,
+          "label": "Crouch and retrieve the clothes",
+          "skills": [
+            {
+              "key": "shoe",
+              "label": "Kneeling · from shoe retrieval",
+              "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
+              "src": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
+              "source_task": "Retrieve shoes"
+            },
+            {
+              "key": "cloth",
+              "label": "Cloth handling & basket placement · from clothes collection",
+              "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
+              "src": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
+              "source_task": "Collect clothes"
+            }
+          ],
+          "skill_labels": [
+            "Kneeling · from shoe retrieval",
+            "Cloth handling & basket placement · from clothes collection"
+          ],
+          "related_clip_ids": [
+            "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
+            "1puOhktSpme4E-M6At185A0rK9V-ax5ez"
+          ],
+          "poster": "assets/media/chapters-curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-02.jpg",
+          "source_start": 10,
+          "source_end": 20
+        },
+        {
+          "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-stage-3",
+          "start": 18.05,
+          "end": 26.05,
+          "label": "Carry to the laundry basket",
+          "skills": [
+            {
+              "key": "cloth",
+              "label": "Cloth handling & basket placement · from clothes collection",
+              "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
+              "src": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
+              "source_task": "Collect clothes"
+            }
+          ],
+          "skill_labels": [
+            "Cloth handling & basket placement · from clothes collection"
+          ],
+          "related_clip_ids": [
+            "1puOhktSpme4E-M6At185A0rK9V-ax5ez"
+          ],
+          "poster": "assets/media/chapters-curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-03.jpg",
+          "source_start": 20,
+          "source_end": 28
+        },
+        {
+          "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-stage-4",
+          "start": 26.05,
+          "end": 35.17,
+          "label": "Place the clothes in the basket",
+          "skills": [
+            {
+              "key": "cloth",
+              "label": "Cloth handling & basket placement · from clothes collection",
+              "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
+              "src": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
+              "source_task": "Collect clothes"
+            }
+          ],
+          "skill_labels": [
+            "Cloth handling & basket placement · from clothes collection"
+          ],
+          "related_clip_ids": [
+            "1puOhktSpme4E-M6At185A0rK9V-ax5ez"
+          ],
+          "poster": "assets/media/chapters-curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4-04.jpg",
+          "source_start": 28,
+          "source_end": 37.13
+        }
+      ],
+      "equal_priority": false,
+      "skill_source_evidence": {
+        "paper_section": "IV-E, L2 compositional generalization",
+        "paper_page": 7,
+        "scope": "Source task families and recombined primitives follow the paper. Their associations with editorial navigation intervals are illustrative, not measurements of learned internal skill activation."
+      },
+      "source_head_trim": 1.95
+    },
+    "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT": {
+      "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT",
+      "title": "Pack chips",
+      "level": "L2",
+      "duration": 23.08,
+      "src": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
+      "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg",
+      "stages": [
+        {
+          "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-stage-1",
+          "start": 0,
+          "end": 7.55,
+          "label": "Approach the tabletop",
+          "skills": [
+            {
+              "key": "storage",
+              "label": "Horizontal grasp · from drawer storage",
+              "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
+              "src": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
+              "source_task": "Store in a drawer"
+            }
+          ],
+          "skill_labels": [
+            "Horizontal grasp · from drawer storage"
+          ],
+          "related_clip_ids": [
+            "1Sml4e99CtNVVS4kI231B92NRn0GUcquE"
+          ],
+          "poster": "assets/media/chapters-curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-01.jpg",
+          "source_start": 0,
+          "source_end": 10
+        },
+        {
+          "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-stage-2",
+          "start": 7.55,
+          "end": 13.55,
+          "label": "Grasp and lift the chips",
+          "skills": [
+            {
+              "key": "storage",
+              "label": "Horizontal grasp · from drawer storage",
+              "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
+              "src": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
+              "source_task": "Store in a drawer"
+            }
+          ],
+          "skill_labels": [
+            "Horizontal grasp · from drawer storage"
+          ],
+          "related_clip_ids": [
+            "1Sml4e99CtNVVS4kI231B92NRn0GUcquE"
+          ],
+          "poster": "assets/media/chapters-curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-02.jpg",
+          "source_start": 10,
+          "source_end": 16
+        },
+        {
+          "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-stage-3",
+          "start": 13.55,
+          "end": 23.08,
+          "label": "Pack the chips into the bag",
+          "skills": [
+            {
+              "key": "pnp",
+              "label": "Container placement · from pick & place",
+              "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
+              "src": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
+              "source_task": "Pick & place"
+            }
+          ],
+          "skill_labels": [
+            "Container placement · from pick & place"
+          ],
+          "related_clip_ids": [
+            "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx"
+          ],
+          "poster": "assets/media/chapters-curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-03.jpg",
+          "source_start": 16,
+          "source_end": 25.54
+        }
+      ],
+      "equal_priority": false,
+      "skill_source_evidence": {
+        "paper_section": "IV-E, L2 compositional generalization",
+        "paper_page": 7,
+        "scope": "Source task families and recombined primitives follow the paper. Their associations with editorial navigation intervals are illustrative, not measurements of learned internal skill activation."
+      },
+      "source_head_trim": 2.45
+    },
+    "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD": {
+      "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD",
+      "title": "Organize medicine",
+      "level": "L2",
+      "duration": 45.17,
+      "src": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
+      "poster": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.jpg",
+      "stages": [
+        {
+          "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-1",
+          "start": 0,
+          "end": 17.05,
+          "label": "Open the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-01.jpg",
+          "source_start": 0,
+          "source_end": 19
+        },
+        {
+          "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-2",
+          "start": 17.05,
+          "end": 26.05,
+          "label": "Retrieve the medicine",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-02.jpg",
+          "source_start": 19,
+          "source_end": 28
+        },
+        {
+          "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-3",
+          "start": 26.05,
+          "end": 31.05,
+          "label": "Close the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-03.jpg",
+          "source_start": 28,
+          "source_end": 33
+        },
+        {
+          "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-4",
+          "start": 31.05,
+          "end": 36.05,
+          "label": "Carry the medicine to the table",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-04.jpg",
+          "source_start": 33,
+          "source_end": 38
+        },
+        {
+          "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-5",
+          "start": 36.05,
+          "end": 45.17,
+          "label": "Place the medicine in the tray",
+          "skills": [
+            {
+              "key": "pnp",
+              "label": "Container placement · from pick & place",
+              "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
+              "src": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
+              "source_task": "Pick & place"
+            }
+          ],
+          "skill_labels": [
+            "Container placement · from pick & place"
+          ],
+          "related_clip_ids": [
+            "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx"
+          ],
+          "poster": "assets/media/chapters-curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-05.jpg",
+          "source_start": 38,
+          "source_end": 47.13
+        }
+      ],
+      "equal_priority": false,
+      "skill_source_evidence": {
+        "paper_section": "IV-E, L2 compositional generalization",
+        "paper_page": 7,
+        "scope": "Source task families and recombined primitives follow the paper. Their associations with editorial navigation intervals are illustrative, not measurements of learned internal skill activation."
+      },
+      "source_head_trim": 1.95
+    },
+    "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako": {
+      "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako",
+      "title": "Discard a bottle",
+      "level": "L2",
+      "duration": 46.58,
+      "src": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
+      "poster": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.jpg",
+      "stages": [
+        {
+          "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-1",
+          "start": 0,
+          "end": 10.55,
+          "label": "Open the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-01.jpg",
+          "source_start": 0,
+          "source_end": 14
+        },
+        {
+          "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-2",
+          "start": 10.55,
+          "end": 24.55,
+          "label": "Retrieve the bottle",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            },
+            {
+              "key": "storage",
+              "label": "Lateral bottle grasp · from drawer storage",
+              "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
+              "src": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
+              "source_task": "Store in a drawer"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval",
+            "Lateral bottle grasp · from drawer storage"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+            "1Sml4e99CtNVVS4kI231B92NRn0GUcquE"
+          ],
+          "poster": "assets/media/chapters-curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-02.jpg",
+          "source_start": 14,
+          "source_end": 28
+        },
+        {
+          "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-3",
+          "start": 24.55,
+          "end": 29.55,
+          "label": "Close the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Cabinet access & retrieval · from cabinet retrieval",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Cabinet access & retrieval · from cabinet retrieval"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-03.jpg",
+          "source_start": 28,
+          "source_end": 33
+        },
+        {
+          "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-4",
+          "start": 29.55,
+          "end": 39.55,
+          "label": "Carry the bottle to the bin",
+          "skills": [
+            {
+              "key": "rubbish",
+              "label": "Pedal opening & release · from rubbish disposal",
+              "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
+              "src": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
+              "source_task": "Dispose of rubbish"
+            }
+          ],
+          "skill_labels": [
+            "Pedal opening & release · from rubbish disposal"
+          ],
+          "related_clip_ids": [
+            "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL"
+          ],
+          "poster": "assets/media/chapters-curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-04.jpg",
+          "source_start": 33,
+          "source_end": 43
+        },
+        {
+          "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-5",
+          "start": 39.55,
+          "end": 46.58,
+          "label": "Discard the bottle",
+          "skills": [
+            {
+              "key": "rubbish",
+              "label": "Pedal opening & release · from rubbish disposal",
+              "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
+              "src": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
+              "source_task": "Dispose of rubbish"
+            }
+          ],
+          "skill_labels": [
+            "Pedal opening & release · from rubbish disposal"
+          ],
+          "related_clip_ids": [
+            "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL"
+          ],
+          "poster": "assets/media/chapters-curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-05.jpg",
+          "source_start": 43,
+          "source_end": 50.0
+        }
+      ],
+      "equal_priority": false,
+      "skill_source_evidence": {
+        "paper_section": "IV-E, L2 compositional generalization",
+        "paper_page": 7,
+        "scope": "Source task families and recombined primitives follow the paper. Their associations with editorial navigation intervals are illustrative, not measurements of learned internal skill activation."
+      },
+      "source_head_trim": 3.45
+    },
+    "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE": {
+      "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE",
+      "title": "Tidy the bedroom",
+      "level": "long",
+      "duration": 69.21000000000001,
+      "src": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
+      "poster": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.jpg",
+      "stages": [
+        {
+          "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-stage-1",
+          "start": 0,
+          "end": 21.2,
+          "label": "Put the shoes on the rack",
+          "skills": [
+            {
+              "key": "shoe",
+              "label": "Retrieve shoes",
+              "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
+              "src": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
+              "source_task": "Retrieve shoes"
+            }
+          ],
+          "skill_labels": [
+            "Retrieve shoes"
+          ],
+          "related_clip_ids": [
+            "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos"
+          ],
+          "poster": "assets/media/chapters-curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-01.jpg",
+          "source_start": 0,
+          "source_end": 28
+        },
+        {
+          "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-stage-2",
+          "start": 21.2,
+          "end": 42.2,
+          "label": "Collect the clothes",
+          "skills": [
+            {
+              "key": "cloth",
+              "label": "Collect clothes",
+              "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
+              "src": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
+              "source_task": "Collect clothes"
+            }
+          ],
+          "skill_labels": [
+            "Collect clothes"
+          ],
+          "related_clip_ids": [
+            "1puOhktSpme4E-M6At185A0rK9V-ax5ez"
+          ],
+          "poster": "assets/media/chapters-curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-02.jpg",
+          "source_start": 28,
+          "source_end": 49
+        },
+        {
+          "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-stage-3",
+          "start": 42.2,
+          "end": 69.21000000000001,
+          "label": "Return the pillow to the bed",
+          "skills": [
+            {
+              "key": "pillow",
+              "label": "Arrange a pillow",
+              "clip_id": "1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob",
+              "src": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
+              "poster": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.jpg",
+              "source_task": "Arrange a pillow"
+            }
+          ],
+          "skill_labels": [
+            "Arrange a pillow"
+          ],
+          "related_clip_ids": [
+            "1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob"
+          ],
+          "poster": "assets/media/chapters-curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-03.jpg",
+          "source_start": 49,
+          "source_end": 76.0
+        }
+      ],
+      "equal_priority": true,
+      "source_head_trim": 6.8
+    },
+    "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA": {
+      "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA",
+      "title": "Clear and organize the room",
+      "level": "long",
+      "duration": 81.58,
+      "src": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
+      "poster": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.jpg",
+      "stages": [
+        {
+          "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-1",
+          "start": 0,
+          "end": 23.55,
+          "label": "Collect the fruit in a basket",
+          "skills": [
+            {
+              "key": "pnp",
+              "label": "Pick & place",
+              "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
+              "src": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
+              "source_task": "Pick & place"
+            }
+          ],
+          "skill_labels": [
+            "Pick & place"
+          ],
+          "related_clip_ids": [
+            "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx"
+          ],
+          "poster": "assets/media/chapters-curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-01.jpg",
+          "source_start": 0,
+          "source_end": 26
+        },
+        {
+          "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-2",
+          "start": 23.55,
+          "end": 46.55,
+          "label": "Collect and discard the packaging",
+          "skills": [
+            {
+              "key": "rubbish",
+              "label": "Dispose of rubbish",
+              "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
+              "src": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
+              "source_task": "Dispose of rubbish"
+            }
+          ],
+          "skill_labels": [
+            "Dispose of rubbish"
+          ],
+          "related_clip_ids": [
+            "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL"
+          ],
+          "poster": "assets/media/chapters-curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-02.jpg",
+          "source_start": 26,
+          "source_end": 49
+        },
+        {
+          "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-3",
+          "start": 46.55,
+          "end": 63.55,
+          "label": "Open the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Retrieve from a cabinet",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Retrieve from a cabinet"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-03.jpg",
+          "source_start": 49,
+          "source_end": 66
+        },
+        {
+          "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-4",
+          "start": 63.55,
+          "end": 73.55,
+          "label": "Store the fruit basket",
+          "skills": [
+            {
+              "key": "storage",
+              "label": "Store in a drawer",
+              "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
+              "src": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
+              "source_task": "Store in a drawer"
+            }
+          ],
+          "skill_labels": [
+            "Store in a drawer"
+          ],
+          "related_clip_ids": [
+            "1Sml4e99CtNVVS4kI231B92NRn0GUcquE"
+          ],
+          "poster": "assets/media/chapters-curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-04.jpg",
+          "source_start": 66,
+          "source_end": 76
+        },
+        {
+          "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-5",
+          "start": 73.55,
+          "end": 81.58,
+          "label": "Close the cabinet",
+          "skills": [
+            {
+              "key": "cabinet",
+              "label": "Retrieve from a cabinet",
+              "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
+              "src": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
+              "source_task": "Retrieve from a cabinet"
+            }
+          ],
+          "skill_labels": [
+            "Retrieve from a cabinet"
+          ],
+          "related_clip_ids": [
+            "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k"
+          ],
+          "poster": "assets/media/chapters-curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-05.jpg",
+          "source_start": 76,
+          "source_end": 84.0
+        }
+      ],
+      "equal_priority": true,
+      "source_head_trim": 2.45
+    }
+  }
+}
