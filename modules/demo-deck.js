@@ -6,7 +6,7 @@
  * Reuse basis and original source: ../vendor/psi0/NOTICE.md.
  *
  * Retains upstream centerCardInReel / updateReelInsets / setActiveCard
- * geometry and native scroll-snap/drag interaction. Adds a reusable API,
+ * geometry and native scroll/drag interaction. Adds a reusable API,
  * keyboard controls, cleanup, reduced motion and external video ownership.
  */
 
@@ -62,6 +62,9 @@ export function createDemoDeck(root, options = {}) {
   let geometry = [];
   let lastDragIntent = -1;
   let ignoreScrollUntil = 0;
+  let trackTranslation = 0;
+  let motionSamples = [];
+  const debugMotion = new URLSearchParams(window.location?.search || '').has('mediaDebug');
 
   root.classList.add('demo-deck');
   root.setAttribute('role', 'region');
@@ -70,6 +73,8 @@ export function createDemoDeck(root, options = {}) {
 
   const frame = element('div', 'demo-deck-frame');
   const reel = element('div', 'demo-deck-reel');
+  const track = element('div', 'demo-deck-track');
+  reel.append(track);
   reel.id = `${id}-reel`;
   reel.tabIndex = 0;
   reel.setAttribute('aria-label', `${label}. Use Left and Right arrow keys to change video.`);
@@ -102,28 +107,53 @@ export function createDemoDeck(root, options = {}) {
     options.onMotionChange?.(value, { index, reason });
   }
 
+  // Keep one persistent, subpixel compositing surface. During a button move the
+  // native scroller stays still; only this translation and card prominence move.
+  // A fractional residual survives the final scroll commit on quantized engines.
+  function renderedPosition() { return reel.scrollLeft - trackTranslation; }
+
+  function renderPosition(offset) {
+    const nextTranslation = reel.scrollLeft - offset;
+    if (nextTranslation === trackTranslation) return;
+    trackTranslation = nextTranslation;
+    track.style.transform = `translate3d(${trackTranslation}px,0,0)`;
+  }
+
+  function commitPosition(offset = renderedPosition()) {
+    ignoreScrollUntil = performance.now() + 80;
+    reel.scrollLeft = offset;
+    renderPosition(offset);
+  }
+
+  function sampleMotion(now, phase) {
+    if (!debugMotion) return;
+    motionSamples.push({ time: now, offset: renderedPosition(), scrollLeft: reel.scrollLeft, translate: trackTranslation, phase });
+    if (motionSamples.length > 180) motionSamples.shift();
+  }
+
+  function flushMotion() {
+    if (debugMotion) root.dataset.motionSamples = JSON.stringify(motionSamples);
+  }
+
   function clearNavigation({ releaseControl = true } = {}) {
     navigationTicket++;
     cancelAnimationFrame(animationFrame);
     animationFrame = 0;
+    commitPosition();
     clearTimeout(settleTimer);
     waitingForMedia = false;
     root.removeAttribute('aria-busy');
     if (releaseControl) reel.dataset.controlled = 'false';
   }
 
-  function measureCards() {
-    geometry = cards.map(card => ({ center: card.offsetLeft + card.offsetWidth / 2, width: card.offsetWidth }));
-  }
-
   // Psi0's center geometry, measured before animation rather than on every frame.
   function centeredPosition(index) {
-    return Math.max(0, Math.min(reel.scrollWidth - reel.clientWidth, geometry[index].center - reel.clientWidth / 2));
+    return Math.max(0, geometry[index].center - reel.clientWidth / 2);
   }
 
   function updateVisuals() {
     if (!geometry.length || !reel.clientWidth) return;
-    const center = reel.scrollLeft + reel.clientWidth / 2;
+    const center = renderedPosition() + reel.clientWidth / 2;
     geometry.forEach((entry, index) => {
       const stride = geometry[index + 1]?.center - entry.center || entry.center - geometry[index - 1]?.center || entry.width;
       const distance = Math.min(2, Math.abs(entry.center - center) / Math.max(stride, 1));
@@ -131,12 +161,12 @@ export function createDemoDeck(root, options = {}) {
       const progress = local * local * (3 - 2 * local);
       const scale = distance <= 1 ? 1 - .06 * progress : .94 - .03 * progress;
       const opacity = distance <= 1 ? 1 - .32 * progress : .68 - .23 * progress;
-      const value = `${scale.toFixed(4)},${opacity.toFixed(4)}`;
+      const value = `${scale},${opacity}`;
       const card = cards[index];
       if (card._deckVisual === value) return;
       card._deckVisual = value;
-      card.style.setProperty('--demo-deck-scale', scale.toFixed(4));
-      card.style.setProperty('--demo-deck-opacity', opacity.toFixed(4));
+      card.style.setProperty('--demo-deck-scale', String(scale));
+      card.style.setProperty('--demo-deck-opacity', String(opacity));
     });
   }
 
@@ -147,16 +177,19 @@ export function createDemoDeck(root, options = {}) {
     const css = getComputedStyle(root);
     const ratio = Number.parseFloat(css.getPropertyValue('--demo-deck-card-ratio')) || 0.72;
     const maximum = Number.parseFloat(css.getPropertyValue('--demo-deck-card-max')) || 850;
+    const gap = Number.parseFloat(css.getPropertyValue('--demo-deck-gap')) || 18;
     const width = Math.min(reel.clientWidth * ratio, maximum);
     reel.style.setProperty('--demo-deck-card-width', `${width}px`);
-    const inset = Math.max((reel.clientWidth - cards[0].offsetWidth) / 2, 0);
+    const inset = Math.max((reel.clientWidth - width) / 2, 0);
     reel.style.setProperty('--demo-deck-edge-inset', `${inset}px`);
-    measureCards();
+    // The fixed-width CSS track uses these exact values. offsetLeft/offsetWidth
+    // round fractional layout pixels and can disagree with the composited frame.
+    geometry = cards.map((_, index) => ({ center: inset + width / 2 + index * (width + gap), width }));
   }
 
   function closestIndex() {
-    if (!cards.length) return -1;
-    const reelCenter = reel.scrollLeft + reel.clientWidth / 2;
+    if (!cards.length || !geometry.length) return -1;
+    const reelCenter = renderedPosition() + reel.clientWidth / 2;
     let closest = 0;
     let closestDistance = Number.POSITIVE_INFINITY;
     geometry.forEach((entry, index) => {
@@ -207,12 +240,21 @@ export function createDemoDeck(root, options = {}) {
 
   function settle() {
     clearTimeout(settleTimer);
-    if (disposed || animationFrame || waitingForMedia || pointer?.dragging) return;
+    if (disposed || animationFrame || layoutFrame || waitingForMedia || pointer?.dragging || !geometry.length || !reel.clientWidth) return;
+    const closest = closestIndex();
+    // Native wheel scrolling uses the same settling path, so scroll-snap cannot
+    // independently adjust the final frame of a transform animation.
+    if (closest >= 0 && Math.abs(renderedPosition() - centeredPosition(closest)) > .5) {
+      goTo(closest, { reason: reason === 'wheel' ? 'wheel' : 'scroll' });
+      return;
+    }
     updateVisuals();
     if (reel.clientWidth > 0) setActiveCard(closestIndex());
     pendingIndex = null;
     reel.dataset.controlled = 'false';
     setMotion(false, activeIndex);
+    sampleMotion(performance.now(), 'settled');
+    flushMotion();
   }
 
   function goTo(index, { behavior = 'smooth', reason: requestedReason = 'api' } = {}) {
@@ -241,12 +283,11 @@ export function createDemoDeck(root, options = {}) {
         return;
       }
       updateReelInsets();
-      const start = reel.scrollLeft;
+      const start = renderedPosition();
       const target = centeredPosition(targetIndex);
       const distance = target - start;
       if (reducedMotion.matches || behavior !== 'smooth' || Math.abs(distance) < .5) {
-        ignoreScrollUntil = performance.now() + 80;
-        reel.scrollLeft = target;
+        commitPosition(target);
         updateVisuals();
         setActiveCard(targetIndex, reason);
         settle();
@@ -255,18 +296,22 @@ export function createDemoDeck(root, options = {}) {
       const stride = geometry[targetIndex].width || reel.clientWidth;
       const duration = Math.max(240, Math.min(520, 480 * Math.sqrt(Math.abs(distance) / stride)));
       const started = performance.now();
+      if (debugMotion) motionSamples = [];
+      sampleMotion(started, 'start');
       setMotion(true, targetIndex);
       const animate = now => {
         if (disposed || ticket !== navigationTicket) return;
         const progress = Math.min(1, (now - started) / duration);
         const eased = 1 - Math.pow(1 - progress, 3);
-        reel.scrollLeft = start + distance * eased;
+        renderPosition(start + distance * eased);
         updateVisuals();
         setActiveCard(closestIndex());
+        sampleMotion(now, 'frame');
         if (progress < 1) animationFrame = requestAnimationFrame(animate);
         else {
           animationFrame = 0;
-          ignoreScrollUntil = now + 80;
+          commitPosition(target);
+          sampleMotion(now, 'commit');
           settle();
         }
       };
@@ -298,8 +343,7 @@ export function createDemoDeck(root, options = {}) {
       if (reel.clientWidth === 0 || !cards.length) return;
       const index = selected;
       updateReelInsets();
-      ignoreScrollUntil = performance.now() + 80;
-      reel.scrollLeft = centeredPosition(index);
+      commitPosition(centeredPosition(index));
       updateVisuals();
       setActiveCard(index, reason);
       pendingIndex = null;
@@ -345,7 +389,9 @@ export function createDemoDeck(root, options = {}) {
       card.append(content, preview);
       return card;
     });
-    reel.replaceChildren(...cards);
+    track.replaceChildren(...cards);
+    trackTranslation = 0;
+    track.style.transform = 'translate3d(0,0,0)';
     previous.disabled = next.disabled = !cards.length;
     previous.hidden = next.hidden = cards.length < 2;
     hint.hidden = cards.length < 2;
@@ -362,6 +408,7 @@ export function createDemoDeck(root, options = {}) {
   next.addEventListener('click', () => step(1, 'button'), { signal });
   reel.addEventListener('scroll', () => {
     if (animationFrame || waitingForMedia) return;
+    if (performance.now() <= ignoreScrollUntil) return;
     if (!moving && performance.now() > ignoreScrollUntil) setMotion(true);
     scheduleActive();
     clearTimeout(settleTimer);
@@ -397,13 +444,13 @@ export function createDemoDeck(root, options = {}) {
 
   // Psi0's pointer drag adapted to preserve vertical page scrolling and controls.
   reel.addEventListener('pointerdown', event => {
-    if (event.button !== 0 || !event.isPrimary || isInteractive(event.target) || cards.length < 2) return;
+    if (event.button !== 0 || !event.isPrimary || isInteractive(event.target) || cards.length < 2 || !geometry.length) return;
     if (animationFrame || waitingForMedia) {
       clearNavigation({ releaseControl: false });
       setMotion(false, activeIndex);
       pendingIndex = null;
     }
-    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, left: reel.scrollLeft, dragging: false };
+    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, left: renderedPosition(), dragging: false };
     lastDragIntent = -1;
   }, { signal });
   reel.addEventListener('pointermove', event => {
@@ -426,7 +473,10 @@ export function createDemoDeck(root, options = {}) {
       setMotion(true, activeIndex);
     }
     if (event.cancelable) event.preventDefault();
-    reel.scrollLeft = pointer.left - deltaX;
+    const target = Math.max(0, Math.min(centeredPosition(cards.length - 1), pointer.left - deltaX));
+    commitPosition(target);
+    updateVisuals();
+    setActiveCard(closestIndex());
     const nearby = closestIndex();
     const intent = clampIndex(nearby + (deltaX < 0 ? 1 : -1));
     if (intent !== lastDragIntent) {

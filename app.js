@@ -3,7 +3,7 @@ import { createDemoDeck } from './modules/demo-deck.js';
 import { createStagePlayer } from './modules/stage-player.js';
 import { createSkillMix } from './modules/skill-mix.js';
 import { seekVideo } from './modules/video-seek.js';
-import { warmVideo } from './modules/video-warm.js';
+import { warmVideo, createVideoWarmScheduler } from './modules/video-warm.js';
 import { mountScrollReveal } from './modules/scroll-reveal.js';
 const mountMethodFigure = root => import('./modules/method-figure.js').then(m=>m.mountMethodFigure(root));
 const mountDatasetFilms = root => import('./modules/dataset-films.js').then(m=>m.mountDatasetFilms(root));
@@ -34,10 +34,12 @@ function buildL1TaskGroups(groups) {
 }
 
 function mountGallery(root, groups, {label, badge, single = false, long = false, stages = false} = {}) {
+  root.dataset.mountAt=performance.now().toFixed(1);
   let groupIndex=0, activeItem=null, activeCard=null, activePlayer=null, visible=false, stageController=null;
   const players=[];
   const playerCache=new Map(), groupDecks=new Map(), transitioning=new Set();
   let deck, currentGroup=null, groupRevision=0, groupAnimations=[], near=false, groupSelection=Promise.resolve(), inMotion=false;
+  const warmer=createVideoWarmScheduler({isProtected:player=>visible&&!document.hidden&&(player===activePlayer||transitioning.has(player))});
   const constrained=Boolean(navigator.connection?.saveData||/^(slow-)?2g$/.test(navigator.connection?.effectiveType||''));
   const isL1=root.id==='l1-gallery', l1Tasks=isL1?buildL1TaskGroups(groups):[];
   root.classList.toggle('long-layout',long);
@@ -91,6 +93,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     const frame=document.createElement('div');frame.className='demo-card-inner';
     frame.innerHTML=`<video class="demo-video" muted loop playsinline preload="none" aria-label="${html(item.title)} — complete demonstration"></video><iframe class="drive-video" title="${html(item.title)} — original demonstration" allow="autoplay; fullscreen" allowfullscreen hidden></iframe><span class="video-tag">${html(badge)} · FULL SEQUENCE</span><div class="video-controls" data-deck-no-drag><button class="play-button" type="button" aria-label="Play video">▶</button><span class="video-time">0:00 / ${clock(media.duration||item.duration)}</span><div class="video-progress"><input class="video-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress" disabled></div><button class="speed-button" type="button" aria-label="Playback speed 1 times">1×</button><button class="fullscreen-button" type="button" aria-label="Enter fullscreen">⛶</button></div><div class="video-error" hidden><p>This video could not load.</p><a href="${html(item.sourceUrl)}" target="_blank" rel="noopener">Watch the full original ↗</a></div>`;
     const video=$('video',frame),remote=$('iframe',frame),play=$('.play-button',frame),seek=$('.video-seek',frame),time=$('.video-time',frame);
+    video.dataset.clipId=item.id;
     if(media.ready||media.poster_ready) video.poster=media.poster;
     else if(item.poster) video.poster=item.poster;
     let loaded=false,userPaused=false,speed=1,wantPlay=false,seekTicket=0;
@@ -103,9 +106,10 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
           if(preload==='auto')video.preload='auto';
         }else{video.hidden=true;$('.video-controls',frame).hidden=true;remote.hidden=false;if(!remote.src)remote.src=`https://drive.google.com/file/d/${encodeURIComponent(item.id)}/preview`;}
       },
-      warm(){this.load('auto');return loaded?warmVideo(video):undefined;},
+      warm(options){this.load('auto');return loaded?warmVideo(video,1200,options):undefined;},
+      relax(){if(loaded)video.preload='metadata';},
       play(){this.load('auto');wantPlay=loaded&&!document.hidden&&!userPaused&&!reduced.matches;if(wantPlay)guardedPlay();},
-      pause(){wantPlay=false;video.pause();if(!remote.hidden){remote.removeAttribute('src');remote.hidden=true;}},
+      pause(){wantPlay=false;video.pause();if(!warmer.isPreparing(this))this.relax();if(!remote.hidden){remote.removeAttribute('src');remote.hidden=true;}},
       dispose(){this.pause();video.removeAttribute('src');video.load();},
       resetUserPause(){userPaused=false;wantPlay=true;},
       canResume(){return wantPlay&&!userPaused&&visible&&!document.hidden&&(activePlayer===this||transitioning.has(this));}
@@ -115,6 +119,16 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     function toggle(){player.load();userPaused=!video.paused;wantPlay=!userPaused;if(wantPlay)guardedPlay();else video.pause();}
     play.addEventListener('click',toggle);video.addEventListener('click',toggle);
     video.addEventListener('play',()=>{if(!player.canResume())video.pause();update();});video.addEventListener('pause',update);
+    video.addEventListener('loadeddata',()=>{
+      if(!video.dataset.firstDataAt){const at=performance.now().toFixed(1);video.dataset.firstDataAt=at;if(!root.dataset.firstDataAt)root.dataset.firstDataAt=at;}
+      // A native stream can finish after warm() timed out. Only the still-current
+      // primary may resume its neighbor queue; never an old hovered target.
+      if(player===activePlayer&&near&&!document.hidden&&!warmer.priorityPlayer)warmNeighbors(Math.max(0,deck.getActiveIndex()));
+    });
+    video.addEventListener('playing',()=>{
+      if(!player.canResume()){video.pause();return;}
+      if(!video.dataset.firstPlayingAt){const at=performance.now().toFixed(1);video.dataset.firstPlayingAt=at;if(!root.dataset.firstPlayingAt)root.dataset.firstPlayingAt=at;}
+    });
     video.addEventListener('loadedmetadata',()=>{seek.disabled=false;time.textContent=`${clock(video.currentTime)} / ${clock(video.duration)}`;});
     video.addEventListener('timeupdate',()=>{if(!seek.matches(':active'))seek.value=video.duration?video.currentTime/video.duration*100:0;time.textContent=`${clock(video.currentTime)} / ${clock(video.duration)}`;});
     video.addEventListener('error',()=>{if(loaded)$('.video-error',frame).hidden=false;});
@@ -172,7 +186,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   function navigationIntent(index,{item,reason}) {
     const target=playerCache.get(item.id);
     if(!target)return;
-    const ready=target.warm();
+    const ready=prioritizePlayer(target,{navigation:true});
     if(visible&&inMotion){
       transitioning.clear();players.forEach(p=>{if(p!==activePlayer&&p!==target)p.pause();});
       if(activePlayer)transitioning.add(activePlayer);
@@ -181,14 +195,31 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     }
     return ready;
   }
-  function warmNeighbors(index) {
-    if(!near||!currentGroup)return;
-    const clips=currentGroup.items;
-    // Only the visible section competes for HD bandwidth, with at most two
-    // adjacent clips. A data-saver connection only warms the selected clip.
-    for(const i of constrained?[index]:[index,index+1,index-1]){
-      if(clips[i])playerCache.get(clips[i].id)?.warm();
-    }
+  function warmNeighbors(index,{force=false,neighbors=true}={}) {
+    if((!near&&!force)||!currentGroup||document.hidden)return Promise.resolve();
+    const record=currentGroup,clips=record.items,primary=playerCache.get(clips[index]?.id);
+    if(!primary)return Promise.resolve();
+    // A recent explicit hover/click outranks incidental observer/resize work.
+    if(warmer.priorityPlayer&&warmer.priorityPlayer!==primary)return warmer.pending;
+    const adjacent=constrained||!neighbors?[]:[index+1,index-1].map(i=>playerCache.get(clips[i]?.id)).filter(Boolean);
+    return warmer.sequence(primary,adjacent,{isCurrent:()=>currentGroup===record&&activePlayer===primary&&(near||force)&&!document.hidden});
+  }
+  function prioritizePlayer(player,{navigation=false}={}){
+    if(!player||document.hidden)return;
+    const preparing=warmer.prioritize(player,{isCurrent:()=>!document.hidden});
+    const generation=warmer.generation;
+    const resumeNeighbors=()=>{
+      // Completed hovers release their priority back to the visible deck once.
+      // A stale completion cannot replace newer hover or observer work, and a
+      // navigation still entering another card must retain its own transition.
+      if(generation!==warmer.generation||warmer.pending||!near||document.hidden)return;
+      if(navigation&&player!==activePlayer)return;
+      warmNeighbors(Math.max(0,deck.getActiveIndex()));
+    };
+    Promise.resolve(preparing).then(resumeNeighbors,resumeNeighbors);
+    // A subsequent hover may cancel background preparation, but must not make
+    // an already-clicked cold card start moving before its own bounded wait.
+    return navigation?player.warm():preparing;
   }
   function getGroup(index) {
     if(groupDecks.has(index))return groupDecks.get(index);
@@ -218,19 +249,20 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     if(currentGroup){currentGroup.host.inert=false;currentGroup.host.setAttribute('aria-hidden','false');}
     if(!inMotion)motion(false);
   }
-  function selectGroup(index){
+  function selectGroup(index,{initialIndex}={}){
     if(single){deck.goTo(index);return Promise.resolve();}
-    if(index===groupIndex)return groupSelection;
-    groupSelection=changeGroup(index);return groupSelection;
+    if(index===groupIndex&&(initialIndex===undefined||currentGroup===groupDecks.get(index)))return groupSelection;
+    groupSelection=changeGroup(index,{initialIndex});return groupSelection;
   }
-  async function changeGroup(index){
+  async function changeGroup(index,{initialIndex}={}){
     const ticket=++groupRevision,previousIndex=groupIndex;
     finishGroups();
     const previous=currentGroup,target=getGroup(index);
     syncTabs(index);syncL1Tasks(0);deckHost.setAttribute('aria-busy','true');
-    const nextIndex=Math.max(0,target.deck.getActiveIndex());
-    await playerCache.get(target.items[nextIndex].id)?.warm();
+    const nextIndex=initialIndex??Math.max(0,target.deck.getActiveIndex());
+    await prioritizePlayer(playerCache.get(target.items[nextIndex].id),{navigation:true});
     if(ticket!==groupRevision)return;
+    if(initialIndex!==undefined&&target!==currentGroup)target.deck.goTo(initialIndex,{behavior:'instant',reason:'task-group-prepare'});
     deckHost.removeAttribute('aria-busy');
     transitioning.clear();
     if(activePlayer)transitioning.add(activePlayer);
@@ -250,15 +282,19 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   }
   tabs.forEach((t,i)=>{
     t.addEventListener('click',()=>selectGroup(i));
-    const prime=()=>{if(!near||constrained)return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];playerCache.get(clip.id)?.warm();};
+    const prime=()=>{if(!near||constrained)return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
     t.addEventListener('pointerenter',prime);t.addEventListener('focus',prime);
+  });
+  l1Rows.forEach(row=>{
+    const prime=()=>{if(!near||constrained)return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
+    row.addEventListener('pointerenter',prime);row.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>row.addEventListener('click',async()=>{
     const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)];
-    const selection=selectGroup(condition),ticket=groupRevision;
+    const selection=selectGroup(condition,{initialIndex:task.indices[0]}),ticket=groupRevision;
     await selection;
     if(ticket!==groupRevision||condition!==groupIndex||currentGroup!==groupDecks.get(condition))return;
-    deck.goTo(task.indices[0],{reason:'task-group'});
+    if(deck.getActiveIndex()!==task.indices[0])deck.goTo(task.indices[0],{reason:'task-group'});
   }));
   $('.task-rail',root).addEventListener('keydown',e=>{
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
@@ -266,30 +302,40 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     const index=e.key==='Home'?0:e.key==='End'?tabs.length-1:(current+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)+tabs.length)%tabs.length;
     selectGroup(index);tabs[index].focus({preventScroll:true});
   });
-  new IntersectionObserver(([entry])=>{near=entry.isIntersecting;if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
-  new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else players.forEach(p=>p.pause());},{threshold:.15}).observe(deckHost);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)players.forEach(p=>p.pause());else if(visible)activePlayer?.play();});
-  const gallery={refresh(){if(visible)activePlayer?.play();},get deck(){return deck;}};galleries.push(gallery);return gallery;
+  new IntersectionObserver(([entry])=>{const wasNear=near;near=entry.isIntersecting;if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));else if(wasNear&&!visible)warmer.cancel();},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
+  new IntersectionObserver(([entry])=>{const wasVisible=visible;visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else{players.forEach(p=>p.pause());if(wasVisible&&!near)warmer.cancel();}},{threshold:.15}).observe(deckHost);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){warmer.cancel();players.forEach(p=>p.pause());}else{if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));if(visible)activePlayer?.play();}});
+  const gallery={refresh(){if(visible)activePlayer?.play();},prepare(){if(!root.dataset.prepareAt)root.dataset.prepareAt=performance.now().toFixed(1);return prioritizePlayer(activePlayer);},get deck(){return deck;}};galleries.push(gallery);return gallery;
 }
 
 function mountNear(host,mount){
-  let started=false;
-  const run=()=>{if(started)return;started=true;return Promise.resolve().then(mount).then(()=>{host.classList.add('is-mounted');scrollReveal.refresh();}).catch(error=>console.error('Section failed to load',host.id,error));};
-  if(!('IntersectionObserver' in window))return run();
-  const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){observer.disconnect();run();}},{rootMargin:'650px 0px',threshold:0});
+  let runPromise=null,observer;
+  const run=()=>{if(!runPromise){observer?.disconnect();host.dataset.mountRequestedAt=performance.now().toFixed(1);runPromise=Promise.resolve().then(mount).then(value=>{host.classList.add('is-mounted');scrollReveal.refresh();return value;}).catch(error=>console.error('Section failed to load',host.id,error));}return runPromise;};
+  if(!('IntersectionObserver' in window)){run();return run;}
+  observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))run();},{rootMargin:'650px 0px',threshold:0});
   observer.observe(host);
   // Direct section links must not depend on the previous sections being mounted.
-  if(location.hash&&host.closest(location.hash)){observer.disconnect();run();}
+  const target=location.hash?document.getElementById(location.hash.slice(1)):null;
+  if(target?.contains(host))run();
+  return run;
 }
 async function boot(){
   // Start the wall before the lower-page data and gallery DOM work.
   const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
   const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json'),getJSON('assets/media/manifest.json'),getJSON('data/chapters.json'),getJSON('data/skill-media.json')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
-  mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}));
-  mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'}));
-  mountNear($('#l2-gallery'),()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true}));
-  mountNear($('#long-gallery'),()=>mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true}));
+  const galleryMounts=new Map([
+    ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],
+    ['#level-one',mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'}))],
+    ['#level-two',mountNear($('#l2-gallery'),()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true}))],
+    ['#long-horizon',mountNear($('#long-gallery'),()=>mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true}))]
+  ]);
+  for(const [hash,run] of galleryMounts){
+    document.querySelectorAll(`a[href="${hash}"]`).forEach(link=>{
+      const prepare=()=>{run().then(gallery=>gallery?.prepare());};
+      for(const event of ['pointerenter','focus','click'])link.addEventListener(event,prepare);
+    });
+  }
   mountNear($('#method-root'),()=>mountMethodFigure($('#method-root')));
   mountNear($('#dataset-root'),()=>mountDatasetFilms($('#dataset-root')));
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
