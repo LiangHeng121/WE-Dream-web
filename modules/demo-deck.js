@@ -31,6 +31,8 @@ function isInteractive(target) {
  * @param {Array} options.items
  * @param {function} options.renderCard (item, index) => HTMLElement. Player ownership stays with the caller.
  * @param {function} options.onActiveChange (index, { item, card, previousIndex, reason }) => void.
+ * @param {function} options.onNavigationIntent (index, { item, card, reason }) => void | Promise. A promise gates programmatic motion until a frame is prepared.
+ * @param {function} options.onMotionChange (moving, { index, reason }) => void. Old players may keep playing until moving becomes false.
  * @returns {{setItems:Function,goTo:Function,prev:Function,next:Function,getActiveIndex:Function,getActiveCard:Function,refresh:Function,destroy:Function}}
  */
 export function createDemoDeck(root, options = {}) {
@@ -53,6 +55,13 @@ export function createDemoDeck(root, options = {}) {
   let reason = 'init';
   let disposed = false;
   let itemRevision = 0;
+  let navigationTicket = 0;
+  let animationFrame = 0;
+  let waitingForMedia = false;
+  let moving = false;
+  let geometry = [];
+  let lastDragIntent = -1;
+  let ignoreScrollUntil = 0;
 
   root.classList.add('demo-deck');
   root.setAttribute('role', 'region');
@@ -86,13 +95,49 @@ export function createDemoDeck(root, options = {}) {
     return Math.max(0, Math.min(items.length - 1, Number.isFinite(Number(index)) ? Math.round(Number(index)) : 0));
   }
 
-  // Adapted from Psi0: center the selected card in the native scrolling reel.
-  function centerCardInReel(card, behavior = 'smooth') {
-    if (!card || reel.clientWidth === 0) return;
-    const reelRect = reel.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
-    const offset = (cardRect.left - reelRect.left) - (reel.clientWidth - cardRect.width) / 2;
-    reel.scrollBy({ left: offset, behavior: reducedMotion.matches ? 'instant' : behavior });
+  function setMotion(value, index = pendingIndex ?? activeIndex) {
+    if (moving === value) return;
+    moving = value;
+    reel.dataset.moving = String(value);
+    options.onMotionChange?.(value, { index, reason });
+  }
+
+  function clearNavigation({ releaseControl = true } = {}) {
+    navigationTicket++;
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    clearTimeout(settleTimer);
+    waitingForMedia = false;
+    root.removeAttribute('aria-busy');
+    if (releaseControl) reel.dataset.controlled = 'false';
+  }
+
+  function measureCards() {
+    geometry = cards.map(card => ({ center: card.offsetLeft + card.offsetWidth / 2, width: card.offsetWidth }));
+  }
+
+  // Psi0's center geometry, measured before animation rather than on every frame.
+  function centeredPosition(index) {
+    return Math.max(0, Math.min(reel.scrollWidth - reel.clientWidth, geometry[index].center - reel.clientWidth / 2));
+  }
+
+  function updateVisuals() {
+    if (!geometry.length || !reel.clientWidth) return;
+    const center = reel.scrollLeft + reel.clientWidth / 2;
+    geometry.forEach((entry, index) => {
+      const stride = geometry[index + 1]?.center - entry.center || entry.center - geometry[index - 1]?.center || entry.width;
+      const distance = Math.min(2, Math.abs(entry.center - center) / Math.max(stride, 1));
+      const local = distance <= 1 ? distance : distance - 1;
+      const progress = local * local * (3 - 2 * local);
+      const scale = distance <= 1 ? 1 - .06 * progress : .94 - .03 * progress;
+      const opacity = distance <= 1 ? 1 - .32 * progress : .68 - .23 * progress;
+      const value = `${scale.toFixed(4)},${opacity.toFixed(4)}`;
+      const card = cards[index];
+      if (card._deckVisual === value) return;
+      card._deckVisual = value;
+      card.style.setProperty('--demo-deck-scale', scale.toFixed(4));
+      card.style.setProperty('--demo-deck-opacity', opacity.toFixed(4));
+    });
   }
 
   // Adapted from Psi0: equal edge insets also center the first and last card.
@@ -106,6 +151,7 @@ export function createDemoDeck(root, options = {}) {
     reel.style.setProperty('--demo-deck-card-width', `${width}px`);
     const inset = Math.max((reel.clientWidth - cards[0].offsetWidth) / 2, 0);
     reel.style.setProperty('--demo-deck-edge-inset', `${inset}px`);
+    measureCards();
   }
 
   function closestIndex() {
@@ -113,9 +159,8 @@ export function createDemoDeck(root, options = {}) {
     const reelCenter = reel.scrollLeft + reel.clientWidth / 2;
     let closest = 0;
     let closestDistance = Number.POSITIVE_INFINITY;
-    cards.forEach((card, index) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - reelCenter);
+    geometry.forEach((entry, index) => {
+      const distance = Math.abs(entry.center - reelCenter);
       if (distance < closestDistance) {
         closestDistance = distance;
         closest = index;
@@ -126,7 +171,7 @@ export function createDemoDeck(root, options = {}) {
 
   // Adapted from Psi0 setActiveCard. Video play/pause belongs to the caller.
   function setActiveCard(index, changeReason = reason) {
-    if (index < 0 || !cards[index]) return;
+    if (index < 0 || !cards[index] || index === activeIndex) return;
     const previousIndex = activeIndex;
     activeIndex = index;
     cards.forEach((card, cardIndex) => {
@@ -153,25 +198,88 @@ export function createDemoDeck(root, options = {}) {
     if (scrollFrame || disposed) return;
     scrollFrame = requestAnimationFrame(() => {
       scrollFrame = 0;
-      if (reel.clientWidth > 0) setActiveCard(closestIndex());
+      if (reel.clientWidth > 0) {
+        updateVisuals();
+        setActiveCard(closestIndex());
+      }
     });
   }
 
   function settle() {
     clearTimeout(settleTimer);
+    if (disposed || animationFrame || waitingForMedia || pointer?.dragging) return;
+    updateVisuals();
+    if (reel.clientWidth > 0) setActiveCard(closestIndex());
     pendingIndex = null;
-    if (!pointer?.dragging) scheduleActive();
+    reel.dataset.controlled = 'false';
+    setMotion(false, activeIndex);
   }
 
   function goTo(index, { behavior = 'smooth', reason: requestedReason = 'api' } = {}) {
     if (disposed || !cards.length) return;
+    cancelAnimationFrame(layoutFrame);
+    layoutFrame = 0;
+    clearNavigation({ releaseControl: false });
+    if (moving) {
+      updateVisuals();
+      setActiveCard(closestIndex());
+      setMotion(false, activeIndex);
+    }
     reason = requestedReason;
     pendingIndex = clampIndex(index);
-    if (reel.clientWidth === 0) setActiveCard(pendingIndex, reason);
-    else {
-      centerCardInReel(cards[pendingIndex], behavior);
-      scheduleActive();
+    const targetIndex = pendingIndex;
+    const ticket = navigationTicket;
+    reel.dataset.controlled = 'true';
+    const begin = () => {
+      if (disposed || ticket !== navigationTicket) return;
+      waitingForMedia = false;
+      root.removeAttribute('aria-busy');
+      if (reel.clientWidth === 0) {
+        setActiveCard(targetIndex, reason);
+        pendingIndex = null;
+        reel.dataset.controlled = 'false';
+        return;
+      }
+      updateReelInsets();
+      const start = reel.scrollLeft;
+      const target = centeredPosition(targetIndex);
+      const distance = target - start;
+      if (reducedMotion.matches || behavior !== 'smooth' || Math.abs(distance) < .5) {
+        ignoreScrollUntil = performance.now() + 80;
+        reel.scrollLeft = target;
+        updateVisuals();
+        setActiveCard(targetIndex, reason);
+        settle();
+        return;
+      }
+      const stride = geometry[targetIndex].width || reel.clientWidth;
+      const duration = Math.max(240, Math.min(520, 480 * Math.sqrt(Math.abs(distance) / stride)));
+      const started = performance.now();
+      setMotion(true, targetIndex);
+      const animate = now => {
+        if (disposed || ticket !== navigationTicket) return;
+        const progress = Math.min(1, (now - started) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        reel.scrollLeft = start + distance * eased;
+        updateVisuals();
+        setActiveCard(closestIndex());
+        if (progress < 1) animationFrame = requestAnimationFrame(animate);
+        else {
+          animationFrame = 0;
+          ignoreScrollUntil = now + 80;
+          settle();
+        }
+      };
+      animationFrame = requestAnimationFrame(animate);
     }
+    let preparation;
+    try { preparation = options.onNavigationIntent?.(targetIndex, { item: items[targetIndex], card: cards[targetIndex], reason }); }
+    catch { /* A media preparation failure must not disable navigation. */ }
+    if (preparation && typeof preparation.then === 'function') {
+      waitingForMedia = true;
+      root.setAttribute('aria-busy', 'true');
+      Promise.resolve(preparation).then(begin, begin);
+    } else begin();
   }
 
   function step(direction, changeReason) {
@@ -181,13 +289,18 @@ export function createDemoDeck(root, options = {}) {
 
   function refresh() {
     if (disposed) return;
+    const selected = clampIndex(pendingIndex ?? Math.max(activeIndex, 0));
+    clearNavigation();
+    setMotion(false, activeIndex);
     cancelAnimationFrame(layoutFrame);
     layoutFrame = requestAnimationFrame(() => {
       layoutFrame = 0;
       if (reel.clientWidth === 0 || !cards.length) return;
-      const index = clampIndex(pendingIndex ?? Math.max(activeIndex, 0));
+      const index = selected;
       updateReelInsets();
-      centerCardInReel(cards[index], 'instant');
+      ignoreScrollUntil = performance.now() + 80;
+      reel.scrollLeft = centeredPosition(index);
+      updateVisuals();
       setActiveCard(index, reason);
       pendingIndex = null;
     });
@@ -196,7 +309,9 @@ export function createDemoDeck(root, options = {}) {
   function setItems(nextItems, { index = 0 } = {}) {
     if (disposed) return;
     if (!Array.isArray(nextItems)) throw new TypeError('Demo deck items must be an array.');
-    clearTimeout(settleTimer);
+    clearNavigation();
+    setMotion(false, activeIndex);
+    cancelAnimationFrame(layoutFrame);
     cancelAnimationFrame(scrollFrame);
     scrollFrame = 0;
     const oldPointerId = pointer?.id;
@@ -204,6 +319,8 @@ export function createDemoDeck(root, options = {}) {
     if (oldPointerId !== undefined && reel.hasPointerCapture(oldPointerId)) reel.releasePointerCapture(oldPointerId);
     reel.dataset.dragging = 'false';
     const revision = ++itemRevision;
+    geometry = [];
+    lastDragIntent = -1;
     items = nextItems.slice();
     activeIndex = -1;
     pendingIndex = items.length ? clampIndex(index) : null;
@@ -244,11 +361,22 @@ export function createDemoDeck(root, options = {}) {
   previous.addEventListener('click', () => step(-1, 'button'), { signal });
   next.addEventListener('click', () => step(1, 'button'), { signal });
   reel.addEventListener('scroll', () => {
+    if (animationFrame || waitingForMedia) return;
+    if (!moving && performance.now() > ignoreScrollUntil) setMotion(true);
     scheduleActive();
     clearTimeout(settleTimer);
     settleTimer = setTimeout(settle, 150);
   }, { passive: true, signal });
   reel.addEventListener('scrollend', settle, { signal });
+  reel.addEventListener('wheel', event => {
+    if (!event.deltaX && !event.shiftKey) return;
+    clearNavigation();
+    reason = 'wheel';
+    pendingIndex = null;
+    ignoreScrollUntil = 0;
+    setMotion(true, activeIndex);
+    settleTimer = setTimeout(settle, 150);
+  }, { passive: true, signal });
   reel.addEventListener('keydown', event => {
     if (isInteractive(event.target) || !cards.length) return;
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -270,7 +398,13 @@ export function createDemoDeck(root, options = {}) {
   // Psi0's pointer drag adapted to preserve vertical page scrolling and controls.
   reel.addEventListener('pointerdown', event => {
     if (event.button !== 0 || !event.isPrimary || isInteractive(event.target) || cards.length < 2) return;
+    if (animationFrame || waitingForMedia) {
+      clearNavigation({ releaseControl: false });
+      setMotion(false, activeIndex);
+      pendingIndex = null;
+    }
     pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, left: reel.scrollLeft, dragging: false };
+    lastDragIntent = -1;
   }, { signal });
   reel.addEventListener('pointermove', event => {
     if (!pointer || pointer.id !== event.pointerId) return;
@@ -279,6 +413,7 @@ export function createDemoDeck(root, options = {}) {
     if (!pointer.dragging) {
       if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
         pointer = null;
+        settle();
         return;
       }
       if (Math.abs(deltaX) < 6) return;
@@ -286,21 +421,32 @@ export function createDemoDeck(root, options = {}) {
       pendingIndex = null;
       reason = 'drag';
       reel.dataset.dragging = 'true';
+      reel.dataset.controlled = 'false';
       reel.setPointerCapture(event.pointerId);
+      setMotion(true, activeIndex);
     }
     if (event.cancelable) event.preventDefault();
     reel.scrollLeft = pointer.left - deltaX;
+    const nearby = closestIndex();
+    const intent = clampIndex(nearby + (deltaX < 0 ? 1 : -1));
+    if (intent !== lastDragIntent) {
+      lastDragIntent = intent;
+      try {
+        Promise.resolve(options.onNavigationIntent?.(intent, { item: items[intent], card: cards[intent], reason: 'drag' })).catch(() => {});
+      } catch { /* Dragging remains available if preparation fails. */ }
+    }
   }, { signal });
   function endDrag(event) {
     if (!pointer || pointer.id !== event.pointerId) return;
     const dragged = pointer.dragging;
     pointer = null;
+    if (dragged) reel.dataset.controlled = 'true';
     reel.dataset.dragging = 'false';
     if (reel.hasPointerCapture(event.pointerId)) reel.releasePointerCapture(event.pointerId);
     if (dragged) {
       suppressClickUntil = performance.now() + 350;
       goTo(closestIndex(), { reason: 'drag' });
-    }
+    } else settle();
   }
   window.addEventListener('pointerup', endDrag, { signal });
   window.addEventListener('pointercancel', endDrag, { signal });
@@ -321,6 +467,11 @@ export function createDemoDeck(root, options = {}) {
     refresh,
     destroy() {
       if (disposed) return;
+      clearNavigation();
+      setMotion(false, activeIndex);
+      const oldPointerId = pointer?.id;
+      pointer = null;
+      if (oldPointerId !== undefined && reel.hasPointerCapture(oldPointerId)) reel.releasePointerCapture(oldPointerId);
       disposed = true;
       controller.abort();
       resizeObserver.disconnect();

@@ -10,15 +10,13 @@
 .demo-deck *,.demo-deck *::before,.demo-deck *::after{box-sizing:border-box}
 .demo-deck [hidden]{display:none!important}
 .demo-deck-frame{position:relative;min-width:0}
-.demo-deck-reel{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:var(--demo-deck-card-width,84%);gap:var(--demo-deck-gap);align-items:center;padding:15px var(--demo-deck-edge-inset,8%) 25px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain;cursor:grab;touch-action:pan-y}
+.demo-deck-reel{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:var(--demo-deck-card-width,84%);gap:var(--demo-deck-gap);align-items:center;padding:15px var(--demo-deck-edge-inset,8%) 25px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:auto;scrollbar-width:none;overscroll-behavior-x:contain;cursor:grab;touch-action:pan-y}
 .demo-deck-reel::-webkit-scrollbar{display:none}
 .demo-deck-reel:focus-visible{outline:3px solid #83b7d6;outline-offset:-3px;border-radius:26px}
 .demo-deck-reel[data-dragging=true]{cursor:grabbing;scroll-snap-type:none;scroll-behavior:auto}
+.demo-deck-reel[data-controlled=true]{scroll-snap-type:none}
 .demo-deck-reel[data-dragging=true] *{user-select:none;cursor:grabbing}
-.demo-deck-card{position:relative;min-width:0;aspect-ratio:16/9;align-self:center;border:0;border-radius:25px;background:#e8eef5;overflow:hidden;scroll-snap-align:center;transform:scale(.93);transform-origin:center;opacity:.6;filter:saturate(.75);transition:transform .36s ease,opacity .36s ease,filter .36s ease,box-shadow .36s ease;box-shadow:0 10px 25px #4b6b8914}
-.demo-deck-card[data-active=true]{transform:scale(1);opacity:1;filter:none;box-shadow:0 12px 30px #4b6b8924}
-.demo-deck-card[data-near=true]{transform:scale(.94);opacity:.68}
-.demo-deck-card[data-far=true]{transform:scale(.91);opacity:.45}
+.demo-deck-card{position:relative;min-width:0;aspect-ratio:16/9;align-self:center;border:0;border-radius:25px;background:#e8eef5;overflow:hidden;scroll-snap-align:center;transform:scale(var(--demo-deck-scale,.93));transform-origin:center;opacity:var(--demo-deck-opacity,.6);box-shadow:0 12px 30px #4b6b8920}
 .demo-deck-content{width:100%;height:100%;aspect-ratio:16/9;min-width:0}
 .demo-deck-content>.demo-card-inner{width:100%;height:100%;aspect-ratio:16/9}
 .demo-deck-content video,.demo-deck-content img{display:block;width:100%;height:100%;object-fit:contain}

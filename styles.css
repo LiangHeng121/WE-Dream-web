@@ -161,3 +161,14 @@
   #l1-gallery .l1-task-text{gap:4px}
 }
 @media(prefers-reduced-motion:reduce){#l1-gallery .l1-condition,#l1-gallery .l1-task-row{transition:none}}
+
+/* Keep gallery players attached between category changes; animate their outer
+   shells so the existing card geometry and controls remain unchanged. */
+.gallery-deck-stack{display:grid;grid-template-columns:minmax(0,1fr);position:relative;overflow:clip;isolation:isolate}
+.gallery-group-deck{grid-area:1/1;min-width:0;width:100%}
+.gallery-group-deck[hidden]{display:none!important}
+.gallery-root:empty{min-height:560px}
+#method-root:empty{min-height:600px}
+#dataset-root:empty{min-height:650px}
+#results-root:empty{min-height:440px}
+@media(max-width:760px){.gallery-root:empty{min-height:630px}#method-root:empty{min-height:740px}#dataset-root:empty{min-height:820px}}

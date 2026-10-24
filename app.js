@@ -3,6 +3,7 @@ import { createDemoDeck } from './modules/demo-deck.js';
 import { createStagePlayer } from './modules/stage-player.js';
 import { createSkillMix } from './modules/skill-mix.js';
 import { seekVideo } from './modules/video-seek.js';
+import { warmVideo } from './modules/video-warm.js';
 import { mountScrollReveal } from './modules/scroll-reveal.js';
 const mountMethodFigure = root => import('./modules/method-figure.js').then(m=>m.mountMethodFigure(root));
 const mountDatasetFilms = root => import('./modules/dataset-films.js').then(m=>m.mountDatasetFilms(root));
@@ -34,7 +35,10 @@ function buildL1TaskGroups(groups) {
 
 function mountGallery(root, groups, {label, badge, single = false, long = false, stages = false} = {}) {
   let groupIndex=0, activeItem=null, activeCard=null, activePlayer=null, visible=false, stageController=null;
-  let players=[];
+  const players=[];
+  const playerCache=new Map(), groupDecks=new Map(), transitioning=new Set();
+  let deck, currentGroup=null, groupRevision=0, groupAnimations=[], near=false, groupSelection=Promise.resolve(), inMotion=false;
+  const constrained=Boolean(navigator.connection?.saveData||/^(slow-)?2g$/.test(navigator.connection?.effectiveType||''));
   const isL1=root.id==='l1-gallery', l1Tasks=isL1?buildL1TaskGroups(groups):[];
   root.classList.toggle('long-layout',long);
   root.classList.toggle('composition-layout',stages&&!long);
@@ -82,6 +86,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     });
   }
   function renderCard(item) {
+    if(playerCache.has(item.id))return playerCache.get(item.id).frame;
     const media=manifest.videos[item.id]||{};
     const frame=document.createElement('div');frame.className='demo-card-inner';
     frame.innerHTML=`<video class="demo-video" muted loop playsinline preload="none" aria-label="${html(item.title)} — complete demonstration"></video><iframe class="drive-video" title="${html(item.title)} — original demonstration" allow="autoplay; fullscreen" allowfullscreen hidden></iframe><span class="video-tag">${html(badge)} · FULL SEQUENCE</span><div class="video-controls" data-deck-no-drag><button class="play-button" type="button" aria-label="Play video">▶</button><span class="video-time">0:00 / ${clock(media.duration||item.duration)}</span><div class="video-progress"><input class="video-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress" disabled></div><button class="speed-button" type="button" aria-label="Playback speed 1 times">1×</button><button class="fullscreen-button" type="button" aria-label="Enter fullscreen">⛶</button></div><div class="video-error" hidden><p>This video could not load.</p><a href="${html(item.sourceUrl)}" target="_blank" rel="noopener">Watch the full original ↗</a></div>`;
@@ -90,18 +95,20 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     else if(item.poster) video.poster=item.poster;
     let loaded=false,userPaused=false,speed=1,wantPlay=false,seekTicket=0;
     const player={item,frame,video,remote,
-      load(){
+      load(preload='metadata'){
         const m=manifest.videos[item.id]||{};
         if(m.ready){
           remote.hidden=true;remote.removeAttribute('src');video.hidden=false;$('.video-controls',frame).hidden=false;
-          if(!loaded){video.src=m.src;video.preload='metadata';if(m.poster)video.poster=m.poster;loaded=true;}
+          if(!loaded){video.preload=preload;video.src=m.src;if(m.poster)video.poster=m.poster;loaded=true;}
+          if(preload==='auto')video.preload='auto';
         }else{video.hidden=true;$('.video-controls',frame).hidden=true;remote.hidden=false;if(!remote.src)remote.src=`https://drive.google.com/file/d/${encodeURIComponent(item.id)}/preview`;}
       },
-      play(){this.load();wantPlay=loaded&&!document.hidden&&!userPaused&&!reduced.matches;if(wantPlay)guardedPlay();},
+      warm(){this.load('auto');return loaded?warmVideo(video):undefined;},
+      play(){this.load('auto');wantPlay=loaded&&!document.hidden&&!userPaused&&!reduced.matches;if(wantPlay)guardedPlay();},
       pause(){wantPlay=false;video.pause();if(!remote.hidden){remote.removeAttribute('src');remote.hidden=true;}},
       dispose(){this.pause();video.removeAttribute('src');video.load();},
       resetUserPause(){userPaused=false;wantPlay=true;},
-      canResume(){return wantPlay&&!userPaused&&visible&&!document.hidden&&activePlayer===this;}
+      canResume(){return wantPlay&&!userPaused&&visible&&!document.hidden&&(activePlayer===this||transitioning.has(this));}
     };
     function guardedPlay(){if(!player.canResume())return;video.play().then(()=>{if(!player.canResume())video.pause();}).catch(()=>{});}
     const update=()=>{play.textContent=video.paused?'▶':'Ⅱ';play.setAttribute('aria-label',video.paused?'Play video':'Pause video');};
@@ -121,10 +128,10 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     $('.fullscreen-button',frame).addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if(frame.requestFullscreen)await frame.requestFullscreen();else video.webkitEnterFullscreen?.();}catch{}});
     const full=$('.fullscreen-button',frame);if(!frame.requestFullscreen&&!video.webkitEnterFullscreen)full.hidden=true;
     frame.addEventListener('fullscreenchange',()=>{full.setAttribute('aria-label',document.fullscreenElement===frame?'Exit fullscreen':'Enter fullscreen');});
-    players.push(player);return frame;
+    players.push(player);playerCache.set(item.id,player);return frame;
   }
   function onActive(index,{item,card}) {
-    players.forEach(p=>p.pause());stageController?.destroy();stageController=null;
+    players.forEach(p=>{if(p.item.id!==item.id&&!transitioning.has(p))p.pause();});stageController?.destroy();stageController=null;
     activeItem=item;activeCard=card;activePlayer=players.find(p=>p.item.id===item.id);
     if(single)syncTabs(index);
     syncL1Tasks(index);
@@ -138,27 +145,119 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     }
     $('.original-video-link',root).href=item.sourceUrl;
     if(long&&chapters.clips[item.id]){
-      // Stage seeking needs metadata, even when playback awaits intersection.
-      activePlayer.load();
+      // The chapter UI can mount before media; approaching the section warms it.
+      if(near||visible)activePlayer.load();
       const stagePlayer=activePlayer;
       stageController=createStagePlayer(stageRoot,chapters.clips[item.id],stagePlayer.video,{requestPlay:()=>stagePlayer.resetUserPause(),canPlay:()=>stagePlayer.canResume()});
     }else if(stages&&chapters.clips[item.id]){stageController=createSkillMix(stageRoot,chapters.clips[item.id],skillMedia);}
     else stageRoot.replaceChildren();
     if(visible)activePlayer.play();
+    if(near)warmNeighbors(index);
   }
-  const deck=createDemoDeck($('.deck-host',root),{items:single?groups.flatMap(g=>g.clips):groups[0].clips,renderCard,onActiveChange:onActive,label});
+  const deckHost=$('.deck-host',root);
+  deckHost.classList.add('gallery-deck-stack');
+  function motion(moving,{index}={}) {
+    inMotion=moving;
+    if(moving&&visible){
+      if(activePlayer)transitioning.add(activePlayer);
+      const item=currentGroup?.items[index],target=item&&playerCache.get(item.id);
+      if(target){transitioning.add(target);target.play();}
+    }
+    if(!moving){
+      transitioning.clear();
+      players.forEach(p=>{if(p!==activePlayer)p.pause();});
+      if(visible)activePlayer?.play();
+    }
+  }
+  function navigationIntent(index,{item,reason}) {
+    const target=playerCache.get(item.id);
+    if(!target)return;
+    const ready=target.warm();
+    if(visible&&inMotion){
+      transitioning.clear();players.forEach(p=>{if(p!==activePlayer&&p!==target)p.pause();});
+      if(activePlayer)transitioning.add(activePlayer);
+      transitioning.add(target);
+      target.play();
+    }
+    return ready;
+  }
+  function warmNeighbors(index) {
+    if(!near||!currentGroup)return;
+    const clips=currentGroup.items;
+    // Only the visible section competes for HD bandwidth, with at most two
+    // adjacent clips. A data-saver connection only warms the selected clip.
+    for(const i of constrained?[index]:[index,index+1,index-1]){
+      if(clips[i])playerCache.get(clips[i].id)?.warm();
+    }
+  }
+  function getGroup(index) {
+    if(groupDecks.has(index))return groupDecks.get(index);
+    const host=document.createElement('div');host.className='gallery-group-deck';
+    host.hidden=true;host.inert=true;host.setAttribute('aria-hidden','true');deckHost.append(host);
+    const record={host,items:single?groups.flatMap(g=>g.clips):groups[index].clips,deck:null};
+    groupDecks.set(index,record);
+    record.deck=createDemoDeck(host,{items:record.items,renderCard,label,
+      onActiveChange:(i,detail)=>{if(currentGroup===record)onActive(i,detail);},
+      onNavigationIntent:(i,detail)=>currentGroup===record?navigationIntent(i,detail):undefined,
+      onMotionChange:(moving,detail)=>{if(currentGroup===record)motion(moving,detail);}
+    });
+    return record;
+  }
+  function activateGroup(record){
+    if(currentGroup!==record)inMotion=false;
+    currentGroup=record;deck=record.deck;
+    record.host.hidden=false;record.host.inert=false;record.host.setAttribute('aria-hidden','false');
+    deck.refresh();
+    const index=Math.max(0,deck.getActiveIndex());
+    onActive(index,{item:record.items[index],card:deck.getActiveCard()});
+  }
+  activateGroup(getGroup(0));
+  function finishGroups(){
+    groupAnimations.forEach(animation=>animation.cancel());groupAnimations=[];
+    for(const record of groupDecks.values())if(record!==currentGroup){record.host.hidden=true;record.host.inert=true;record.host.setAttribute('aria-hidden','true');}
+    if(currentGroup){currentGroup.host.inert=false;currentGroup.host.setAttribute('aria-hidden','false');}
+    if(!inMotion)motion(false);
+  }
   function selectGroup(index){
-    if(single){deck.goTo(index);return;}
-    if(index===groupIndex)return;
-    players.forEach(p=>p.dispose());players=[];stageController?.destroy();stageController=null;
-    syncTabs(index);syncL1Tasks(0);deck.setItems(groups[index].clips);
-    if(isL1&&!reduced.matches)l1Panels[index].animate([{opacity:.3,transform:'translateY(-4px)'},{opacity:1,transform:'translateY(0)'}],{duration:240,easing:'ease-out'});
-    if(!reduced.matches) $('.deck-host',root).animate([{opacity:.35,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:350});
+    if(single){deck.goTo(index);return Promise.resolve();}
+    if(index===groupIndex)return groupSelection;
+    groupSelection=changeGroup(index);return groupSelection;
   }
-  tabs.forEach((t,i)=>t.addEventListener('click',()=>selectGroup(i)));
-  l1Rows.forEach(row=>row.addEventListener('click',()=>{
+  async function changeGroup(index){
+    const ticket=++groupRevision,previousIndex=groupIndex;
+    finishGroups();
+    const previous=currentGroup,target=getGroup(index);
+    syncTabs(index);syncL1Tasks(0);deckHost.setAttribute('aria-busy','true');
+    const nextIndex=Math.max(0,target.deck.getActiveIndex());
+    await playerCache.get(target.items[nextIndex].id)?.warm();
+    if(ticket!==groupRevision)return;
+    deckHost.removeAttribute('aria-busy');
+    transitioning.clear();
+    if(activePlayer)transitioning.add(activePlayer);
+    activateGroup(target);
+    if(previous===target){finishGroups();return;}
+    previous.host.inert=true;previous.host.setAttribute('aria-hidden','true');
+    if(!reduced.matches){
+      const direction=index>previousIndex?1:-1;
+      const timing={duration:480,easing:'cubic-bezier(.22,.68,.18,1)',fill:'both'};
+      groupAnimations=[
+        previous.host.animate([{transform:'translate3d(0,0,0)',opacity:1},{transform:`translate3d(${-direction*100}%,0,0)`,opacity:.65}],timing),
+        target.host.animate([{transform:`translate3d(${direction*100}%,0,0)`,opacity:.65},{transform:'translate3d(0,0,0)',opacity:1}],timing)
+      ];
+      await Promise.allSettled(groupAnimations.map(animation=>animation.finished));
+    }
+    if(ticket===groupRevision)finishGroups();
+  }
+  tabs.forEach((t,i)=>{
+    t.addEventListener('click',()=>selectGroup(i));
+    const prime=()=>{if(!near||constrained)return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];playerCache.get(clip.id)?.warm();};
+    t.addEventListener('pointerenter',prime);t.addEventListener('focus',prime);
+  });
+  l1Rows.forEach(row=>row.addEventListener('click',async()=>{
     const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)];
-    if(condition!==groupIndex)selectGroup(condition);
+    const selection=selectGroup(condition),ticket=groupRevision;
+    await selection;
+    if(ticket!==groupRevision||condition!==groupIndex||currentGroup!==groupDecks.get(condition))return;
     deck.goTo(task.indices[0],{reason:'task-group'});
   }));
   $('.task-rail',root).addEventListener('keydown',e=>{
@@ -167,22 +266,36 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     const index=e.key==='Home'?0:e.key==='End'?tabs.length-1:(current+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)+tabs.length)%tabs.length;
     selectGroup(index);tabs[index].focus({preventScroll:true});
   });
-  new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible)activePlayer?.play();else players.forEach(p=>p.pause());},{threshold:.15}).observe($('.deck-host',root));
+  new IntersectionObserver(([entry])=>{near=entry.isIntersecting;if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
+  new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else players.forEach(p=>p.pause());},{threshold:.15}).observe(deckHost);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)players.forEach(p=>p.pause());else if(visible)activePlayer?.play();});
-  const gallery={refresh(){if(visible)activePlayer?.play();},deck};galleries.push(gallery);return gallery;
+  const gallery={refresh(){if(visible)activePlayer?.play();},get deck(){return deck;}};galleries.push(gallery);return gallery;
 }
 
+function mountNear(host,mount){
+  let started=false;
+  const run=()=>{if(started)return;started=true;return Promise.resolve().then(mount).then(()=>{host.classList.add('is-mounted');scrollReveal.refresh();}).catch(error=>console.error('Section failed to load',host.id,error));};
+  if(!('IntersectionObserver' in window))return run();
+  const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){observer.disconnect();run();}},{rootMargin:'650px 0px',threshold:0});
+  observer.observe(host);
+  // Direct section links must not depend on the previous sections being mounted.
+  if(location.hash&&host.closest(location.hash)){observer.disconnect();run();}
+}
 async function boot(){
+  // Start the wall before the lower-page data and gallery DOM work.
+  const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
   const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json'),getJSON('assets/media/manifest.json'),getJSON('data/chapters.json'),getJSON('data/skill-media.json')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
-  mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'});
-  mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'});
-  mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true});
-  mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true});
+  mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}));
+  mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'}));
+  mountNear($('#l2-gallery'),()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true}));
+  mountNear($('#long-gallery'),()=>mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true}));
+  mountNear($('#method-root'),()=>mountMethodFigure($('#method-root')));
+  mountNear($('#dataset-root'),()=>mountDatasetFilms($('#dataset-root')));
+  mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
   scrollReveal.refresh();
   if(content.project.authors.length){const a=$('#authors');a.textContent=content.project.authors.join(' · ');a.hidden=false;}
-  const results=await Promise.allSettled([mountHeroWall($('.hero')),mountMethodFigure($('#method-root')),mountDatasetFilms($('#dataset-root')),mountResultsExplorer($('#results-root'))].map(work=>Promise.resolve(work).then(value=>{scrollReveal.refresh();return value;})));
-  results.forEach((result,i)=>{if(result.status==='rejected'){const name=['hero','method','dataset','results'][i];console.error(name,result.reason);const host=$(['.hero','#method-root','#dataset-root','#results-root'][i]);if(i>0){const message=document.createElement('p');message.className='module-error';message.textContent='This section could not load. Please refresh the page.';host.append(message);}}});
+  await hero;
 }
 const menu=$('.menu-toggle'),mobile=$('#mobile-nav');
 menu.addEventListener('click',()=>{const opened=menu.getAttribute('aria-expanded')==='true';menu.setAttribute('aria-expanded',String(!opened));menu.setAttribute('aria-label',opened?'Open navigation':'Close navigation');mobile.hidden=opened;});

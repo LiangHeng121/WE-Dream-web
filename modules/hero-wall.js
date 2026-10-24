@@ -8,6 +8,7 @@ export function createWallPlaybackController({ onChange = () => {}, onWarning = 
   const states = new Map();
   let destroyed = false;
   function status(state, value) {
+    if (state.status === value && state.video.dataset.playAttempts === String(state.attempts)) return;
     state.status = value; state.video.dataset.playback = value;
     state.video.dataset.playAttempts = String(state.attempts); onChange();
   }
@@ -84,6 +85,45 @@ export function createWallPlaybackController({ onChange = () => {}, onWarning = 
   };
 }
 
+// The wall previews are small, complete action loops. Buffer a bounded number at
+// once instead of opening 40 media requests beside the rest of the page. This
+// queue controls requests; preload="auto" alone is only a browser hint.
+export function createWallLoadQueue(items, { load, concurrency = 8, onChange = () => {}, onError = () => {} } = {}) {
+  const entries = items.map((item, index) => ({ item, index, state: 'queued' }));
+  let active = false, destroyed = false, loading = 0;
+  const controller = new AbortController();
+  const snapshot = () => ({ loading, ready: entries.filter(entry => entry.state === 'ready').length, total: entries.length });
+  function pump() {
+    if (!active || destroyed) return;
+    for (const entry of entries) {
+      if (loading >= concurrency) break;
+      if (entry.state !== 'queued') continue;
+      entry.state = 'loading'; loading += 1;
+      Promise.resolve().then(() => load(entry.item, controller.signal)).then(() => {
+        entry.state = 'ready';
+      }, error => {
+        entry.state = 'error';
+        if (!destroyed) onError(entry.item, error);
+      }).finally(() => {
+        loading -= 1;
+        if (!destroyed) { onChange(snapshot()); pump(); }
+      });
+    }
+    onChange(snapshot());
+  }
+  return {
+    setActive(value) { active = value; pump(); },
+    prioritize(item) {
+      const index = entries.findIndex(entry => entry.item === item);
+      if (index > 0) entries.unshift(...entries.splice(index, 1));
+      pump();
+    },
+    retry() { for (const entry of entries) if (entry.state === 'error') entry.state = 'queued'; pump(); },
+    snapshot,
+    destroy() { destroyed = true; active = false; controller.abort(); }
+  };
+}
+
 // A play promise / currentTime does not prove that a frame reached the screen.
 // The reveal uses presented-frame observations, plus enough data for the whole
 // five-second move. A fully buffered looping file also covers a loop boundary.
@@ -149,13 +189,19 @@ export async function mountHeroWall(root) {
   playbackNotice.textContent = 'Some previews could not play. Retry motion';
   playbackNotice.addEventListener('click', () => { manualPlaybackChoice = true; paused = false; playback(true); });
   root.append(playbackNotice);
-  const playbackController = createWallPlaybackController({
-    onChange: () => {
+  let playbackStatusFrame = null;
+  function updatePlaybackStatus() {
+    if (playbackStatusFrame !== null) return;
+    playbackStatusFrame = requestAnimationFrame(() => {
+      playbackStatusFrame = null;
       const videos = [...camera.querySelectorAll('video')];
       root.dataset.wallPlaying = String(videos.filter(video => !video.paused && video.dataset.playback === 'playing').length);
       const issues = videos.filter(video => ['blocked', 'error', 'retry-needed'].includes(video.dataset.playback)).length;
       root.dataset.wallIssues = String(issues); playbackNotice.hidden = issues === 0;
-    },
+    });
+  }
+  const playbackController = createWallPlaybackController({
+    onChange: updatePlaybackStatus,
     onWarning: (video, reason) => {
       console.warn('[WE-Dream video wall]', video.dataset.clipId, reason);
       root.dispatchEvent(new CustomEvent('wallplaybackissue', { detail: { id: video.dataset.clipId, reason } }));
@@ -169,14 +215,58 @@ export async function mountHeroWall(root) {
     tile.className = 'wall-tile'; tile.type = 'button'; tile.tabIndex = -1;
     tile.setAttribute('aria-label', `Explore demonstration ${index + 1}: ${prompts.get(id)?.taskLabel || item.task}`);
     const video = document.createElement('video');
-    video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.preload = 'auto';
+    video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.preload = 'none';
     video.dataset.clipId = id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
-    video.poster = item.poster || ''; video.src = item.src;
+    video.poster = item.poster || ''; video.dataset.source = item.src;
     video.setAttribute('aria-hidden', 'true');
     const frame = document.createElement('div'); frame.className = 'wall-video-frame';
     frame.append(video); tile.append(frame); camera.append(tile);
     tile.addEventListener('click', () => focus(index));
     return { tile, video, item, frame };
+  });
+  // Start with the windows exposed by the initial crop. The source order and
+  // rendered 8-by-5 layout stay unchanged; only network dispatch is reordered.
+  const columns = root.clientWidth <= 760 ? mobileColumns : desktopColumns;
+  const rows = Math.ceil(units.length / columns);
+  const loadOrder = [...units].sort((a, b) => {
+    const distance = unit => {
+      const index = units.indexOf(unit);
+      return Math.hypot((index % columns + .5) / columns - .5, (Math.floor(index / columns) + .5) / rows - .5);
+    };
+    return distance(a) - distance(b);
+  });
+  let queuedPlaybackFrame = null;
+  function schedulePlayback() {
+    if (queuedPlaybackFrame !== null) return;
+    queuedPlaybackFrame = requestAnimationFrame(() => { queuedPlaybackFrame = null; if (root.isConnected) playback(); });
+  }
+  const loadQueue = createWallLoadQueue(loadOrder, {
+    async load(unit, signal) {
+      const request = new AbortController();
+      const abort = () => request.abort(); signal.addEventListener('abort', abort, { once: true });
+      const timeout = setTimeout(abort, 20000);
+      try {
+        const response = await fetch(unit.item.src, { signal: request.signal, priority: 'high' });
+        if (!response.ok) throw new Error(`Wall preview HTTP ${response.status}`);
+        const blob = await response.blob();
+        if (signal.aborted || !root.isConnected) return;
+        unit.objectUrl = URL.createObjectURL(blob);
+        unit.video.preload = 'auto'; unit.video.src = unit.objectUrl;
+        unit.video.dataset.loadMode = 'buffered';
+      } catch (error) {
+        if (signal.aborted || !root.isConnected) throw error;
+        // Keep the native player as a fallback if a host disallows Fetch/Blob.
+        unit.video.preload = 'auto'; unit.video.src = unit.item.src;
+        unit.video.dataset.loadMode = 'native-fallback';
+      } finally {
+        clearTimeout(timeout); signal.removeEventListener('abort', abort);
+      }
+      schedulePlayback();
+    },
+    onChange({ loading, ready, total }) {
+      root.dataset.wallLoading = String(loading);
+      root.dataset.wallLoaded = `${ready}/${total}`;
+    }
   });
   // The controls stay fixed while the original wall camera moves as a whole.
   const focusNavigation = document.createElement('div');
@@ -274,17 +364,16 @@ export async function mountHeroWall(root) {
       if (state.mediaTime !== null && mediaTime !== state.mediaTime) state.advances += 1;
       if (state.mediaTime === null || mediaTime !== state.mediaTime) state.lastFrameAt = now;
       state.count = count; state.mediaTime = mediaTime;
-      video.dataset.frameCount = String(count); video.dataset.frameMediaTime = mediaTime.toFixed(3);
-      video.dataset.lastFrameAt = state.lastFrameAt.toFixed(1);
     };
     if ('requestVideoFrameCallback' in video) {
       video.dataset.frameSource = 'presented-frame-callback';
       const frame = (now, metadata) => {
         if (!video.isConnected) return;
         record(metadata.mediaTime, state.count + 1, now);
-        video.requestVideoFrameCallback(frame);
+        state.callback = video.requestVideoFrameCallback(frame);
       };
-      video.requestVideoFrameCallback(frame);
+      state.callback = video.requestVideoFrameCallback(frame);
+      state.stop = () => video.cancelVideoFrameCallback(state.callback);
     } else {
       // Older browsers expose decode counters instead. Never substitute the
       // playback clock alone: it can advance while a poster is still visible.
@@ -294,12 +383,26 @@ export async function mountHeroWall(root) {
         const count = quality ? quality.totalVideoFrames - quality.droppedVideoFrames : video.webkitDecodedFrameCount || 0;
         if (count > state.count) record(video.currentTime, count, now);
       };
-      video.addEventListener('timeupdate', () => state.sample(performance.now()));
+      const sample = () => state.sample(performance.now());
+      video.addEventListener('timeupdate', sample);
+      state.stop = () => video.removeEventListener('timeupdate', sample);
     }
     return state;
   });
   let revealState = 'warming', revealTimer = null, revealStartCounts = null;
+  const detailedDiagnostics = new URLSearchParams(location.search).has('mediaDebug');
   const diagnostics = root.wallRevealDiagnostics = { version: 1, clock: 'performance.now', duration: 5000, state: revealState, samples: [] };
+  function publishFrameSnapshot() {
+    frameStates.forEach((state, i) => {
+      const video = units[i].video;
+      video.dataset.frameCount = String(state.count);
+      video.dataset.frameMediaTime = state.mediaTime === null ? '' : state.mediaTime.toFixed(3);
+      video.dataset.lastFrameAt = state.lastFrameAt.toFixed(1);
+    });
+  }
+  // QA can request a snapshot without taxing every rendered frame. Normal
+  // visitors incur no diagnostic DOM writes while 40 videos are running.
+  diagnostics.snapshot = () => { publishFrameSnapshot(); return frameStates.map(({ count, advances, mediaTime, lastFrameAt }) => ({ count, advances, mediaTime, lastFrameAt })); };
   root.dataset.wallRevealState = revealState;
   function frameDeltas() { return frameStates.map((state, i) => state.count - (revealStartCounts?.[i] || 0)); }
   function finishReveal(reason = 'completed') {
@@ -314,6 +417,8 @@ export async function mountHeroWall(root) {
       diagnostics.finalFrameDeltas = frameDeltas();
       root.dataset.wallRevealFrameDeltas = JSON.stringify(diagnostics.finalFrameDeltas);
     }
+    publishFrameSnapshot();
+    frameStates.forEach(state => state.stop());
   }
   drift.addEventListener('animationend', event => {
     if (event.target === drift && event.animationName === 'wall-reveal') finishReveal();
@@ -322,6 +427,10 @@ export async function mountHeroWall(root) {
     clearTimeout(revealTimer); revealTimer = null;
     if (!root.isConnected || revealState === 'held') return;
     const now = performance.now(), active = !paused && visible && !document.hidden;
+    if (revealState === 'running' && !detailedDiagnostics) {
+      root.dataset.wallRevealState = active ? revealState : `${revealState}-paused`;
+      return;
+    }
     const heroBox = root.getBoundingClientRect();
     const samples = units.map(({ tile, video }, i) => {
       const state = frameStates[i]; state.sample?.(now);
@@ -351,6 +460,7 @@ export async function mountHeroWall(root) {
     if (revealState === 'running') {
       const deltas = frameDeltas();
       root.dataset.wallRevealFrameDeltas = JSON.stringify(deltas);
+      if (detailedDiagnostics) publishFrameSnapshot();
       // Bounded evidence of frame progress during the move, not just after it.
       diagnostics.samples.push({ at: now, active, elapsed: now - diagnostics.startedAt, visible: samples.flatMap((sample, i) => sample.visible ? [i] : []), frames: frameStates.map(state => state.count), mediaTimes: frameStates.map(state => state.mediaTime), lastFrameAges: frameStates.map(state => Number.isFinite(state.lastFrameAt) ? Math.round(now - state.lastFrameAt) : null) });
       if (diagnostics.samples.length > 100) diagnostics.samples.shift();
@@ -364,12 +474,14 @@ export async function mountHeroWall(root) {
   const sourceEnd = unit => Number(unit.item.trim_end || unit.item.source_duration || unit.item.duration);
   function playback(reset = false) {
     const active = !paused && visible && !document.hidden;
+    loadQueue.setActive(active);
+    if (reset) loadQueue.retry();
     root.classList.toggle('motion-paused', !active);
     root.dataset.wallIntent = paused ? (manualPlaybackChoice ? 'user-paused' : 'reduced-motion') : document.hidden ? 'background' : !visible ? 'offscreen' : focused >= 0 ? 'focused' : 'all-playing';
     toggle.innerHTML = `<span aria-hidden="true">${paused ? '▶' : 'Ⅱ'}</span> ${paused ? 'Play motion' : 'Pause motion'}`;
     toggle.setAttribute('aria-label', paused ? 'Play background motion' : 'Pause background motion');
     units.forEach(({ video, returning }, i) => {
-      const wanted = active && !returning && (focused < 0 || focused === i) && !((focusedHd?.ready || focusedHd?.aligning) && focusedHd.index === i);
+      const wanted = active && Boolean(video.getAttribute('src')) && !returning && (focused < 0 || focused === i) && !((focusedHd?.ready || focusedHd?.aligning) && focusedHd.index === i);
       playbackController.sync(video, wanted, { reset });
     });
     if (focusedHd) playbackController.sync(focusedHd.video, active && focusedHd.ready && !focusedHd.loopSeeking, { reset });
@@ -456,6 +568,7 @@ export async function mountHeroWall(root) {
     // A rapid reversal must reveal the current preview, not an older retained HD.
     clearRetiredFrames(index);
     focused = index;
+    loadQueue.prioritize(units[index]);
     root.classList.add('wall-focused'); root.classList.toggle('wall-focus-moving', previous >= 0);
     units.forEach(({ tile }, i) => {
       tile.classList.toggle('is-focused', i === index); if (i === index) tile.classList.remove('was-focused');
@@ -492,5 +605,14 @@ export async function mountHeroWall(root) {
     playback();
   });
   window.addEventListener('resize', () => { if (focused >= 0) { layoutFocus(); watchCameraMove(); } });
+  window.addEventListener('pagehide', event => {
+    // A bfcache entry may be restored with the same DOM, so keep its preview
+    // buffers alive. Release them only when this page is actually discarded.
+    if (event.persisted) return;
+    loadQueue.destroy();
+    clearTimeout(revealTimer);
+    frameStates.forEach(state => state.stop());
+    for (const unit of units) if (unit.objectUrl) URL.revokeObjectURL(unit.objectUrl);
+  });
   playback();
 }
