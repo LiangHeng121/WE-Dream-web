@@ -27,5 +27,10 @@
     "l1": 15,
     "l2": 4
   },
-  "wall_layout": "Fixed randomized order; all five background-generalization clips separated across five rows"
+  "wall_layout": "Fixed randomized order; all five background-generalization clips separated across five rows",
+  "wall_category_colors": {
+    "id": "blue",
+    "l1": "lavender",
+    "l2": "mint"
+  }
 }

@@ -12,7 +12,7 @@ This repository contains the buildless v27 website. GitHub Pages publishes from 
 
 - The 40-window opening wall now contains 21 in-domain, all 15 L1 and all 4 L2 demonstrations. All nine in-domain task types remain represented, with two or three clips each.
 - Selection and placement use a reproducible random seed. The five background-generalization clips occupy separate rows and are spaced apart; the other clips are interleaved.
-- A small category bubble at the upper-left corner of the focused prompt identifies In Domain, L1 Generalization or L2 Generalization.
+- A small category bubble at the upper-left corner of the focused prompt identifies In Domain (blue), L1 Generalization (lavender) or L2 Generalization (mint). The same palette is used by the corresponding gallery entry links, headings and video labels.
 - New lightweight wall previews and first-frame posters come from the existing trimmed HD media. Full 1080p files, the v26 handoff, camera transitions and galleries are unchanged.
 
 ## Release 26
