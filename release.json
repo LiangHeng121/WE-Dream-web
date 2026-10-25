@@ -1,7 +1,7 @@
 {
   "version": 17,
   "published_date": "2026-10-25",
-  "release": "1080p-playback-priority",
+  "release": "1080p-responsive-switching",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -11,6 +11,6 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 1,
-  "document_cache_version": "17.1"
+  "patch": 2,
+  "document_cache_version": "17.2"
 }

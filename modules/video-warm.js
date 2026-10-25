@@ -39,17 +39,27 @@ export function videoFullyBuffered(video) {
   return Number.isFinite(duration) && duration > 0 && ranges?.length === 1 && ranges.start(0) <= .05 && ranges.end(0) >= duration - .1;
 }
 
-function waitForFullBuffer(video, { signal } = {}) {
-  if (videoFullyBuffered(video) || video.error || signal?.aborted) return;
+// Four seconds of media at the current playback rate gives the selected clip
+// headroom before lending bandwidth to one adjacent card. Short complete clips
+// are safe too; metadata/readiness alone never grants this budget.
+export function videoCanPrefetch(video) {
+  if (video.error || video.seeking || video.readyState < 2) return false;
+  if (videoFullyBuffered(video)) return true;
+  const rate = Number.isFinite(video.playbackRate) && video.playbackRate > 0 ? video.playbackRate : 1;
+  return videoBufferedAhead(video) >= 4 * rate;
+}
+
+function waitForBuffer(video, { signal, predicate = videoFullyBuffered } = {}) {
+  if (predicate(video) || video.error || signal?.aborted) return;
   return new Promise(resolve => {
-    const events = ['progress', 'loadeddata', 'canplay', 'timeupdate', 'durationchange'];
+    const events = ['progress', 'loadeddata', 'canplay', 'timeupdate', 'durationchange', 'ratechange'];
     const finish = () => {
       events.forEach(event => video.removeEventListener(event, check));
       video.removeEventListener('error', finish);
       signal?.removeEventListener('abort', finish);
       resolve();
     };
-    const check = () => { if (videoFullyBuffered(video) || video.error || signal?.aborted) finish(); };
+    const check = () => { if (predicate(video) || video.error || signal?.aborted) finish(); };
     events.forEach(event => video.addEventListener(event, check));
     video.addEventListener('error', finish, { once: true });
     signal?.addEventListener('abort', finish, { once: true });
@@ -57,9 +67,10 @@ function waitForFullBuffer(video, { signal } = {}) {
   });
 }
 
-// Speculative requests only start once the current clip is completely cached.
-// Native preload="metadata" cannot cancel an existing auto download. Obsolete
-// unfinished requests therefore use the player's explicit suspend operation.
+// One speculative request may borrow bandwidth once the selected clip has a
+// safe buffer. Reclaim it below two seconds, and require full primary caching
+// before retrying, so a slow connection cannot oscillate between both streams.
+// Native preload="metadata" does not cancel an existing native download.
 export function createVideoWarmScheduler({ isProtected = () => false } = {}) {
   let revision = 0, controller = null, job = null;
   const touched = new Set(), owned = new Set();
@@ -86,16 +97,41 @@ export function createVideoWarmScheduler({ isProtected = () => false } = {}) {
       if (!valid()) return;
       touched.add(primary); owned.add(primary); await primary.warm({ signal: abort.signal });
       if (!valid() || primary.video.readyState < 2 || primary.video.error || !next.length) return;
-      await waitForFullBuffer(primary.video, { signal: abort.signal });
-      if (!valid() || !videoFullyBuffered(primary.video)) return;
       const neighbor = next[0];
-      touched.add(neighbor); owned.add(neighbor); await neighbor.warm({ signal: abort.signal });
-      if (!valid()) return;
-      // Own this one background request until it finishes, so navigation can
-      // actually cancel it; never release two concurrent speculative streams.
-      await waitForFullBuffer(neighbor.video, { signal: abort.signal });
-      if (!valid()) return;
-      relax(neighbor); touched.delete(neighbor); owned.delete(neighbor);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const eligible = attempt === 0 ? videoCanPrefetch : videoFullyBuffered;
+        await waitForBuffer(primary.video, { signal: abort.signal, predicate: eligible });
+        if (!valid() || !eligible(primary.video)) return;
+        const speculative = new AbortController();
+        let reclaimed = false;
+        const cancelWait = () => speculative.abort();
+        const reclaim = event => {
+          if (reclaimed || !valid() || isProtected(neighbor) || videoFullyBuffered(primary.video) || videoFullyBuffered(neighbor.video)) return;
+          const rate = Number.isFinite(primary.video.playbackRate) && primary.video.playbackRate > 0 ? primary.video.playbackRate : 1;
+          if (event?.type !== 'waiting' && !primary.video.seeking && videoBufferedAhead(primary.video) >= 2 * rate) return;
+          reclaimed = true;
+          neighbor.suspend?.(); speculative.abort();
+        };
+        const events = ['progress', 'timeupdate', 'waiting', 'seeking', 'ratechange'];
+        abort.signal.addEventListener('abort', cancelWait, { once: true });
+        events.forEach(event => primary.video.addEventListener(event, reclaim));
+        touched.add(neighbor); owned.add(neighbor);
+        try {
+          reclaim();
+          if (!speculative.signal.aborted) await neighbor.warm({ signal: speculative.signal });
+          if (!valid()) return;
+          // Retain ownership until native I/O completes so either a navigation
+          // or the selected video's low buffer can cancel this exact request.
+          await waitForBuffer(neighbor.video, { signal: speculative.signal });
+        } finally {
+          abort.signal.removeEventListener('abort', cancelWait);
+          events.forEach(event => primary.video.removeEventListener(event, reclaim));
+        }
+        if (!valid()) return;
+        if (reclaimed) { touched.delete(neighbor); owned.delete(neighbor); continue; }
+        relax(neighbor); touched.delete(neighbor); owned.delete(neighbor);
+        break;
+      }
     }).finally(() => {
       if (ticket !== revision) return;
       touched.forEach(relax); touched.clear(); controller = null; job = null;

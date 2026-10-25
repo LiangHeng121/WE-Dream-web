@@ -1,13 +1,13 @@
-import { mountHeroWall } from './modules/hero-wall.js?v=17.1';
-import { createDemoDeck } from './modules/demo-deck.js?v=17.1';
-import { createStagePlayer } from './modules/stage-player.js?v=17.1';
-import { createSkillMix } from './modules/skill-mix.js?v=17.1';
-import { seekVideo } from './modules/video-seek.js?v=17.1';
-import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, monitorVideoPlayback } from './modules/video-warm.js?v=17.1';
-import { mountScrollReveal } from './modules/scroll-reveal.js?v=17.1';
-const mountMethodFigure = root => import('./modules/method-figure.js?v=17.1').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17.1').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17.1').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=17.2';
+import { createDemoDeck } from './modules/demo-deck.js?v=17.2';
+import { createStagePlayer } from './modules/stage-player.js?v=17.2';
+import { createSkillMix } from './modules/skill-mix.js?v=17.2';
+import { seekVideo } from './modules/video-seek.js?v=17.2';
+import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, videoCanPrefetch, monitorVideoPlayback } from './modules/video-warm.js?v=17.2';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=17.2';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=17.2').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17.2').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17.2').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -39,7 +39,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   let groupIndex=0, activeItem=null, activeCard=null, activePlayer=null, visible=false, stageController=null;
   const players=[];
   const playerCache=new Map(), groupDecks=new Map(), transitioning=new Set();
-  let deck, currentGroup=null, groupRevision=0, groupAnimations=[], near=false, groupSelection=Promise.resolve(), inMotion=false;
+  let deck, currentGroup=null, groupRevision=0, groupAnimations=[], near=false, groupSelection=Promise.resolve(), inMotion=false, previewPlayer=null;
   const warmer=createVideoWarmScheduler({isProtected:player=>visible&&!document.hidden&&(player===activePlayer||transitioning.has(player))});
   const constrained=Boolean(navigator.connection?.saveData||/^(slow-)?2g$/.test(navigator.connection?.effectiveType||''));
   const isL1=root.id==='l1-gallery', l1Tasks=isL1?buildL1TaskGroups(groups):[];
@@ -221,7 +221,13 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     // A recent explicit hover/click outranks incidental observer/resize work.
     if(warmer.priorityPlayer&&warmer.priorityPlayer!==primary)return warmer.pending;
     const adjacent=constrained||!neighbors?[]:[index+1,index-1].map(i=>playerCache.get(clips[i]?.id)).filter(Boolean);
+    if(adjacent.includes(previewPlayer))adjacent.sort((a,b)=>Number(b===previewPlayer)-Number(a===previewPlayer));
     return warmer.sequence(primary,adjacent,{isCurrent:()=>currentGroup===record&&activePlayer===primary&&(visible||force)&&!document.hidden});
+  }
+  function previewNavigation(index,{item}){
+    if(!visible||constrained||inMotion||document.hidden||warmer.priorityPlayer)return;
+    previewPlayer=playerCache.get(item.id);
+    warmNeighbors(Math.max(0,deck.getActiveIndex()));
   }
   function prioritizePlayer(player,{navigation=false}={}){
     if(!player||document.hidden)return;
@@ -236,8 +242,8 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
       warmNeighbors(Math.max(0,deck.getActiveIndex()));
     };
     Promise.resolve(preparing).then(resumeNeighbors,resumeNeighbors);
-    // A subsequent hover may cancel background preparation, but must not make
-    // an already-clicked cold card start moving before its own bounded wait.
+    // Give the clicked player its own wait so unrelated prefetch cancellation
+    // cannot abort that preparation. Deck motion runs independently of it.
     return navigation?player.warm():preparing;
   }
   function getGroup(index) {
@@ -249,6 +255,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     record.deck=createDemoDeck(host,{items:record.items,renderCard,label,
       onActiveChange:(i,detail)=>{if(currentGroup===record)onActive(i,detail);},
       onNavigationIntent:(i,detail)=>currentGroup===record?navigationIntent(i,detail):undefined,
+      onNavigationPreview:(i,detail)=>currentGroup===record?previewNavigation(i,detail):undefined,
       onMotionChange:(moving,detail)=>{if(currentGroup===record)motion(moving,detail);}
     });
     return record;
@@ -301,11 +308,11 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   }
   tabs.forEach((t,i)=>{
     t.addEventListener('click',()=>selectGroup(i));
-    const prime=()=>{if(!visible||constrained||!videoFullyBuffered(activePlayer.video))return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
+    const prime=()=>{if(!visible||constrained||inMotion||!videoCanPrefetch(activePlayer.video))return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
     t.addEventListener('pointerenter',prime);t.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>{
-    const prime=()=>{if(!visible||constrained||!videoFullyBuffered(activePlayer.video))return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
+    const prime=()=>{if(!visible||constrained||inMotion||!videoCanPrefetch(activePlayer.video))return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
     row.addEventListener('pointerenter',prime);row.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>row.addEventListener('click',async()=>{
@@ -341,7 +348,7 @@ function mountNear(host,mount){
 async function boot(){
   // Start the wall before the lower-page data and gallery DOM work.
   const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
-  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17.1'),getJSON('assets/media/manifest.json?v=17.1'),getJSON('data/chapters.json?v=17.1'),getJSON('data/skill-media.json?v=17.1')]);
+  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17.2'),getJSON('assets/media/manifest.json?v=17.2'),getJSON('data/chapters.json?v=17.2'),getJSON('data/skill-media.json?v=17.2')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],

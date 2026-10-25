@@ -1,4 +1,4 @@
-import { seekVideo } from './video-seek.js?v=17.1';
+import { seekVideo } from './video-seek.js?v=17.2';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -245,34 +245,33 @@ export function wallNeighborIndex(index, direction, columns, count) {
   return -1;
 }
 
-// Keep the existing camera in place while a requested full-resolution frame is
-// prepared. Rapid directions build from the pending index; stale completions
-// cannot move the wall or replace the prompt after a newer selection.
-export function createWallFocusCoordinator({ current, prepare, commit, onPending = () => {}, timeout = 3000 }) {
-  let revision = 0, pendingIndex = -1, pendingPromise = null, endWait = null;
+// Camera motion follows input immediately. Full-resolution preparation happens
+// alongside it; a late frame can upgrade only the still-current selection.
+export function createWallFocusCoordinator({ current, prepare, commit, peek = () => null, onReady = () => {}, onPending = () => {} }) {
+  let revision = 0, pendingIndex = -1, pendingPromise = null;
   function cancel() {
-    revision += 1; endWait?.(null); endWait = null;
+    revision += 1;
     pendingIndex = -1; pendingPromise = null; onPending(-1);
   }
   return {
     go(index) {
-      if (index === current()) { cancel(); return Promise.resolve(false); }
       if (index === pendingIndex) return pendingPromise;
+      if (index === current()) { cancel(); return Promise.resolve(false); }
       cancel();
       const ticket = revision; pendingIndex = index; onPending(index);
-      const ready = new Promise(resolve => {
-        let done = false;
-        const finish = media => { if (done) return; done = true; clearTimeout(timer); resolve(media); };
-        const timer = setTimeout(() => finish(null), timeout);
-        endWait = finish;
-        Promise.resolve().then(() => ticket === revision ? prepare(index) : null).then(finish, () => finish(null));
+      const committed = Promise.resolve(true); pendingPromise = committed;
+      // A ready retained decoder must be handed to commit before it cleans up
+      // outgoing frames, particularly on a rapid A -> B -> A reversal.
+      commit(index, peek(index));
+      Promise.resolve().then(() => ticket === revision ? prepare(index) : null).then(media => {
+        if (ticket !== revision) return;
+        pendingIndex = -1; pendingPromise = null; onPending(-1);
+        if (media && current() === index) onReady(index, media);
+      }, () => {
+        if (ticket !== revision) return;
+        pendingIndex = -1; pendingPromise = null; onPending(-1);
       });
-      pendingPromise = ready.then(media => {
-        if (ticket !== revision) return false;
-        pendingIndex = -1; pendingPromise = null; endWait = null; onPending(-1);
-        commit(index, media); return true;
-      });
-      return pendingPromise;
+      return committed;
     },
     cancel,
     get pendingIndex() { return pendingIndex; }
@@ -302,10 +301,10 @@ export function waitWallHdFrame(video, { signal, metadataOnly = false, timeout =
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=17.1').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=17.2').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=17.1').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=17.2').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -746,7 +745,10 @@ export async function mountHeroWall(root) {
   }
   function prepareHd(index, { align = false, resume = null } = {}) {
     if (!visible || document.hidden) return Promise.resolve(null);
-    if (focusedHd?.index === index && focusedHd.ready) return Promise.resolve(focusedHd);
+    if (focusedHd?.index === index && focusedHd.ready) {
+      if (preparedHd !== focusedHd) discardPrepared();
+      return Promise.resolve(focusedHd);
+    }
     const retained = [...retiredFrames].find(frame => frame.index === index && frame.ready);
     if (retained) { discardPrepared(); return Promise.resolve(retained); }
     if (!units[index]?.item.full_src) return Promise.resolve(null);
@@ -808,8 +810,16 @@ export async function mountHeroWall(root) {
   }
   const focusCoordinator = createWallFocusCoordinator({
     current: () => focused,
+    peek(index) {
+      const retained = [...retiredFrames].find(hd => hd.index === index && hd.ready && !hd.abort.signal.aborted);
+      if (retained) return retained;
+      if (preparedHd?.index !== index || !preparedHd.ready || preparedHd.abort.signal.aborted || preparedHd.video.seeking) return null;
+      const time = sourceStart(units[index]) + units[index].video.currentTime;
+      return Math.abs(preparedHd.video.currentTime - time) <= .12 ? preparedHd : null;
+    },
     prepare: index => prepareHd(index, { align: true }),
     commit: commitFocus,
+    onReady(index, hd) { if (focused === index && focusedHd !== hd) activateHd(hd); },
     onPending(index) {
       root.dataset.wallFocusPending = String(index);
       if (index >= 0) {
@@ -834,12 +844,15 @@ export async function mountHeroWall(root) {
   function focus(index) {
     if (!exploring || !units[index]?.tile.offsetWidth) return Promise.resolve(false);
     clearTimeout(hoverTimer);
-    if (index === focused) discardPrepared();
+    if (index === focused && preparedHd?.index !== index) discardPrepared();
     return focusCoordinator.go(index);
   }
   function commitFocus(index, hd) {
     const previous = focused, moveKeyboardFocus = camera.contains(document.activeElement);
     cameraMoveRevision += 1;
+    // A hover-prepared frame can lag behind a still-playing preview. If peek
+    // declined it, keep the preview until prepareHd realigns the cached video.
+    if (!hd && preparedHd?.index === index) preparedHd.ready = false;
     // A rapid reversal can reuse the still-playing outgoing HQ decoder.
     if (hd) retiredFrames.delete(hd);
     if (previous >= 0) {

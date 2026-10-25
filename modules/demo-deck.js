@@ -31,7 +31,8 @@ function isInteractive(target) {
  * @param {Array} options.items
  * @param {function} options.renderCard (item, index) => HTMLElement. Player ownership stays with the caller.
  * @param {function} options.onActiveChange (index, { item, card, previousIndex, reason }) => void.
- * @param {function} options.onNavigationIntent (index, { item, card, reason }) => void | Promise. A promise gates programmatic motion until a frame is prepared.
+ * @param {function} options.onNavigationIntent (index, { item, card, reason }) => void | Promise. Starts media preparation without blocking motion.
+ * @param {function} options.onNavigationPreview (index, { item, card }) => void. Prepares a likely target on hover or keyboard focus.
  * @param {function} options.onMotionChange (moving, { index, reason }) => void. Old players may keep playing until moving becomes false.
  * @returns {{setItems:Function,goTo:Function,prev:Function,next:Function,getActiveIndex:Function,getActiveCard:Function,refresh:Function,destroy:Function}}
  */
@@ -57,7 +58,6 @@ export function createDemoDeck(root, options = {}) {
   let itemRevision = 0;
   let navigationTicket = 0;
   let animationFrame = 0;
-  let waitingForMedia = false;
   let moving = false;
   let geometry = [];
   let lastDragIntent = -1;
@@ -141,7 +141,6 @@ export function createDemoDeck(root, options = {}) {
     animationFrame = 0;
     commitPosition();
     clearTimeout(settleTimer);
-    waitingForMedia = false;
     root.removeAttribute('aria-busy');
     if (releaseControl) reel.dataset.controlled = 'false';
   }
@@ -240,7 +239,7 @@ export function createDemoDeck(root, options = {}) {
 
   function settle() {
     clearTimeout(settleTimer);
-    if (disposed || animationFrame || layoutFrame || waitingForMedia || pointer?.dragging || !geometry.length || !reel.clientWidth) return;
+    if (disposed || animationFrame || layoutFrame || pointer?.dragging || !geometry.length || !reel.clientWidth) return;
     const closest = closestIndex();
     // Native wheel scrolling uses the same settling path, so scroll-snap cannot
     // independently adjust the final frame of a transform animation.
@@ -271,11 +270,12 @@ export function createDemoDeck(root, options = {}) {
     pendingIndex = clampIndex(index);
     const targetIndex = pendingIndex;
     const ticket = navigationTicket;
+    const requestedAt = performance.now();
     reel.dataset.controlled = 'true';
     const begin = () => {
       if (disposed || ticket !== navigationTicket) return;
-      waitingForMedia = false;
       root.removeAttribute('aria-busy');
+      if (debugMotion) root.dataset.navigationStats = JSON.stringify({ index: targetIndex, reason, inputDelayMs: performance.now() - requestedAt });
       if (reel.clientWidth === 0) {
         setActiveCard(targetIndex, reason);
         pendingIndex = null;
@@ -320,11 +320,10 @@ export function createDemoDeck(root, options = {}) {
     let preparation;
     try { preparation = options.onNavigationIntent?.(targetIndex, { item: items[targetIndex], card: cards[targetIndex], reason }); }
     catch { /* A media preparation failure must not disable navigation. */ }
-    if (preparation && typeof preparation.then === 'function') {
-      waitingForMedia = true;
-      root.setAttribute('aria-busy', 'true');
-      Promise.resolve(preparation).then(begin, begin);
-    } else begin();
+    // Network latency must not become dead time after a click. Keep the existing
+    // poster/decoded frame while the incoming player prepares during the slide.
+    Promise.resolve(preparation).catch(() => {});
+    begin();
   }
 
   function step(direction, changeReason) {
@@ -406,8 +405,22 @@ export function createDemoDeck(root, options = {}) {
 
   previous.addEventListener('click', () => step(-1, 'button'), { signal });
   next.addEventListener('click', () => step(1, 'button'), { signal });
+  function previewTarget(index) {
+    if (disposed || moving || !cards.length) return;
+    index = clampIndex(index);
+    if (index === activeIndex) return;
+    try { Promise.resolve(options.onNavigationPreview?.(index, { item: items[index], card: cards[index] })).catch(() => {}); }
+    catch { /* A speculative media failure must never affect interaction. */ }
+  }
+  for (const [button, direction] of [[previous, -1], [next, 1]]) {
+    for (const event of ['pointerenter', 'focus']) button.addEventListener(event, () => previewTarget((pendingIndex ?? activeIndex) + direction), { signal });
+  }
+  reel.addEventListener('pointerover', event => {
+    const preview = event.target.closest('.demo-deck-preview');
+    if (preview) previewTarget(Number(preview.parentElement.dataset.index));
+  }, { signal });
   reel.addEventListener('scroll', () => {
-    if (animationFrame || waitingForMedia) return;
+    if (animationFrame) return;
     if (performance.now() <= ignoreScrollUntil) return;
     if (!moving && performance.now() > ignoreScrollUntil) setMotion(true);
     scheduleActive();
@@ -445,7 +458,7 @@ export function createDemoDeck(root, options = {}) {
   // Psi0's pointer drag adapted to preserve vertical page scrolling and controls.
   reel.addEventListener('pointerdown', event => {
     if (event.button !== 0 || !event.isPrimary || isInteractive(event.target) || cards.length < 2 || !geometry.length) return;
-    if (animationFrame || waitingForMedia) {
+    if (animationFrame) {
       clearNavigation({ releaseControl: false });
       setMotion(false, activeIndex);
       pendingIndex = null;
