@@ -1,6 +1,8 @@
 // hls.js owns demuxing, MediaSource and its rolling buffer. This adapter only
 // owns request intent: one-fragment speculation versus foreground playback.
 // API: https://github.com/video-dev/hls.js/blob/v1.6.19/docs/API.md
+import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v26';
+
 let libraryPromise;
 const loadLibrary = () => libraryPromise ||= import('../vendor/hls.js/hls.light.mjs');
 const PLAY_BUFFER = { maxBufferLength: 4, maxMaxBufferLength: 6, maxBufferSize: 1000000 };
@@ -89,7 +91,8 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
         const module = await loadHls(), Hls = module.default || module;
         if (destroyed || !requested) return false;
         if (!Hls.isSupported()) { fallback('mse-unsupported'); return true; }
-        const instance = new Hls({ ...PLAY_BUFFER, autoStartLoad: false, backBufferLength: 6, lowLatencyMode: false, startLevel: 0, capLevelToPlayerSize: false, testBandwidth: false });
+        const bootstrapLoader = createStreamBootstrapLoader(Hls);
+        const instance = new Hls({ ...PLAY_BUFFER, autoStartLoad: false, backBufferLength: 6, lowLatencyMode: false, startLevel: 0, capLevelToPlayerSize: false, testBandwidth: false, ...(bootstrapLoader ? { loader: bootstrapLoader } : {}) });
         hls = instance; mode = 'hls'; status('loading-manifest');
         const current = () => !destroyed && hls === instance;
         instance.on(Hls.Events.MANIFEST_PARSED, () => {

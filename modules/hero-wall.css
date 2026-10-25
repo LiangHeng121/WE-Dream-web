@@ -44,6 +44,11 @@
    compositor promotion and makes quality handoff timing unpredictable. */
 .wall-tile .wall-hd{position:absolute;inset:0;opacity:0;transition:none;pointer-events:none}
 .wall-tile .wall-hd.is-ready{opacity:1}
+/* Keep the selected HD surface composited beneath its live preview until a
+   matching submitted frame is verified; never reveal an unpainted HD layer. */
+.wall-focused .is-focused .wall-hd{opacity:1;z-index:1}
+.wall-focused .is-focused .wall-first-frame,.wall-focused .is-focused .wall-preview{z-index:2}
+.wall-focused .is-focused .wall-hd.is-ready{z-index:3}
 @media(max-width:760px){.hero h1{font-size:clamp(54px,15.4vw,108px);white-space:nowrap}}
 /* Light hero navigation, kept here with the hero's own palette. */
 .site-header{color:#253e5a}.site-header .nav-paper{border-color:#ffffffce;background:#ffffffa8;color:#294667}.site-header .menu-toggle{border-color:#ffffffd9;background:#ffffffb3;color:#294667}

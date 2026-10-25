@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v25';
-import { createStreamVideo } from './stream-video.js?v=v25';
+import { seekVideo } from './video-seek.js?v=v26';
+import { createStreamVideo } from './stream-video.js?v=v26';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -377,10 +377,10 @@ export function waitWallPresentedFrame(video, { signal, timeout = 1800 } = {}) {
   });
 }
 
-// A completed seek already supplies the decoded target frame. Once that
-// paused target reaches the preview's clock, an actual playing event is enough
-// to start the opacity handoff; waiting for another transparent-layer rVFC can
-// delay it by hundreds of milliseconds despite continuously advancing clocks.
+// A completed seek and real playing event establish decoder/clock readiness.
+// The separate submitted-frame PTS gate still verifies the pixels before reveal;
+// callbacks collected during the paused seek can satisfy it without waiting
+// for another playing callback from an occluded video surface.
 export function waitWallDecodedPlayback(video, { signal, timeout = 1800 } = {}) {
   if (signal?.aborted || video.error) return Promise.resolve(false);
   return new Promise(resolve => {
@@ -401,18 +401,82 @@ export function waitWallDecodedPlayback(video, { signal, timeout = 1800 } = {}) 
   });
 }
 
+// Record compositor frame PTS continuously, including the paused seek frame.
+// The media clock/playing event alone cannot prove which pixels the HD layer owns.
+export function trackWallFrames(video, { signal, onFrame = () => {}, now = () => performance.now() } = {}) {
+  let callback = null, stopped = false, latest = null, sequence = 0, generation = 0;
+  const supported = typeof video.requestVideoFrameCallback === 'function';
+  const queue = () => {
+    if (!supported || stopped) return;
+    const expectedGeneration = generation;
+    callback = video.requestVideoFrameCallback((at, metadata) => {
+      if (stopped || signal?.aborted || expectedGeneration !== generation) return;
+      if (Number.isFinite(metadata.mediaTime)) {
+        latest = { mediaTime: metadata.mediaTime, at: Number.isFinite(at) ? at : now(),
+          expectedDisplayTime: metadata.expectedDisplayTime, sequence: ++sequence, generation };
+        onFrame(latest);
+      }
+      queue();
+    });
+  };
+  const invalidate = () => {
+    latest = null; generation++;
+    if (callback !== null) video.cancelVideoFrameCallback?.(callback);
+    queue();
+  };
+  const stop = () => {
+    if (stopped) return; stopped = true;
+    if (callback !== null) video.cancelVideoFrameCallback?.(callback);
+    for (const event of ['emptied', 'loadstart', 'seeking']) video.removeEventListener?.(event, invalidate);
+    signal?.removeEventListener('abort', stop);
+  };
+  for (const event of ['emptied', 'loadstart', 'seeking']) video.addEventListener?.(event, invalidate);
+  signal?.addEventListener('abort', stop, { once: true });
+  if (signal?.aborted) stop(); else queue();
+  return { supported, get latest() { return latest; }, setOnFrame(listener) { onFrame = listener; }, stop };
+}
+
+// Older engines without rVFC get a clearly weaker visible-surface fallback:
+// a real post-playing timeupdate and two paint opportunities, never just a timer.
+export function waitWallVisibleFallback(video, { signal, isCurrent = () => true, timeout = 1200,
+  requestFrame = globalThis.requestAnimationFrame, cancelFrame = globalThis.cancelAnimationFrame } = {}) {
+  if (signal?.aborted || typeof requestFrame !== 'function') return Promise.resolve(false);
+  return new Promise(resolve => {
+    let timer, paint = null, painting = false, settled = false;
+    const valid = () => !signal?.aborted && isCurrent() && !video.paused && video.readyState >= 2 && !video.seeking && !video.error;
+    const finish = value => {
+      if (settled) return; settled = true; clearTimeout(timer);
+      if (paint !== null) cancelFrame?.(paint);
+      video.removeEventListener('timeupdate', progressed); video.removeEventListener('error', failed); signal?.removeEventListener('abort', failed);
+      resolve(value);
+    };
+    const failed = () => finish(false);
+    const progressed = () => {
+      if (painting || !valid()) return;
+      painting = true;
+      paint = requestFrame(() => {
+        if (!valid()) { finish(false); return; }
+        paint = requestFrame(() => finish(valid()));
+      });
+    };
+    video.addEventListener('timeupdate', progressed); video.addEventListener('error', failed);
+    signal?.addEventListener('abort', failed, { once: true }); timer = setTimeout(failed, timeout);
+  });
+}
+
 export async function alignWallHandoff(video, preview, {
   signal, sourceStart = 0, isCurrent = () => true, start = () => video.play(), pause = () => video.pause(),
-  timeout = 7000, now = () => performance.now(), onState = () => {}, requestBuffer = null
+  timeout = 7000, now = () => performance.now(), onState = () => {}, requestBuffer = null, frameTracker = null
 } = {}) {
   const deadline = now() + timeout;
   const current = () => !signal?.aborted && isCurrent() && now() < deadline;
-  const waitUntil = check => new Promise(resolve => {
+  const frames = frameTracker || trackWallFrames(video, { signal, now });
+  const waitUntil = (check, until = deadline) => new Promise(resolve => {
     let timer, settled = false;
     const finish = value => { if (settled) return; settled = true; clearTimeout(timer); signal?.removeEventListener('abort', aborted); resolve(value); };
     const aborted = () => finish(null);
     const poll = () => {
-      if (!current()) { finish(null); return; }
+      if (!current() || now() >= until) { finish(null); return; }
       const value = check();
       if (value) finish(value); else timer = setTimeout(poll, 16);
     };
@@ -426,13 +490,14 @@ export async function alignWallHandoff(video, preview, {
     }
     return false;
   };
-  let lead = .32, seeks = 0, stationary = false, positioned = false;
+  let lead = .12, seeks = 0, stationary = false, positioned = false;
   let observedTime = preview.currentTime, movedAt = now();
   const observe = () => {
     const time = preview.currentTime;
     if (Math.abs(time - observedTime) > .015) { observedTime = time; movedAt = now(); }
     return { time, stalled: preview.paused || now() - movedAt >= 180 };
   };
+  try {
   await pause();
   for (let attempt = 0; attempt < 3 && current(); attempt++) {
     onState('waiting-buffer', { seeks, lead });
@@ -463,7 +528,7 @@ export async function alignWallHandoff(video, preview, {
     onState('seeking', { seeks, lead, target: anchor.target });
     if (!await waitUntil(() => video.readyState >= 2 && !video.seeking)) return false;
     const seekSeconds = (now() - seekAt) / 1000;
-    lead = Math.max(.32, Math.min(1.5, seekSeconds + .08));
+    lead = Math.max(.12, Math.min(1.5, seekSeconds + .08));
     onState('waiting-preview', { seeks, lead, seekMs: seekSeconds * 1000, target: anchor.target });
     const anchorTime = anchor.target - sourceStart;
     // A slower-than-predicted decode may miss the first rendezvous. Measure
@@ -493,20 +558,39 @@ export async function alignWallHandoff(video, preview, {
     signal?.removeEventListener('abort', abortPlaying); playingAbort.abort();
     if (!playing || !current()) return false;
     const drift = video.currentTime - sourceStart - preview.currentTime;
-    if (Math.abs(drift) <= .12) { onState('aligned', { seeks, drift, stationary: anchor.stationary }); return true; }
+    if (Math.abs(drift) <= .12) {
+      onState('waiting-surface', { seeks, target: anchor.target });
+      let proof;
+      if (frames.supported) {
+        proof = await waitUntil(() => {
+          const frame = frames.latest;
+          if (!frame || video.paused || video.readyState < 2 || video.seeking || video.error) return null;
+          const target = sourceStart + preview.currentTime;
+          return Math.abs(frame.mediaTime - target) <= .12 && Math.abs(video.currentTime - target) <= .12 ? frame : null;
+        }, Math.min(deadline, now() + 1800));
+      } else {
+        proof = await waitWallVisibleFallback(video, { signal, isCurrent: current, timeout: Math.max(1, Math.min(1200, deadline - now())) });
+      }
+      if (!proof || !current()) { if (!signal?.aborted && isCurrent()) onState('frame-timeout', { seeks }); return false; }
+      const frameProof = frames.supported ? 'submitted-frame-pts' : 'visible-playing-fallback';
+      onState('aligned', { seeks, drift: video.currentTime - sourceStart - preview.currentTime, stationary: anchor.stationary,
+        frameProof, frameTime: frames.supported ? proof.mediaTime : null });
+      return true;
+    }
     await pause();
     lead = Math.min(1.5, Math.max(lead, Math.abs(drift) + .08));
   }
   return false;
+  } finally { if (!frameTracker) frames.stop(); }
 }
 
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v25').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v26').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v25').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v26').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -865,7 +949,9 @@ export async function mountHeroWall(root) {
     networkSuspended = true; loadQueue.setActive(false);
     focusCoordinator.cancel(); clearTimeout(hoverTimer);
     suspendPreviews();
-    if (focusedHd?.handingOff || focusedHd?.handoffTimer) {
+    if (focusedHd?.handingOff || focusedHd?.handoffTimer || focusedHd?.firstFrameVerifying) {
+      if (focusedHd.firstFrameVerifying) focusedHd.resumeFirstFrame = true;
+      focusedHd.firstFrameVerifying = false;
       focusedHd.handoffRevision = (focusedHd.handoffRevision || 0) + 1;
       clearTimeout(focusedHd.handoffTimer); focusedHd.handoffTimer = null;
       focusedHd.handingOff = false; focusedHd.handoffPlaying = false; focusedHd.playbackReady = false; focusedHd.selection = null;
@@ -985,7 +1071,7 @@ export async function mountHeroWall(root) {
     if (visible && !document.hidden && networkSuspended) {
       networkSuspended = false; root.dataset.wallNetworkState = 'visible';
     }
-    if (active && focusStart?.previewReady && focusStart.cameraReady && !focusStart.previewReleased && !focusedHd?.ready) {
+    if (active && focusStart?.previewReady && focusStart.cameraReady && !focusStart.previewReleased && (!focusedHd?.ready || focusedHd.firstFramePending)) {
       focusStart.previewReleased = focusStart.released = true;
       clearTimeout(focusStart.timer); camera.removeAttribute('aria-busy');
       const preview = units[focused].video; preview.hidden = false;
@@ -1023,6 +1109,9 @@ export async function mountHeroWall(root) {
       const wanted = active && Boolean(video.getAttribute('src')) && !units[i].resuming && !returning && (focused < 0 || selectedPreview);
       playbackController.sync(video, wanted, { reset });
     });
+    if (active && focusedHd?.resumeFirstFrame) {
+      const hd = focusedHd; hd.resumeFirstFrame = false; hd.selection = null; activateHd(hd);
+    }
     if (focusedHd) playbackController.sync(focusedHd.video, active && focusedHd.ready && (focusedHd.playbackReady || (focusedHd.handingOff && focusedHd.handoffPlaying)) && !focusedHd.loopSeeking, { reset });
     for (const frame of retiredFrames) playbackController.sync(frame.video, active && frame.ready && frame.playbackReady && !frame.loopSeeking, { reset });
     if (active && !focusedHd && preparedHd?.index === focused && preparedHd.ready) activateHd(preparedHd);
@@ -1067,11 +1156,28 @@ export async function mountHeroWall(root) {
     if (preparedHd === hd) preparedHd = null;
     retiredFrames.delete(hd); focusedHd = hd;
     const selection = focusStart;
+    if (hd.surfaceSelection !== selection) { hd.surfaceSelection = selection; delete hd.video.dataset.wallSurfaceFrames; }
+    hd.frames ||= trackWallFrames(hd.video, { signal: hd.abort.signal });
+    hd.frames.setOnFrame(frame => {
+      if (focusedHd !== hd || (focusStart?.handedOff && !hd.firstFramePending) || !visible || document.hidden) return;
+      const samples = selection.surfaceFrames ||= [];
+      samples.push({ at: Number(performance.now().toFixed(1)), mediaTime: Number(frame.mediaTime.toFixed(4)), generation: frame.generation,
+        paused: hd.video.paused, seeking: hd.video.seeking, readyState: hd.video.readyState });
+      if (samples.length > 8) samples.shift();
+      hd.video.dataset.wallSurfaceFrames = JSON.stringify(samples);
+      if (hd.firstFramePending && (!focusStart?.previewReleased || focusStart.handedOff) && Math.abs(frame.mediaTime - (hd.resume?.time ?? sourceStart(units[hd.index]))) <= .12) {
+        hd.firstFramePending = false; hd.selection = null; activateHd(hd); return;
+      }
+      if (hd.selection !== focusStart || hd.handoffAttempts < 3) return;
+      if (frame.sequence > (hd.handoffExhaustedFrame || 0)) {
+        hd.handoffAttempts = 0; hd.selection = null; root.dataset.wallHandoffState = 'frame-resumed'; schedulePlayback();
+      }
+    });
     hd.selection = selection; hd.playbackReady = false;
     if (hd.video.dataset.hdLoadedDataAt) root.dataset.wallHdLoadedDataAt = hd.video.dataset.hdLoadedDataAt;
     hd.video.hidden = false;
     if (selection?.previewReleased && !selection.handedOff) {
-      hd.handingOff = true; hd.handoffPlaying = false;
+      hd.firstFramePending = false; hd.handingOff = true; hd.handoffPlaying = false; hd.handoffFrameTimedOut = false;
       if (hd.handoffAttemptSelection !== selection) { hd.handoffAttemptSelection = selection; hd.handoffAttempts = 0; }
       hd.handoffAttempts++;
       const preview = units[hd.index].video;
@@ -1081,10 +1187,12 @@ export async function mountHeroWall(root) {
         if (!current()) return;
         hd.handingOff = false; hd.handoffPlaying = false; hd.playbackReady = false;
         hd.video.classList.remove('is-ready');
+        if (hd.handoffFrameTimedOut) hd.handoffAttempts = 3;
         hd.selection = hd.handoffAttempts >= 3 ? selection : null;
         if (hd.handoffAttempts >= 3) {
           hd.handoffExhaustedEnd = Math.max(0, ...Array.from({ length: hd.video.buffered?.length || 0 }, (_, i) => hd.video.buffered.end(i)));
           hd.handoffExhaustedReady = hd.video.readyState;
+          hd.handoffExhaustedFrame = hd.frames.latest?.sequence || 0;
         }
         root.dataset.wallHandoffState = hd.handoffAttempts >= 3 ? 'preview-exhausted' : 'preview';
         // Preserve the same decoder/source while more bytes arrive. There is
@@ -1100,15 +1208,20 @@ export async function mountHeroWall(root) {
       hd.stream.start().then(started => started && current() && alignWallHandoff(hd.video, preview, {
         signal: hd.abort.signal, sourceStart: sourceStart(units[hd.index]), isCurrent: current,
         requestBuffer: hd.stream.isStreaming ? target => { hd.video.currentTime = target; } : null,
+        frameTracker: hd.frames,
         pause: () => { hd.handoffPlaying = false; playback(); },
         start: () => { hd.handoffPlaying = true; playback(); },
         onState: (phase, details) => {
           if (!current()) return;
+          if (phase === 'frame-timeout') hd.handoffFrameTimedOut = true;
+          if (details.frameProof) hd.handoffFrameProof = details.frameProof;
+          if (details.frameTime !== undefined) hd.handoffFrameTime = details.frameTime;
           const trace = selection.handoffTrace ||= [];
           trace.push({ phase, at: Number(performance.now().toFixed(1)), preview: Number(preview.currentTime.toFixed(3)), hd: Number(hd.video.currentTime.toFixed(3)),
             previewPaused: preview.paused, hdPaused: hd.video.paused, seeking: hd.video.seeking, readyState: hd.video.readyState,
             ...(details.seekMs !== undefined ? { seekMs: Number(details.seekMs.toFixed(1)) } : {}),
-            ...(details.target !== undefined ? { target: Number(details.target.toFixed(3)) } : {}) });
+            ...(details.target !== undefined ? { target: Number(details.target.toFixed(3)) } : {}),
+            ...(details.frameTime !== undefined ? { frameTime: details.frameTime, frameProof: details.frameProof } : {}) });
           if (trace.length > 32) trace.shift();
           root.dataset.wallHandoffTrace = JSON.stringify(trace);
           root.dataset.wallHandoffPhase = phase;
@@ -1122,7 +1235,8 @@ export async function mountHeroWall(root) {
         if (!aligned) { retry(); return; }
         hd.playbackReady = true;
         root.dataset.wallHandoffDecodedPlayingAt = performance.now().toFixed(1);
-        root.dataset.wallHandoffFrameProof = 'decoded-target+playing';
+        root.dataset.wallHandoffFrameProof = hd.handoffFrameProof || 'unknown';
+        if (hd.handoffFrameTime !== undefined) root.dataset.wallHandoffFrameTime = String(hd.handoffFrameTime);
         const previewAtFade = preview.currentTime, hdAtFade = hd.video.currentTime;
         getComputedStyle(hd.video).opacity; hd.video.classList.add('is-ready');
         await waitWallVisualTransitions(hd.video, 'opacity');
@@ -1146,20 +1260,47 @@ export async function mountHeroWall(root) {
       }).catch(retry);
       playback(); return;
     }
-    // Flush the zero-opacity state before raising it, including a retained
-    // decoder that has just been rewound for a new selection.
-    getComputedStyle(hd.video).opacity;
-    hd.video.classList.add('is-ready');
-    root.dataset.wallFocusedQuality = `${hd.video.videoWidth}x${hd.video.videoHeight}`;
-    const fade = waitWallVisualTransitions(hd.video, 'opacity').then(() => {
-      if (focusStart === selection && focusedHd === hd) root.dataset.wallHdFadeSettledAt = performance.now().toFixed(1);
-    });
-    Promise.all([cameraTransition, fade]).then(() => {
-      if (hd.abort.signal.aborted || focusStart !== selection || focusedHd !== hd || focused !== hd.index) return;
-      hd.playbackReady = true;
+    // A warm or retained decoder may still own an older surface after its
+    // zero seek. Keep the exact first-frame cover until that zero PTS has been
+    // submitted; if it is not ready by camera settlement, release the preview.
+    const firstRevision = hd.handoffRevision = (hd.handoffRevision || 0) + 1;
+    const firstCurrent = () => !hd.abort.signal.aborted && hd.handoffRevision === firstRevision && focusStart === selection && focusedHd === hd && focused === hd.index && (!selection?.previewReleased || selection.handedOff);
+    hd.firstFrameVerifying = !hd.frames.supported;
+    Promise.resolve(cameraTransition).then(async () => {
+      if (!firstCurrent()) return;
+      const target = hd.resume?.time ?? sourceStart(units[hd.index]);
+      const current = () => firstCurrent() && visible && !document.hidden;
+      let first = hd.frames.latest;
+      if (!hd.frames.supported) {
+        // Older engines still have a usable path when the tiny preview fails.
+        // Start only after the camera, beneath the cover, then require actual
+        // media progress and paint opportunities. This is not claimed as PTS proof.
+        const playing = waitWallDecodedPlayback(hd.video, { signal: hd.abort.signal });
+        hd.handingOff = hd.handoffPlaying = true; playback();
+        const painted = await playing && await waitWallVisibleFallback(hd.video, { signal: hd.abort.signal, isCurrent: current });
+        if (!current()) return;
+        if (!painted) {
+          hd.firstFrameVerifying = false; hd.handingOff = hd.handoffPlaying = false; hd.firstFramePending = true; hd.selection = null; playback(); return;
+        }
+        first = { mediaTime: hd.video.currentTime };
+      }
+      if (!first || (hd.frames.supported && (Math.abs(first.mediaTime - target) > .12 || Math.abs(hd.video.currentTime - target) > .12)) || hd.video.seeking || hd.video.readyState < 2 || hd.video.error) {
+        hd.firstFramePending = true; hd.selection = null; playback(); return;
+      }
+      getComputedStyle(hd.video).opacity; hd.video.classList.add('is-ready');
+      await waitWallVisualTransitions(hd.video, 'opacity');
+      if (!firstCurrent()) return;
+      if ((hd.frames.supported && hd.frames.latest?.generation !== first.generation) || hd.video.seeking || hd.video.readyState < 2 || hd.video.error) {
+        hd.video.classList.remove('is-ready'); hd.firstFramePending = true; hd.selection = null; playback(); return;
+      }
+      root.dataset.wallHdFadeSettledAt = performance.now().toFixed(1);
+      hd.firstFrameVerifying = false; hd.firstFramePending = false; hd.handingOff = hd.handoffPlaying = false; hd.playbackReady = true;
       if (selection) selection.handedOff = true;
       if (selection) { selection.released = true; clearTimeout(selection.timer); }
       camera.removeAttribute('aria-busy');
+      root.dataset.wallHandoffFrameProof = hd.frames.supported ? 'submitted-first-frame-pts' : 'visible-playing-fallback';
+      if (hd.frames.supported) root.dataset.wallHandoffFrameTime = String(first.mediaTime);
+      root.dataset.wallFocusedQuality = `${hd.video.videoWidth}x${hd.video.videoHeight}`;
       root.dataset.wallFocusPlaybackReleasedAt = performance.now().toFixed(1);
       root.dataset.wallFocusPlaybackStartTime = hd.video.currentTime.toFixed(3);
       playback();
@@ -1277,6 +1418,7 @@ export async function mountHeroWall(root) {
     video.addEventListener('error', () => { if (focusedHd === hd) { clearHd(); playback(); } }, { once: true });
     // Only the enlarged HD source changes transport; the 40-tile camera and
     // outgoing-frame animation keep their existing geometry and lifecycle.
+    hd.frames = trackWallFrames(video, { signal: hd.abort.signal });
     unit.frame.append(video); connectHdStream(hd, unit);
     hd.promise = (async () => {
       if (!await hd.stream.load() || hd.abort.signal.aborted) return null;
@@ -1413,7 +1555,7 @@ export async function mountHeroWall(root) {
     root.dataset.wallFocusSelectedAt = performance.now().toFixed(1);
     root.dataset.wallFocusTargetStart = sourceStart(units[index]).toFixed(3);
     for (const key of ['wallCameraSettledAt', 'wallHdFadeSettledAt', 'wallFocusPlaybackReleasedAt', 'wallFocusPlaybackStartTime', 'wallFocusFirstPlayAt', 'wallFocusFirstPlayTime']) delete root.dataset[key];
-    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta']) delete root.dataset[key];
+    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffFrameTime', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta']) delete root.dataset[key];
     camera.setAttribute('aria-busy', 'true');
     selection.timer = setTimeout(() => {
       if (focusStart !== selection || selection.released) return;
@@ -1456,7 +1598,7 @@ export async function mountHeroWall(root) {
       // at the beginning rather than inheriting the retained outgoing clock.
       clearTimeout(hd.handoffTimer); hd.handoffTimer = null;
       hd.handoffRevision = (hd.handoffRevision || 0) + 1; hd.handingOff = false; hd.handoffPlaying = false;
-      hd.preparing = true; hd.playbackReady = false;
+      hd.preparing = true; hd.playbackReady = false; hd.firstFramePending = false; hd.firstFrameVerifying = hd.resumeFirstFrame = false; hd.resume = null;
       playbackController.sync(hd.video, false);
       hd.video.hidden = true; hd.video.classList.remove('is-ready');
       hd.ready = hd.playbackReady = false; hd.selection = null;
