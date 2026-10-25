@@ -2,14 +2,34 @@
 import { createRoutingVisual } from './method-routing.js?v=v38';
 import { createFrozenMark } from './frozen-mark.js?v=v38';
 export const METHOD_OVERVIEW = {
-  title: 'Learning and control with one model.',
-  caption: 'A humanoid needs both transferable knowledge of everyday interactions and commands tailored to its own body. WE-Dream first learns to predict video and latent actions from human egocentric experience, then adapts the same backbone to language-conditioned robot demonstrations. Routed attention retains video supervision during training while allowing deployment to predict actions alone; real-time chunking turns these predictions into a continuous stream of whole-body commands.',
+  "title": "A world-action model for whole-body control.",
+  "caption": "World-action models (WAMs) connect video-generative priors to robot control by jointly predicting future observations and actions. WE-Dream is a 16B-parameter humanoid WAM with two key ingredients: latent-action pretraining on up to 10,000 hours of human egocentric video, and routed attention that retains video supervision during training while enabling action-only inference. Multi-task robot post-training adapts the shared model to G1, and real-time chunking supports continuous whole-body execution."
 };
 export const METHOD_PARTS = [
-  { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learning interactions from visual change.', caption: 'Human videos offer diverse interaction experience, but human hand trajectories do not directly specify how a humanoid should move. A frozen latent action model encodes changes between consecutive frames into compact action representations, and WE-Dream learns to predict these latent actions together with future video. This teaches visual interaction patterns without prescribing human hand kinematics, leaving embodiment-specific commands to robot post-training.' },
-  { key: 'posttrain', label: 'Robot post-training', title: 'Adapting human experience to the robot.', caption: 'Robot post-training turns this visual experience into commands for the G1 humanoid. We inherit the pretrained weights, reinitialize only parameters affected by the new state and action dimensions, and fine-tune all trainable parameters across nine household tasks, conditioned on observed video, language instructions and joint positions. The resulting policy combines hand and neck targets with a latent body command for SONIC, coordinating manipulation with walking, turning and changes in posture.' },
-  { key: 'routing', label: 'Routed attention', title: 'Retaining video supervision for efficient control.', caption: 'Video prediction provides dense supervision, but generating future video also adds computation at deployment. During both training stages, each microbatch enables or masks action queries’ access to noisy future-video tokens with equal probability (p = 0.5); observed visual context and state remain available, and both video and action losses are retained. This prepares the same trained model for action-only inference while preserving video as a learning signal.' },
-  { key: 'deploy', label: 'Action-only deployment', title: 'Continuous control from action predictions.', caption: 'At deployment, the model predicts action chunks from observed video, the instruction and robot state, omitting future-video generation. Real-time chunking predicts 24 actions and replans every 12, so successive windows overlap by half; it runs prediction alongside execution and uses soft guidance to encourage smooth handovers. Together with inference acceleration, this supplies a continuous 30 Hz command stream, sending neck and hand targets directly and converting latent body commands into joint targets through SONIC.' },
+  {
+    "key": "pretrain",
+    "label": "Latent-action pretraining",
+    "title": "Scaling humanoid WAMs with latent actions.",
+    "caption": "Scaling humanoid WAMs with human video requires an action representation that transfers across embodiments. We use a frozen latent action model to encode consecutive frames into visual-transition codes, and train WE-Dream to jointly predict these codes and future video. Latent actions capture interaction semantics without prescribing human hand kinematics. In our controlled comparison, this objective transfers better than hand-pose supervision or action-free video pretraining; scaling the human-video data further improves downstream performance."
+  },
+  {
+    "key": "posttrain",
+    "label": "Robot post-training",
+    "title": "Multi-task post-training for whole-body control.",
+    "caption": "We adapt the pretrained WAM to Unitree G1 using demonstrations from nine household task families. The policy retains the shared video-action backbone and learns robot-specific state and action interfaces, with all trainable parameters optimized jointly. Conditioned on egocentric observations, language and joint positions, it predicts whole-body commands that combine hand and neck targets with SONIC latent body commands. This produces one policy for manipulation coordinated with walking, turning and changes in posture."
+  },
+  {
+    "key": "routing",
+    "label": "Routed attention",
+    "title": "Routed attention for action-only inference.",
+    "caption": "Video prediction provides dense supervision for a WAM, but generating future video adds cost during control. Our routed attention samples whether action queries can access noisy future-video tokens, with p = 0.5 in both training stages. Both routes retain observed context and both video and action losses. Mixing these attention routes lets the same model learn with and without future-video access, preparing it for action-only deployment while retaining video prediction as a training objective."
+  },
+  {
+    "key": "deploy",
+    "label": "Action-only deployment",
+    "title": "Real-time deployment of the 16B policy.",
+    "caption": "Action-only inference omits future-video denoising while retaining observed visual context, the instruction and robot state. We combine it with inference acceleration, FP8 quantization and real-time chunking to deploy the 16B policy on a single RTX 5090. The model predicts 24-action chunks and replans every 12 actions, running prediction alongside execution and using soft guidance for smooth handovers. The resulting continuous 30 Hz command stream drives the hands and neck directly and the body through SONIC."
+  }
 ];
 
 const NS = 'http://www.w3.org/2000/svg';
