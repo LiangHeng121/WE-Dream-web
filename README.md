@@ -6,11 +6,13 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v19.1 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v20 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
-## Release 19.1
+## Release 20
 
 - 1080p resolution and continuous playback take priority. All 57 full demonstrations and 6 skill excerpts use 1920 × 1080 H.264, 24 fps, CRF29, and MP4 faststart. Lossy bitrate is intentional; the 63 files total 358 MB, versus 2.19 GB in v16.
+- The opening wall paints all 40 first-frame tiles directly from initial HTML before scripts or video downloads; each video takes over after a decoded frame is presented. One embedded WebP atlas replaces the separate 40-poster request queue.
+- All 139 loading posters come from frame zero of the exact delivered video; wall previews use their own frames. All 57 full-video HLS first frames match the MP4 sources. Poster cache keys are updated without changing video URLs.
 - Scripts and styles are bundled into one entry each to reduce page-start network round trips. Explicit section navigation stays aligned while lazy content above it mounts; manual scrolling immediately cancels this short correction.
 - Full demonstrations use HLS with a bounded rolling buffer and one first-fragment neighbor preview; the original MP4 remains a fallback. Existing H.264 video packets are copied, without another lossy encode.
 - Only visible galleries may prefetch while a foreground gallery is active. Offscreen posters are deferred; sidebar thumbnails and WOFF2 fonts reduce non-video traffic.

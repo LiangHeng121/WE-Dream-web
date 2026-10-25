@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v19.1';
-import { createStreamVideo } from './stream-video.js?v=v19.1';
+import { seekVideo } from './video-seek.js?v=v20';
+import { createStreamVideo } from './stream-video.js?v=v20';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -145,54 +145,32 @@ export function createWallLoadQueue(items, { load, concurrency = 8, onChange = (
   };
 }
 
-// Posters are decorative fallbacks, never a 40-request prerequisite for video.
-// Decode a small low-priority batch first, then give video.poster the cached URL.
-export function createWallPosterQueue(items, { concurrency = 3, createImage = () => new Image() } = {}) {
-  const entries = items.map(item => ({ item, state: 'queued', attempt: null }));
-  let active = false, destroyed = false, allowed = null, loading = 0;
-  const eligible = entry => !allowed || allowed.has(entry.item);
-  function cancel(entry) {
-    const attempt = entry.attempt;
-    if (!attempt) return;
-    entry.attempt = null; entry.state = 'queued'; loading -= 1;
-    attempt.clean(); attempt.image.removeAttribute('src');
+// Preserve the static first-frame layer until this particular media element
+// has submitted its decoded frame. Reset on source cancellation, never on pause.
+export function bindWallFirstFrame(video) {
+  let callback = null, generation = 0, shown = false;
+  const hasFrameCallback = typeof video.requestVideoFrameCallback === 'function';
+  function clear() {
+    generation += 1; shown = false;
+    if (callback !== null) video.cancelVideoFrameCallback?.(callback);
+    callback = null; video.classList.remove('is-presented');
   }
-  function pump() {
-    if (!active || destroyed) return;
-    for (const entry of entries) {
-      if (loading >= concurrency) break;
-      if (entry.state !== 'queued' || !eligible(entry)) continue;
-      if (!entry.item.item.poster) { entry.state = 'ready'; continue; }
-      const image = createImage();
-      const attempt = { image, clean: () => { image.removeEventListener('load', loaded); image.removeEventListener('error', failed); } };
-      const settle = ready => {
-        if (entry.attempt !== attempt) return;
-        attempt.clean(); entry.attempt = null; loading -= 1;
-        entry.state = ready ? 'ready' : 'error';
-        if (ready) entry.item.video.poster = entry.item.item.poster;
-        pump();
-      };
-      const loaded = () => settle(true), failed = () => settle(false);
-      entry.attempt = attempt; entry.state = 'loading'; loading += 1;
-      image.fetchPriority = 'low'; image.decoding = 'async';
-      image.addEventListener('load', loaded); image.addEventListener('error', failed);
-      image.src = entry.item.item.poster;
-      if (image.complete && image.naturalWidth > 0) loaded();
-    }
+  function ready() {
+    if (shown || callback !== null || video.readyState < 2 || video.error || !video.getAttribute('src')) return;
+    const ticket = generation;
+    const reveal = () => {
+      if (ticket !== generation) return;
+      callback = null;
+      if (video.readyState < 2 || video.error || !video.getAttribute('src')) return;
+      shown = true; video.classList.add('is-presented');
+    };
+    if (hasFrameCallback) callback = video.requestVideoFrameCallback(reveal);
+    else reveal(); // loadeddata is the best available decoded-frame signal.
   }
-  return {
-    setActive(value, candidates = null) {
-      const resuming = value && !active;
-      active = value; allowed = candidates;
-      for (const entry of entries) {
-        if (!active || !eligible(entry)) cancel(entry);
-        if (resuming && entry.state === 'error') entry.state = 'queued';
-      }
-      pump();
-    },
-    destroy() { destroyed = true; active = false; entries.forEach(cancel); },
-    snapshot() { return { loading, ready: entries.filter(entry => entry.state === 'ready').length, total: entries.length }; }
-  };
+  const events = [['loadeddata', ready], ['playing', ready], ['loadstart', clear], ['emptied', clear], ['abort', clear], ['error', clear]];
+  events.forEach(([event, handler]) => video.addEventListener(event, handler));
+  ready();
+  return { destroy() { clear(); events.forEach(([event, handler]) => video.removeEventListener(event, handler)); } };
 }
 
 // Pausing a media element does not cancel its network request. Keep a completely
@@ -361,10 +339,10 @@ export function waitWallHdFrame(video, { signal, metadataOnly = false, timeout =
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v19.1').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v20').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v19.1').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v20').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -414,12 +392,13 @@ export async function mountHeroWall(root) {
   });
   camera.inert = true; camera.setAttribute('aria-hidden', 'true');
   focusLabel.setAttribute('aria-live', 'polite');
+  const shells = new Map([...camera.querySelectorAll('.wall-tile[data-wall-id]')].map(tile => [tile.dataset.wallId, tile]));
   const units = data.source_ids.map((id, index) => {
     const item = data.videos[id];
-    const tile = document.createElement('button');
-    tile.className = 'wall-tile'; tile.type = 'button'; tile.tabIndex = -1;
+    const tile = shells.get(id) || document.createElement('button');
+    tile.className = 'wall-tile'; tile.type = 'button'; tile.tabIndex = -1; tile.dataset.wallId = id;
     tile.setAttribute('aria-label', `Explore demonstration ${index + 1}: ${prompts.get(id)?.taskLabel || item.task}`);
-    const video = document.createElement('video');
+    const video = document.createElement('video'); video.className = 'wall-preview';
     video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.preload = 'none';
     video.dataset.clipId = id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.dataset.source = item.src;
@@ -431,13 +410,15 @@ export async function mountHeroWall(root) {
       if (!root.dataset.wallFirstDataAt) root.dataset.wallFirstDataAt = at;
       root.dataset.wallLoaded = `${units.filter(({ video: preview }) => preview.readyState >= 2).length}/${units.length}`;
     });
-    const frame = document.createElement('div'); frame.className = 'wall-video-frame';
-    frame.append(video); tile.append(frame); camera.append(tile);
+    const frame = tile.querySelector('.wall-video-frame') || document.createElement('div'); frame.className = 'wall-video-frame';
+    // Adopt the initial HTML without removing its already painted SVG layer.
+    const firstFrame = bindWallFirstFrame(video);
+    frame.append(video); if (!frame.parentNode) tile.append(frame); if (!tile.parentNode) camera.append(tile);
     tile.addEventListener('click', () => focus(index));
     tile.addEventListener('pointerenter', () => primeHd(index));
     tile.addEventListener('pointerleave', () => clearTimeout(hoverTimer));
     tile.addEventListener('focus', () => primeHd(index));
-    return { tile, video, item, frame };
+    return { tile, video, item, frame, firstFrame };
   });
   contentData.then(content => {
     if (!content || !root.isConnected) return;
@@ -457,23 +438,6 @@ export async function mountHeroWall(root) {
     };
     return distance(a) - distance(b);
   });
-  const posterCandidates = new Set();
-  const posterQueue = createWallPosterQueue(loadOrder);
-  const syncPosters = () => posterQueue.setActive(visible && !document.hidden, posterCandidates);
-  // The overflow-clipped, transformed tile bounds determine which fallbacks
-  // are about to appear during the unchanged reveal/camera animation.
-  const posterObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
-    for (const entry of entries) {
-      const unit = units.find(unit => unit.tile === entry.target);
-      if (entry.isIntersecting) posterCandidates.add(unit); else posterCandidates.delete(unit);
-    }
-    syncPosters();
-  }, { rootMargin: '120px 0px', threshold: 0 }) : null;
-  for (const unit of loadOrder) {
-    const box = unit.tile.getBoundingClientRect();
-    if (box.bottom > -120 && box.top < innerHeight + 120 && box.right > 0 && box.left < innerWidth) posterCandidates.add(unit);
-    posterObserver?.observe(unit.tile);
-  }
   let queuedPlaybackFrame = null;
   function schedulePlayback() {
     if (queuedPlaybackFrame !== null) return;
@@ -765,7 +729,6 @@ export async function mountHeroWall(root) {
   }
   function playback(reset = false) {
     const active = !paused && visible && !document.hidden;
-    syncPosters();
     if ((!visible || document.hidden) && !networkSuspended) suspendNetwork();
     if (visible && !document.hidden && networkSuspended) {
       networkSuspended = false; root.dataset.wallNetworkState = 'visible';
@@ -1047,7 +1010,7 @@ export async function mountHeroWall(root) {
     if (event.persisted) return;
     focusCoordinator.cancel(); clearTimeout(hoverTimer); discardPrepared();
     loadQueue.destroy();
-    posterObserver?.disconnect(); posterQueue.destroy();
+    units.forEach(unit => unit.firstFrame.destroy());
     clearTimeout(revealTimer);
     frameStates.forEach(state => state.stop());
   });

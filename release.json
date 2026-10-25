@@ -1,7 +1,7 @@
 {
-  "version": 19,
+  "version": 20,
   "published_date": "2026-10-25",
-  "release": "foreground-priority-bounded-1080p-streaming",
+  "release": "static-first-frame-hero-and-matching-video-posters",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -11,11 +11,13 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 1,
-  "document_cache_version": "v19.1",
+  "patch": 0,
+  "document_cache_version": "v20",
   "dataset_local_delivery": 17,
-  "review": "v19.1",
+  "review": "v20",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
-  "delivery": "Single JS and CSS entry bundles; foreground-priority streaming; stabilized explicit section navigation"
+  "delivery": "Static first-frame wall; decoded-frame handoff; bounded1080p streaming",
+  "loading_posters": 139,
+  "wall_first_paint": "40 tiles, one 61,286-byte embedded first-frame WebP atlas"
 }
