@@ -1,7 +1,7 @@
 {
-  "version": 27,
-  "published_date": "2026-10-25",
-  "release": "balanced-random-wall-and-category-badges",
+  "version": 28,
+  "published_date": "2026-10-26",
+  "release": "foreground-hd-recovery-and-inset-category-badges",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -11,10 +11,10 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 1,
-  "document_cache_version": "v27",
+  "patch": 0,
+  "document_cache_version": "v28",
   "dataset_local_delivery": 17,
-  "review": "v27",
+  "review": "v28",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -32,5 +32,7 @@
     "id": "blue",
     "l1": "lavender",
     "l2": "mint"
-  }
+  },
+  "wall_hd_recovery": "Promote warming HLS on selection; at most two selection-scoped retries for preparation and submitted-frame timeout failures",
+  "wall_category_badge": "Inside prompt upper-left; 12.5px; no dot"
 }

@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v27';
-import { createStreamVideo } from './stream-video.js?v=v27';
+import { seekVideo } from './video-seek.js?v=v28';
+import { createStreamVideo } from './stream-video.js?v=v28';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -587,10 +587,10 @@ export async function alignWallHandoff(video, preview, {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v27').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v28').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v27').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v28').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -1065,6 +1065,37 @@ export async function mountHeroWall(root) {
       if (current()) { root.dataset.wallHdWarmState = intent.state; root.dataset.wallHdWarmReason = intent.reason; schedulePlayback(); }
     });
   }
+  // A transient preparation/frame failure must not leave a selected preview
+  // permanently low-resolution. Give that selection two bounded recoveries;
+  // keep the existing decoder/PTS gate when available, and cancel on selection
+  // changes. Background tabs defer work until visible instead of doing I/O.
+  function scheduleHdRecovery(index, reason) {
+    const selection = focusStart;
+    if (!selection || focused !== index || selection.abort.signal.aborted || selection.handedOff || selection.hdRecoveryTimer || selection.hdRecoveryResume) return;
+    const attempt = (selection.hdRecoveryAttempts || 0) + 1;
+    if (attempt > 2) { root.dataset.wallHdRecoveryState = 'exhausted'; return; }
+    selection.hdRecoveryAttempts = attempt;
+    root.dataset.wallHdRecoveryState = 'scheduled';
+    root.dataset.wallHdRecoveryReason = reason;
+    root.dataset.wallHdRecoveryAttempt = String(attempt);
+    const run = () => {
+      selection.hdRecoveryTimer = null;
+      if (focusStart !== selection || focused !== index || selection.abort.signal.aborted || selection.handedOff) return;
+      if (!visible || document.hidden) { selection.hdRecoveryResume = run; root.dataset.wallHdRecoveryState = 'background'; return; }
+      selection.hdRecoveryResume = null;
+      // Genuine new media progress may already have resumed the handoff.
+      if (focusedHd?.handingOff || focusedHd?.firstFrameVerifying || preparedHd?.index === index) return;
+      root.dataset.wallHdRecoveryState = 'retrying';
+      if (focusedHd?.index === index && focusedHd.ready && !focusedHd.abort.signal.aborted) {
+        focusedHd.handoffAttempts = 0; focusedHd.selection = null;
+        activateHd(focusedHd);
+      } else if (!focusedHd) prepareHd(index);
+    };
+    selection.hdRecoveryTimer = setTimeout(run, attempt === 1 ? 800 : 2000);
+    selection.abort.signal.addEventListener('abort', () => {
+      clearTimeout(selection.hdRecoveryTimer); selection.hdRecoveryTimer = null; selection.hdRecoveryResume = null;
+    }, { once: true });
+  }
   function playback(reset = false) {
     const active = (!paused || (exploring && focused >= 0)) && visible && !document.hidden;
     if ((!visible || document.hidden) && !networkSuspended) suspendNetwork();
@@ -1109,6 +1140,7 @@ export async function mountHeroWall(root) {
       const wanted = active && Boolean(video.getAttribute('src')) && !units[i].resuming && !returning && (focused < 0 || selectedPreview);
       playbackController.sync(video, wanted, { reset });
     });
+    if (active && focusStart?.hdRecoveryResume) focusStart.hdRecoveryResume();
     if (active && focusedHd?.resumeFirstFrame) {
       const hd = focusedHd; hd.resumeFirstFrame = false; hd.selection = null; activateHd(hd);
     }
@@ -1202,6 +1234,7 @@ export async function mountHeroWall(root) {
           hd.handoffTimer = null;
           if (current()) activateHd(hd);
         }, 600);
+        if (hd.handoffAttempts >= 3) scheduleHdRecovery(hd.index, hd.handoffFrameTimedOut ? 'frame-timeout' : 'handoff-exhausted');
         playback();
       };
       root.dataset.wallHandoffState = 'aligning';
@@ -1384,7 +1417,14 @@ export async function mountHeroWall(root) {
       const decoded = preparedHd.video.readyState >= 2 && !preparedHd.video.seeking;
       // Reuse useful bytes already arriving in the first HLS fragment. Only
       // library/manifest-only speculation switches to the one-request MP4.
-      if (focused !== index || preparedHd.transport === 'native' || decoded || preparedHd.stream.state === 'warming') return preparedHd.promise;
+      if (focused === index && preparedHd.stream.state === 'warming') {
+        // Promote the existing in-flight fragment immediately. Keeping the
+        // speculative intent would stopLoad at FRAG_BUFFERED even after a click.
+        // start() changes intent before awaiting I/O and reuses the same source.
+        preparedHd.stream.start().catch(() => false);
+        root.dataset.wallHdPromotedAt = performance.now().toFixed(1);
+      }
+      if (focused !== index || preparedHd.transport === 'native' || decoded || preparedHd.stream.state === 'warming' || preparedHd.stream.state === 'streaming') return preparedHd.promise;
     }
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
@@ -1415,7 +1455,9 @@ export async function mountHeroWall(root) {
     });
     video.addEventListener('timeupdate', loopAction);
     video.addEventListener('ended', loopAction);
-    video.addEventListener('error', () => { if (focusedHd === hd) { clearHd(); playback(); } }, { once: true });
+    video.addEventListener('error', () => {
+      if (focusedHd === hd) { clearHd(); scheduleHdRecovery(index, 'media-error'); playback(); }
+    }, { once: true });
     // Only the enlarged HD source changes transport; the 40-tile camera and
     // outgoing-frame animation keep their existing geometry and lifecycle.
     hd.frames = trackWallFrames(video, { signal: hd.abort.signal });
@@ -1450,7 +1492,11 @@ export async function mountHeroWall(root) {
       return hd;
     })().catch(() => null).then(ready => {
       hd.preparing = false;
-      if (!ready && preparedHd === hd) { preparedHd = null; disposeHd(hd); }
+      if (!ready && preparedHd === hd) {
+        const recover = focused === index && !hd.abort.signal.aborted;
+        preparedHd = null; disposeHd(hd);
+        if (recover) scheduleHdRecovery(index, 'prepare-failed');
+      }
       return ready;
     });
     return hd.promise;
@@ -1477,16 +1523,19 @@ export async function mountHeroWall(root) {
   function showPrompt(unit) {
     const clip = prompts.get(unit.item.id), text = clip?.promptExact || clip?.prompt_exact || clip?.promptDisplay;
     focusLabel.replaceChildren();
+    const header = document.createElement('span'); header.className = 'wall-prompt-header';
+    const meta = document.createElement('span'); meta.className = 'wall-prompt-meta';
     const level = String(clip?.level || unit.item.level || '').trim().toLowerCase();
     const category = { id: ['id', 'In Domain'], 'in domain': ['id', 'In Domain'], l1: ['l1', 'L1 Generalization'], l2: ['l2', 'L2 Generalization'] }[level];
     if (category) {
       const badge = document.createElement('span'); badge.className = 'wall-level-badge';
-      badge.dataset.level = category[0]; badge.textContent = category[1]; focusLabel.append(badge);
+      badge.dataset.level = category[0]; badge.textContent = category[1]; header.append(badge);
     }
-    const label = document.createElement('span'); label.className = 'wall-prompt-label'; label.textContent = 'PROMPT'; focusLabel.append(label);
+    const label = document.createElement('span'); label.className = 'wall-prompt-label'; label.textContent = 'PROMPT'; meta.append(label);
     if (clip?.promptStatus === 'provisional') {
-      const draft = document.createElement('span'); draft.className = 'wall-prompt-draft'; draft.textContent = 'Draft'; focusLabel.append(draft);
+      const draft = document.createElement('span'); draft.className = 'wall-prompt-draft'; draft.textContent = 'Draft'; meta.append(draft);
     }
+    header.append(meta); focusLabel.append(header);
     const quote = document.createElement('span'); quote.className = 'wall-prompt-text';
     quote.textContent = text ? `“${text}”` : 'Instruction unavailable'; focusLabel.append(quote);
   }
@@ -1561,7 +1610,7 @@ export async function mountHeroWall(root) {
     root.dataset.wallFocusSelectedAt = performance.now().toFixed(1);
     root.dataset.wallFocusTargetStart = sourceStart(units[index]).toFixed(3);
     for (const key of ['wallCameraSettledAt', 'wallHdFadeSettledAt', 'wallFocusPlaybackReleasedAt', 'wallFocusPlaybackStartTime', 'wallFocusFirstPlayAt', 'wallFocusFirstPlayTime']) delete root.dataset[key];
-    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffFrameTime', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta']) delete root.dataset[key];
+    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffFrameTime', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta', 'wallHdRecoveryState', 'wallHdRecoveryReason', 'wallHdRecoveryAttempt', 'wallHdPromotedAt']) delete root.dataset[key];
     camera.setAttribute('aria-busy', 'true');
     selection.timer = setTimeout(() => {
       if (focusStart !== selection || selection.released) return;
@@ -1613,7 +1662,11 @@ export async function mountHeroWall(root) {
       hd.promise = alignHd(hd).catch(() => null).then(ready => {
         hd.preparing = false;
         if (ready && focusStart === selection && focused === index) activateHd(hd);
-        else if (!ready && preparedHd === hd) { preparedHd = null; disposeHd(hd); }
+        else if (!ready && preparedHd === hd) {
+          const recover = !hd.abort.signal.aborted && focusStart === selection && focused === index;
+          preparedHd = null; disposeHd(hd);
+          if (recover) scheduleHdRecovery(index, 'retained-prepare-failed');
+        }
         return ready;
       });
     }

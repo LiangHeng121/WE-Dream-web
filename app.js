@@ -1,14 +1,14 @@
-import { mountHeroWall } from './modules/hero-wall.js?v=v27';
-import { createStreamVideo } from './modules/stream-video.js?v=v27';
-import { createDemoDeck } from './modules/demo-deck.js?v=v27';
-import { createStagePlayer } from './modules/stage-player.js?v=v27';
-import { createSkillMix } from './modules/skill-mix.js?v=v27';
-import { seekVideo } from './modules/video-seek.js?v=v27';
-import { createVideoWarmScheduler, monitorVideoPlayback } from './modules/video-warm.js?v=v27';
-import { mountScrollReveal } from './modules/scroll-reveal.js?v=v27';
-const mountMethodFigure = root => import('./modules/method-figure.js?v=v27').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js?v=v27').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js?v=v27').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=v28';
+import { createStreamVideo } from './modules/stream-video.js?v=v28';
+import { createDemoDeck } from './modules/demo-deck.js?v=v28';
+import { createStagePlayer } from './modules/stage-player.js?v=v28';
+import { createSkillMix } from './modules/skill-mix.js?v=v28';
+import { seekVideo } from './modules/video-seek.js?v=v28';
+import { createVideoWarmScheduler, monitorVideoPlayback } from './modules/video-warm.js?v=v28';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=v28';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=v28').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=v28').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=v28').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -443,9 +443,9 @@ async function boot(){
     for(const event of ['pointerenter','focus','click'])link.addEventListener(event,()=>datasetMount().then(dataset=>dataset?.prepare?.()));
   });
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
-  const chapterData=getJSON('data/chapters.json?v=v27').then(data=>{chapters=data;});
-  const skillData=getJSON('data/skill-media.json?v=v27').then(data=>{skillMedia=data;});
-  const [content,media]=await Promise.all([getJSON('data/content.json?v=v27'),getJSON('assets/media/manifest.json?v=v27')]);
+  const chapterData=getJSON('data/chapters.json?v=v28').then(data=>{chapters=data;});
+  const skillData=getJSON('data/skill-media.json?v=v28').then(data=>{skillMedia=data;});
+  const [content,media]=await Promise.all([getJSON('data/content.json?v=v28'),getJSON('assets/media/manifest.json?v=v28')]);
   manifest=media;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],

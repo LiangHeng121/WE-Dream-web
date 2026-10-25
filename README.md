@@ -6,7 +6,15 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v27 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v28 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 28
+
+- Selecting a still-loading HLS preview immediately promotes the existing request to foreground buffering. It no longer finishes under the one-fragment background policy before starting active loading.
+- Temporary HD preparation failures and exhausted frame checks receive at most two selection-scoped recovery attempts. Switching away cancels recovery; hidden tabs defer it. The moving preview stays visible until the original submitted-frame timestamp check succeeds.
+- A controlled browser test returned HTTP 503 for the first selected HD request. The page retried after 800 ms and recovered to 1920 × 1080 without another click. This verifies temporary failure recovery, not a universal startup-time guarantee.
+- Category bubbles are larger and placed inside the prompt box at the upper left. Blue, lavender and mint remain matched to the corresponding sections; no leading dot.
+- All 14 hero/stream regression suites passed, with independent review. The 40-video selection, order, media encoding and camera transitions are unchanged.
 
 ## Release 27
 
