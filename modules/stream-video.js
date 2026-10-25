@@ -1,7 +1,7 @@
 // hls.js owns demuxing, MediaSource and its rolling buffer. This adapter only
 // owns request intent: one-fragment speculation versus foreground playback.
 // API: https://github.com/video-dev/hls.js/blob/v1.6.19/docs/API.md
-import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v37';
+import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v38';
 
 let libraryPromise;
 const loadLibrary = () => libraryPromise ||= import('../vendor/hls.js/hls.light.mjs');

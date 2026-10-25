@@ -1,7 +1,8 @@
 /* Original WE-Dream overview: a fixed architecture, not a sequence of slides. */
-import { createRoutingVisual } from './method-routing.js?v=v37';
+import { createRoutingVisual } from './method-routing.js?v=v38';
+import { createFrozenMark } from './frozen-mark.js?v=v38';
 export const METHOD_PARTS = [
-  { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn actions from human video.', caption: 'A frozen latent action model extracts 32D visual-transition targets from human first-person video.' },
+  { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn actions from human video.', caption: 'A frozen latent action model extracts 32D latent actions from human first-person video.' },
   { key: 'posttrain', label: 'Robot post-training', title: 'Adapt the pretrained model to robot control.', caption: 'Transfer model weights and jointly learn from robot demonstrations, states, and 80D action targets.' },
   { key: 'routing', label: 'Routed attention', title: 'Train with and without future-video access.', caption: 'Sample the two attention routes with equal probability per local microbatch, retaining video and action losses in both training stages.' },
   { key: 'deploy', label: 'Action-only deployment', title: 'Execute without future-video generation.', caption: 'The same trained weights predict action chunks. Neck and hands use direct targets; the body command goes through SONIC.' },
@@ -101,7 +102,7 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
   `;
   let mobile = window.matchMedia('(max-width: 760px)').matches;
   let layout = geometry(mobile);
-  let root, parts = [], flows = [], chunkCells = [], routingVisual = null;
+  let root, parts = [], flows = [], chunkCells = [], routingVisual = null, frozenMark = null;
   let last = { focus: null, time: 0, still: false };
   let previousFocus = Symbol();
   let destroyed = false;
@@ -172,12 +173,12 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     const lam = mobile ? { x: 60, y: 416, w: 205, h: 54 } : { x: 44, y: 285, w: 124, h: 44 };
     const target = mobile ? { x: 330, y: 416, w: 210, h: 54 } : { x: 188, y: 285, w: 138, h: 44 };
     const frozen = box(g, 'lam', lam.x, lam.y, lam.w, lam.h, 'Frozen LAM', '', { 'stroke-dasharray': '4 4' });
-    const frozenLabel = frozen.querySelector('text');
-    frozenLabel.setAttribute('x', lam.x + lam.w / 2 + (mobile ? 10 : 7));
-    frozenLabel.style.fontSize = mobile ? '22px' : '16px';
-    const snowflake = element('g', { transform: `translate(${lam.x + (mobile ? 22 : 14)} ${lam.y + lam.h / 2})`, 'aria-hidden': 'true', stroke: '#88b1cd', 'stroke-width': mobile ? 1.8 : 1.25, 'stroke-linecap': 'round', fill: 'none' }, frozen);
-    for (let i = 0; i < 6; i++) element('path', { d: mobile ? 'M0 0 V-9 M0-6 L-3-4 M0-6 L3-4' : 'M0 0 V-6 M0-4 L-2-2.5 M0-4 L2-2.5', transform: `rotate(${i * 60})` }, snowflake);
-    box(g, 'latent-targets', target.x, target.y, target.w, target.h, '32D latent', 'targets', { fill: '#f5eff9', stroke: '#d4c5e1' });
+    frozen.querySelector('text').style.fontSize = mobile ? '22px' : '16px';
+    frozenMark = createFrozenMark(frozen, {
+      x: lam.x - (mobile ? 14 : 10), y: lam.y - (mobile ? 20 : 14),
+      size: mobile ? 44 : 32, variant: 'glassSnowflake',
+    });
+    box(g, 'latent-targets', target.x, target.y, target.w, target.h, 'Latent action', '32D', { fill: '#f5eff9', stroke: '#d4c5e1' });
     const center = mobile ? 300 : 185;
     const end = layout.videos.human.y + layout.videos.human.height;
     const lamCenter = lam.x + lam.w / 2;
@@ -197,7 +198,8 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     const model = mobile ? { x: 50, y: 1337, w: 500, h: 443 } : { x: 424, y: 201, w: 382, h: 420 };
     const center = model.x + model.w / 2;
     const inputY = mobile ? 1245 : 122, inputH = mobile ? 56 : 42;
-    box(g, 'training-input', model.x, inputY, model.w, inputH, 'Video · language · state', '', { fill: '#f7f9fc', stroke: '#d2deeb' });
+    const input = box(g, 'training-input', model.x, inputY, model.w, inputH, 'Visual context · Instruction · State', '', { fill: '#f7f9fc', stroke: '#d2deeb' });
+    element('title', {}, input).textContent = 'Conditioning: observed visual history, a language instruction, and state. Human pretraining uses a zero state placeholder; robot post-training uses 45D proprioception. Text and reference-image features enter cross-attention.';
     wire(g, `M${center} ${inputY + inputH + 2} V${model.y - 3}`, 2, { id: 'inputs-to-model' });
     const core = element('g', { 'data-node': 'core' }, g);
     rect(core, model.x + 3, model.y + 5, model.w, model.h, { fill: '#b8c7df', 'fill-opacity': '.13', stroke: 'none', rx: 21 });
@@ -214,15 +216,17 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     const leftCenter = leftX + outputW / 2, rightCenter = rightX + outputW / 2;
     wire(g, `M${center} ${model.y + model.h + 1} V${junctionY - 6} Q${center} ${junctionY} ${center - 6} ${junctionY} H${leftCenter + 6} Q${leftCenter} ${junctionY} ${leftCenter} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'video-prediction' });
     wire(g, `M${center} ${model.y + model.h + 1} V${junctionY - 6} Q${center} ${junctionY} ${center + 6} ${junctionY} H${rightCenter - 6} Q${rightCenter} ${junctionY} ${rightCenter} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'action-prediction' });
-    box(g, 'videoLoss', leftX, outputY, outputW, mobile ? 80 : 64, 'Video prediction', '+ video loss', { fill: '#f1f7fa' });
-    box(g, 'actionLoss', rightX, outputY, outputW, mobile ? 80 : 64, 'Action prediction', '+ action loss', { fill: '#f6f1fa' });
+    box(g, 'videoLoss', leftX, outputY, outputW, mobile ? 80 : 64, 'Video prediction', 'Video loss', { fill: '#f1f7fa' });
+    box(g, 'actionLoss', rightX, outputY, outputW, mobile ? 80 : 64, 'Action prediction', 'Action loss', { fill: '#f6f1fa' });
   }
   function drawDeployment() {
     const g = panel(3);
     const x = mobile ? 60 : 904, width = mobile ? 480 : 372, center = x + width / 2;
     const observationY = mobile ? 2120 : 122;
     const policyY = mobile ? 2220 : 197;
-    box(g, 'observed-context', x, observationY, width, mobile ? 60 : 42, 'Camera · language · state', '', { fill: '#f4f8f6', stroke: '#d2e2d9' });
+    const input = box(g, 'observed-context', x, observationY, width, mobile ? 60 : 42, 'Observations · Instruction · Robot state', '', { fill: '#f4f8f6', stroke: '#d2e2d9' });
+    input.querySelector('text').style.fontSize = mobile ? '23px' : '17px';
+    element('title', {}, input).textContent = 'Observed head-camera frames and retained visual history, a language instruction, and the current 45D proprioceptive state condition action-only inference.';
     box(g, 'action-only-policy', x, policyY, width, mobile ? 76 : 62, 'Action-only prediction', 'Future video omitted', { fill: '#edf6f1', stroke: '#bfd9cb' });
     wire(g, `M${center} ${observationY + (mobile ? 62 : 44)} V${policyY - 3}`, 3, { id: 'context-to-policy' });
     const chunkY = mobile ? 2340 : 296;
@@ -276,6 +280,8 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
   function build() {
     routingVisual?.destroy();
     routingVisual = null;
+    frozenMark?.destroy();
+    frozenMark = null;
     root?.remove();
     parts = []; flows = []; chunkCells = [];
     previousFocus = Symbol();
@@ -312,6 +318,7 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
       flow.dot.setAttribute('cy', point.y);
     });
     routingVisual?.render({ time, still, active: focus === null || focus === 2 });
+    frozenMark?.render({ time, still: still || (focus !== null && focus !== 0) });
     const cursor = still ? 12 : Math.floor(((time / 100) % 24 + 24) % 24);
     chunkCells.forEach((cell, i) => cell.style.opacity = focus === null || focus === 3 ? (i <= cursor ? '1' : '.48') : '.8');
   }
@@ -323,5 +330,5 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
   }
   build();
   render(last);
-  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; routingVisual?.destroy(); root?.remove(); svg.remove(); } };
+  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; routingVisual?.destroy(); frozenMark?.destroy(); root?.remove(); svg.remove(); } };
 }

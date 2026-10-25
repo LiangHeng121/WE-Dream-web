@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f7f9fc">
+<title>WE-Dream · Frozen 动效方案</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/fonts/fonts.css?v=v38">
+<style>
+*{box-sizing:border-box}html{color-scheme:light}body{margin:0;background:radial-gradient(ellipse at 12% 0,#e8f2fb 0,transparent 55%),radial-gradient(ellipse at 91% 70%,#eee8f7 0,transparent 50%),#f8fafc;color:#45647c;font-family:'DM Sans',Arial,'PingFang SC','Microsoft YaHei',sans-serif}main{width:min(1290px,calc(100% - 64px));margin:auto;padding:32px 0 36px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:11px;letter-spacing:.15em;color:#8d9fb4}.back{color:#627e98;font-size:13px;text-decoration:none;background:#ffffff90;border:1px solid #fff;border-radius:24px;padding:10px 17px}.heading{margin:34px 0 28px;display:flex;align-items:end;justify-content:space-between;gap:40px}h1{font-size:35px;letter-spacing:-.04em;font-weight:500;line-height:1.35;margin:0}.intro{max-width:470px;margin:0;color:#8395a9;font-size:14px;line-height:1.9}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.option{padding:25px 24px 23px;min-width:0;background:linear-gradient(140deg,#fffffff2,#ffffff66);border:1px solid #fff;border-radius:32px;box-shadow:0 18px 50px #abb8ce15}.title{display:flex;gap:12px;align-items:center}.number{height:34px;width:34px;display:grid;place-items:center;flex:none;border:1px solid #fff;background:linear-gradient(135deg,#e3f0f7,#e9e3f3);border-radius:13px;color:#8a9fb7;font-size:13px}h2{font-size:21px;font-weight:500;letter-spacing:-.03em;margin:0}.scene{margin:24px 0 20px;display:grid;place-items:center;height:230px;position:relative;border-radius:25px;background:radial-gradient(ellipse at 50% 50%,#e8f2f990 0,transparent 67%)}.option:nth-child(2) .scene{background:radial-gradient(ellipse at 50% 50%,#e5f3f280 0,transparent 67%)}.option:nth-child(3) .scene{background:radial-gradient(ellipse at 50% 50%,#ede8f890 0,transparent 67%)}.large{width:290px;max-width:100%;height:160px;overflow:visible}.natural{padding-top:20px;border-top:1px solid #dce6ef70;display:flex;align-items:center;justify-content:space-between;gap:12px}.size-label{font-size:11px;color:#99a8b8;letter-spacing:.02em}.capsule{width:124px;height:44px;flex:none;overflow:visible}.capsule text,.capsule-large text{font-family:'DM Sans',Arial,sans-serif;fill:#63839e;font-size:12px;font-weight:500}.description{color:#7e92a7;font-size:13px;line-height:1.85;margin:19px 0 0;min-height:48px}.footer{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-top:25px;font-size:12px;color:#8a9caf}.footer p{margin:0;line-height:1.8}.motion-control{font:inherit;color:#6c86a0;background:#ffffff80;border:1px solid #fff;border-radius:20px;padding:9px 15px;cursor:pointer;white-space:nowrap}a:focus-visible,button:focus-visible{outline:3px solid #adcbdc;outline-offset:4px}@media(max-width:1000px){.options{gap:15px}.option{padding:22px 18px}.heading{align-items:start;flex-direction:column;gap:15px}.intro{max-width:680px}.natural{flex-direction:column;justify-content:center;gap:13px}.scene{height:210px}}@media(max-width:720px){main{width:calc(100% - 32px);padding-top:22px}.heading{margin-top:28px}h1{font-size:29px}.options{grid-template-columns:1fr}.option{padding:24px}.scene{height:195px;margin-top:12px}.natural{flex-direction:row}.description{min-height:0}.footer{align-items:start;flex-direction:column;gap:14px}.eyebrow{font-size:10px;letter-spacing:.09em}.back{font-size:12px;padding:9px 13px}}
+</style>
+</head>
+<body>
+<main>
+<header><span class="eyebrow">WE-DREAM · MOTION STUDIES</span><a class="back" href="index.html#method-root">↖ 返回 Method</a></header>
+<div class="heading"><h1>让雪花柔软地动起来。</h1><p class="intro">保留六向分枝的雪花轮廓，用圆润的冰蓝渐变和轻微晃动增加动画感。三个方案都叠在 Frozen LAM 泡泡的左上角。</p></div>
+<section class="options" aria-label="Frozen 标记动画方案">
+<article class="option"><div class="title"><span class="number">A</span><h2>软雪花</h2></div><div class="scene"><svg class="large" viewBox="-22 -28 168 90" data-variant="softSnowflake" role="img" aria-label="左上角圆润的六向雪花轻轻摇摆"></svg></div><div class="natural"><span class="size-label">实际尺寸 · 32 px</span><svg class="capsule" viewBox="0 0 124 44" data-small="softSnowflake" role="img" aria-label="软雪花位于 Frozen LAM 左上角"><rect x=".5" y=".5" width="123" height="43" rx="16" fill="#ffffffb3" stroke="#d7e4f1" stroke-dasharray="3 4"/><text x="62" y="26.5" text-anchor="middle">Frozen LAM</text></svg></div><p class="description">粗圆分枝，冰蓝到淡紫渐变，柔和地左右摇摆。小光点随之浮动。</p></article>
+<article class="option"><div class="title"><span class="number">B</span><h2>玻璃雪花</h2></div><div class="scene"><svg class="large" viewBox="-22 -28 168 90" data-variant="glassSnowflake" role="img" aria-label="左上角的半透明六向雪花，冰蓝表面有柔光滑动"></svg></div><div class="natural"><span class="size-label">实际尺寸 · 32 px</span><svg class="capsule" viewBox="0 0 124 44" data-small="glassSnowflake" role="img" aria-label="玻璃雪花位于 Frozen LAM 左上角"><rect x=".5" y=".5" width="123" height="43" rx="16" fill="#ffffffb3" stroke="#d7e4f1" stroke-dasharray="3 4"/><text x="62" y="26.5" text-anchor="middle">Frozen LAM</text></svg></div><p class="description">更轻透的分枝和玻璃高光。晃动幅度较小，柔光缓缓扫过雪花。</p></article>
+<article class="option"><div class="title"><span class="number">C</span><h2>弹性雪花</h2></div><div class="scene"><svg class="large" viewBox="-22 -28 168 90" data-variant="playfulSnowflake" role="img" aria-label="左上角饱满圆润的六向雪花，轻盈晃动"></svg></div><div class="natural"><span class="size-label">实际尺寸 · 32 px</span><svg class="capsule" viewBox="0 0 124 44" data-small="playfulSnowflake" role="img" aria-label="弹性雪花搭配 Frozen LAM 标签"><rect x=".5" y=".5" width="123" height="43" rx="16" fill="#ffffffb3" stroke="#d7e4f1" stroke-dasharray="3 4"/><text x="62" y="26.5" text-anchor="middle">Frozen LAM</text></svg></div><p class="description">更饱满的圆角分枝，加一点弹性的上下起伏和倾斜，动画感更鲜明。</p></article>
+</section>
+<div class="footer"><p>选你喜欢的 A / B / C；也可以指定一种形状，加上另一种动效。</p><button type="button" class="motion-control" id="motion-toggle" aria-pressed="false">暂停预览</button><span id="motion-status" class="size-label" aria-live="polite"></span></div>
+</main>
+<script type="module">
+import { createFrozenMark } from './modules/frozen-mark.js?v=v38';
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const examples = [...document.querySelectorAll('[data-variant], [data-small]')].map(svg => {
+ if(svg.hasAttribute('data-variant')) {
+  const sample=document.querySelector('[data-small]').cloneNode(true);
+  [...sample.children].filter(child=>['rect','text'].includes(child.localName)).forEach(child=>svg.append(child));
+  svg.classList.add('capsule-large');
+ }
+ return { node:svg, visible:true, marker:createFrozenMark(svg,{x:-10,y:-14,size:32,variant:svg.dataset.small || svg.dataset.variant}) };
+});
+let frame = 0, last = 0, elapsed = 0, paused = false;
+const toggle = document.querySelector('#motion-toggle');
+const status = document.querySelector('#motion-status');
+function draw() { examples.forEach(item => { if(item.visible) item.marker.render({ time: elapsed, still: reducedMotion.matches }); }); }
+function tick(now) {
+ frame = 0;
+ if(document.hidden || reducedMotion.matches || paused) { last = 0; return; }
+ elapsed += last ? Math.min(80, now-last) : 0; last = now;
+ draw(); frame = requestAnimationFrame(tick);
+}
+function sync() {
+ cancelAnimationFrame(frame); frame = 0; last = 0;
+ toggle.disabled = reducedMotion.matches;
+ toggle.textContent = reducedMotion.matches ? '已减少动态效果' : paused ? '播放预览' : '暂停预览';
+ toggle.setAttribute('aria-pressed',String(paused || reducedMotion.matches));
+ status.textContent = reducedMotion.matches ? '遵循系统动态效果设置' : '';
+ draw();
+ if(!document.hidden && !reducedMotion.matches && !paused) frame = requestAnimationFrame(tick);
+}
+const observer = new IntersectionObserver(entries => {
+ entries.forEach(entry => { const item = examples.find(item => item.node === entry.target); if(item) item.visible = entry.isIntersecting; }); draw();
+}, { threshold: 0 });
+examples.forEach(item => observer.observe(item.node));
+toggle.addEventListener('click',() => { paused=!paused; sync(); });
+reducedMotion.addEventListener('change',sync);
+document.addEventListener('visibilitychange',sync);
+addEventListener('pagehide',() => { cancelAnimationFrame(frame); observer.disconnect(); });
+addEventListener('pageshow',() => { examples.forEach(item => observer.observe(item.node)); sync(); });
+sync();
+</script>
+</body>
+</html>

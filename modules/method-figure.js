@@ -1,5 +1,5 @@
-import { videoFullyBuffered } from './video-warm.js?v=v37';
-import { METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v37';
+import { videoFullyBuffered } from './video-warm.js?v=v38';
+import { METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v38';
 
 export function createMethodVideoController(video, { mayPlay, shouldSuspend, signal } = {}) {
   let saved = null, restoring = false, disposed = false;
@@ -68,9 +68,9 @@ export function mountMethodFigure(root) {
     </div>
     <div class="mf-viewport">
       <div class="mf-diagram"></div>
-      <div class="mf-method-film" data-method-film="human" data-part="0"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v36/human-pretraining-mosaic.mp4" poster="assets/media/method-v36/human-pretraining-mosaic.jpg?v=v37" aria-label="Two EgoDex and two EgoVerse first-person demonstrations in a video mosaic"></video></div></div>
-      <div class="mf-method-film" data-method-film="robot" data-part="1"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v36/robot-posttraining-mosaic.mp4" poster="assets/media/method-v36/robot-posttraining-mosaic.jpg?v=v37" aria-label="Four robot demonstrations from the G1 head camera in a video mosaic"></video></div></div>
-      <div class="mf-method-film" data-method-film="execution" data-part="3"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v35/deployment-prefilter1080.mp4" poster="assets/media/method-v35/deployment-prefilter1080.jpg?v=v37" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div></div>
+      <div class="mf-method-film" data-method-film="human" data-part="0"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v36/human-pretraining-mosaic.mp4" poster="assets/media/method-v36/human-pretraining-mosaic.jpg?v=v38" aria-label="Two EgoDex and two EgoVerse first-person demonstrations in a video mosaic"></video></div></div>
+      <div class="mf-method-film" data-method-film="robot" data-part="1"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v36/robot-posttraining-mosaic.mp4" poster="assets/media/method-v36/robot-posttraining-mosaic.jpg?v=v38" aria-label="Four robot demonstrations from the G1 head camera in a video mosaic"></video></div></div>
+      <div class="mf-method-film" data-method-film="execution" data-part="3"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v35/deployment-prefilter1080.mp4" poster="assets/media/method-v35/deployment-prefilter1080.jpg?v=v38" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div></div>
     </div>
     <div class="mf-overview-footer"><p class="mf-focus-caption"></p></div>`;
   const viewport = root.querySelector('.mf-viewport');

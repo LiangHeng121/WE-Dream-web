@@ -8,6 +8,13 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 This repository contains the buildless research website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
+## Release 38
+
+- Restore the v35 blue/lavender attention matrix treatment, retaining all16 entries and the single p=0.5 routed cell. Use consistent C/V/A/S labels and both unchanged training objectives.
+- Correct the LAM output to32D latent action; distinguish visual context/instruction/state conditioning from the internal token streams. Deployment explicitly receives observations, instruction and robot state.
+- Selected glass snowflake moves gently at the upper-left corner of Frozen LAM. It shares the existing visibility/reduced-motion scheduling.
+- Hero/video files and playback remain unchanged. The source-derived first-frame atlas integrity checks pass before and after packaging.
+
 ## Release 37
 
 - Restore the embedded first-frame wall atlas. A broad version-string replacement had changed one base64 character inside the WebP, producing visible corruption while videos were still loading.
