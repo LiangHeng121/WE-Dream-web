@@ -1,13 +1,13 @@
-import { mountHeroWall } from './modules/hero-wall.js?v=17.2';
-import { createDemoDeck } from './modules/demo-deck.js?v=17.2';
-import { createStagePlayer } from './modules/stage-player.js?v=17.2';
-import { createSkillMix } from './modules/skill-mix.js?v=17.2';
-import { seekVideo } from './modules/video-seek.js?v=17.2';
-import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, videoCanPrefetch, monitorVideoPlayback } from './modules/video-warm.js?v=17.2';
-import { mountScrollReveal } from './modules/scroll-reveal.js?v=17.2';
-const mountMethodFigure = root => import('./modules/method-figure.js?v=17.2').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17.2').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17.2').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=18';
+import { createDemoDeck } from './modules/demo-deck.js?v=18';
+import { createStagePlayer } from './modules/stage-player.js?v=18';
+import { createSkillMix } from './modules/skill-mix.js?v=18';
+import { seekVideo } from './modules/video-seek.js?v=18';
+import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, monitorVideoPlayback } from './modules/video-warm.js?v=18';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=18';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=18').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=18').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=18').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -220,21 +220,26 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     if(!primary)return Promise.resolve();
     // A recent explicit hover/click outranks incidental observer/resize work.
     if(warmer.priorityPlayer&&warmer.priorityPlayer!==primary)return warmer.pending;
-    const adjacent=constrained||!neighbors?[]:[index+1,index-1].map(i=>playerCache.get(clips[i]?.id)).filter(Boolean);
-    if(adjacent.includes(previewPlayer))adjacent.sort((a,b)=>Number(b===previewPlayer)-Number(a===previewPlayer));
+    const adjacent=constrained||!neighbors?[]:[previewPlayer,...[index+1,index-1].map(i=>playerCache.get(clips[i]?.id))].filter(player=>player&&player!==primary);
     return warmer.sequence(primary,adjacent,{isCurrent:()=>currentGroup===record&&activePlayer===primary&&(visible||force)&&!document.hidden});
   }
-  function previewNavigation(index,{item}){
-    if(!visible||constrained||inMotion||document.hidden||warmer.priorityPlayer)return;
-    previewPlayer=playerCache.get(item.id);
+  function previewPlayerIntent(player){
+    if(!player||player===activePlayer||!visible||constrained||inMotion||document.hidden||warmer.priorityPlayer)return;
+    // A hovered task can belong to another cached group. Keep it as the one
+    // speculative target instead of cancelling its first frame on completion.
+    previewPlayer=player;
     warmNeighbors(Math.max(0,deck.getActiveIndex()));
+  }
+  function previewNavigation(index,{item}){
+    previewPlayerIntent(playerCache.get(item.id));
   }
   function prioritizePlayer(player,{navigation=false}={}){
     if(!player||document.hidden)return;
+    if(navigation)previewPlayer=null;
     const preparing=warmer.prioritize(player,{isCurrent:()=>!document.hidden});
     const generation=warmer.generation;
     const resumeNeighbors=()=>{
-      // Completed hovers release their priority back to the visible deck once.
+      // Completed explicit preparation returns its budget to the visible deck.
       // A stale completion cannot replace newer hover or observer work, and a
       // navigation still entering another card must retain its own transition.
       if(generation!==warmer.generation||warmer.pending||!visible||document.hidden)return;
@@ -308,11 +313,11 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   }
   tabs.forEach((t,i)=>{
     t.addEventListener('click',()=>selectGroup(i));
-    const prime=()=>{if(!visible||constrained||inMotion||!videoCanPrefetch(activePlayer.video))return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
+    const prime=()=>{if(!visible||constrained||inMotion)return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];previewPlayerIntent(playerCache.get(clip.id));};
     t.addEventListener('pointerenter',prime);t.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>{
-    const prime=()=>{if(!visible||constrained||inMotion||!videoCanPrefetch(activePlayer.video))return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
+    const prime=()=>{if(!visible||constrained||inMotion)return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);previewPlayerIntent(playerCache.get(record.items[task.indices[0]].id));};
     row.addEventListener('pointerenter',prime);row.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>row.addEventListener('click',async()=>{
@@ -328,17 +333,17 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     const index=e.key==='Home'?0:e.key==='End'?tabs.length-1:(current+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)+tabs.length)%tabs.length;
     selectGroup(index);tabs[index].focus({preventScroll:true});
   });
-  new IntersectionObserver(([entry])=>{const wasNear=near;near=entry.isIntersecting;if(!near&&wasNear&&!visible){warmer.cancel();players.forEach(p=>p.suspend());}},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
-  new IntersectionObserver(([entry])=>{const wasVisible=visible;visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else{players.forEach(p=>p.pause());if(wasVisible){warmer.cancel();players.forEach(p=>p.suspend());}}},{threshold:.15}).observe(deckHost);
+  new IntersectionObserver(([entry])=>{const wasNear=near;near=entry.isIntersecting;if(near&&!visible){warmNeighbors(Math.max(0,deck.getActiveIndex()),{force:true,neighbors:false});}else if(!near&&wasNear&&!visible){warmer.cancel();players.forEach(p=>p.suspend());}},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
+  new IntersectionObserver(([entry])=>{const wasVisible=visible;visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else{players.forEach(p=>p.pause());if(wasVisible){if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()),{force:true,neighbors:false});else{warmer.cancel();players.forEach(p=>p.suspend());}}}},{threshold:.15}).observe(deckHost);
   document.addEventListener('visibilitychange',()=>{if(document.hidden){warmer.cancel();players.forEach(p=>{p.pause();p.suspend();});}else{if(visible)warmNeighbors(Math.max(0,deck.getActiveIndex()));if(visible)activePlayer?.play();}});
   const gallery={refresh(){if(visible)activePlayer?.play();},prepare(){if(!root.dataset.prepareAt)root.dataset.prepareAt=performance.now().toFixed(1);return prioritizePlayer(activePlayer);},get deck(){return deck;}};galleries.push(gallery);return gallery;
 }
 
-function mountNear(host,mount){
+function mountNear(host,mount,{margin=650}={}){
   let runPromise=null,observer;
   const run=()=>{if(!runPromise){observer?.disconnect();host.dataset.mountRequestedAt=performance.now().toFixed(1);runPromise=Promise.resolve().then(mount).then(value=>{host.classList.add('is-mounted');scrollReveal.refresh();return value;}).catch(error=>console.error('Section failed to load',host.id,error));}return runPromise;};
   if(!('IntersectionObserver' in window)){run();return run;}
-  observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))run();},{rootMargin:'650px 0px',threshold:0});
+  observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))run();},{rootMargin:`${margin}px 0px`,threshold:0});
   observer.observe(host);
   // Direct section links must not depend on the previous sections being mounted.
   const target=location.hash?document.getElementById(location.hash.slice(1)):null;
@@ -348,7 +353,14 @@ function mountNear(host,mount){
 async function boot(){
   // Start the wall before the lower-page data and gallery DOM work.
   const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
-  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17.2'),getJSON('assets/media/manifest.json?v=17.2'),getJSON('data/chapters.json?v=17.2'),getJSON('data/skill-media.json?v=17.2')]);
+  // Independent sections must not wait for the unrelated evaluation manifests.
+  mountNear($('#method-root'),()=>mountMethodFigure($('#method-root')));
+  const datasetMount=mountNear($('#dataset-root'),()=>mountDatasetFilms($('#dataset-root')),{margin:1200});
+  document.querySelectorAll('a[href="#dataset"]').forEach(link=>{
+    for(const event of ['pointerenter','focus','click'])link.addEventListener(event,()=>datasetMount().then(dataset=>dataset?.prepare?.()));
+  });
+  mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
+  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=18'),getJSON('assets/media/manifest.json?v=18'),getJSON('data/chapters.json?v=18'),getJSON('data/skill-media.json?v=18')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],
@@ -362,9 +374,6 @@ async function boot(){
       for(const event of ['pointerenter','focus','click'])link.addEventListener(event,prepare);
     });
   }
-  mountNear($('#method-root'),()=>mountMethodFigure($('#method-root')));
-  mountNear($('#dataset-root'),()=>mountDatasetFilms($('#dataset-root')));
-  mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
   scrollReveal.refresh();
   if(content.project.authors.length){const a=$('#authors');a.textContent=content.project.authors.join(' · ');a.hidden=false;}
   await hero;
