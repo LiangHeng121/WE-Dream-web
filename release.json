@@ -1,7 +1,7 @@
 {
-  "version": 31,
+  "version": 32,
   "published_date": "2026-10-26",
-  "release": "cached-hd-startup-fragments",
+  "release": "native-animated-method",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -11,10 +11,10 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 2,
-  "document_cache_version": "v31.2",
+  "patch": 0,
+  "document_cache_version": "v32",
   "dataset_local_delivery": 17,
-  "review": "v31.2",
+  "review": "v32",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -42,5 +42,6 @@
   "wall_startup_cache_files": 40,
   "wall_startup_payload_reduction_percent": 48.25,
   "wall_startup_transfer_validation": "HTTP Content-Encoding-aware length checks; bounded decoded bytes and SHA256 remain mandatory",
-  "wall_startup_cache_lookup": "Relative HLS fragment URLs resolve against document base for exact cache lookup; original request callbacks and query strings preserved"
+  "wall_startup_cache_lookup": "Relative HLS fragment URLs resolve against document base for exact cache lookup; original request callbacks and query strings preserved",
+  "method_presentation": "Native SVG walkthrough with latent-action pretraining, robot post-training, routed attention and action-only deployment; interactive chapter controls, route comparison and scrubbing"
 }

@@ -1,49 +1,34 @@
-import { videoFullyBuffered } from './video-warm.js?v=v31.2';
+import { videoFullyBuffered } from './video-warm.js?v=v32';
+import { METHOD_STEPS, createMethodDiagram } from './method-diagram.js?v=v32';
 
-// Original Figure 2 regions are the visual source of truth. These overlays
-// highlight existing modules, rather than replacing the architecture.
-const FIGURES = {
-  overview: 'assets/figures/method-overview.png',
-  latent: 'assets/figures/method-human.png',
-  robot: 'assets/figures/method-robot.png',
-  backbone: 'assets/figures/method-backbone.png',
-  control: 'assets/figures/method-control-path.png',
-};
-const MEDIA = {
-  execution: {
-    src: 'assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4',
-    poster: 'assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v31.2',
-    label: 'Policy execution',
-    source: 'https://drive.google.com/file/d/1puOhktSpme4E-M6At185A0rK9V-ax5ez/view',
-    alt: 'A WE-Dream humanoid rollout collecting a yellow shirt into a laundry basket.',
-  },
-};
-
-// Paper pp. 3–5, Fig. 2 and Sections III-C/III-F: mixed routing is a
-// training mechanism; the deployed system uses action-only inference + RTC.
-const DETAILS = {
-  latent: { panel: 'latent', label: 'Latent-action pretraining', title: 'Transfer interaction knowledge from human video.', text: 'A frozen latent action model encodes consecutive frames into 32D transition codes. These targets supervise action prediction alongside video, capturing interaction semantics without prescribing human hand kinematics.', facts: ['Frozen LAM', '32D visual-transition codes'] },
-  transfer: { panel: 'latent', label: 'Transferring the pretrained model', title: 'Adapt the interface while reusing the backbone.', text: 'Robot post-training transfers the pretrained backbone and adapts the action and state interfaces to 80D humanoid commands and 45D states. A single policy is then jointly trained on nine household task families.', facts: ['Pretrained shared backbone', 'One humanoid policy'] },
-  routing: { panel: 'routing', label: 'Routed attention', title: 'Retain video learning for action-only control.', text: 'Routed attention varies action queries’ access to noisy future-video tokens during training. Both routes retain video and action supervision; the deployed policy can then omit future-video generation.', facts: ['Mixed routing · p = 0.5', 'Both training losses retained'] },
-  backbone: { panel: 'routing', label: 'Shared world–action backbone', title: 'Couple visual prediction and action learning.', text: 'Separate video, action and state encoders feed a shared DiT. Language and reference-image embeddings provide cross-attention conditioning, connecting visual dynamics and action prediction within one model.', facts: ['Shared DiT', 'Language + image conditioning'] },
-  context: { panel: 'routing', label: 'Block-causal attention', title: 'Ground actions in observed history.', text: 'Clean past observations remain visible. Video, action and state align within the current temporal block, while later blocks are masked. Action queries always retain observed context.', facts: ['Clean visual history', 'Aligned temporal blocks'] },
-  objectives: { panel: 'routing', label: 'Training objectives', title: 'Learn world dynamics and actions together.', text: 'The video head and action decoder predict separate flow velocities. Video and action losses have equal weight in both pretraining and robot post-training, including both sampled attention routes.', facts: ['Video flow matching', 'Action flow matching'] },
-  control: { panel: 'control', label: 'Action-only deployment', title: 'Keep moving while the model predicts.', text: 'Deployment omits future-video denoising and reuses cached observation keys and values. Real-time chunking predicts 24 actions and replans every 12, overlapping prediction and execution for a continuous 30 Hz action stream.', facts: ['No future-video denoising', '24 actions · replan every 12'] },
-  execution: { panel: 'execution', label: 'Whole-body execution', title: 'Turn compact commands into coordinated motion.', text: 'Hand and neck targets execute directly. SONIC converts the 64D latent body command into body joint targets, supporting continuous whole-body execution.', facts: ['Direct hand + neck targets', 'SONIC body controller'] },
-};
-function film(key, label = MEDIA[key].label) {
-  const media = MEDIA[key];
-  return `<figure class="mf-film"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="${media.src}" poster="${media.poster}" aria-label="${media.alt}"></video></div><figcaption><a href="${media.source}" target="_blank" rel="noopener">${label} ↗</a></figcaption></figure>`;
+// One clock owns the entire diagram. Offscreen/hidden time is never accumulated.
+export function createMethodClock(steps, reduced = false) {
+  const state = { index: 0, time: 0, paused: reduced };
+  const total = steps.reduce((sum, item) => sum + item.duration, 0);
+  function select(index) {
+    state.index = Math.max(0, Math.min(steps.length - 1, index));
+    state.time = 0;
+  }
+  function seek(fraction) {
+    let time = Math.max(0, Math.min(1, fraction)) * total;
+    let index = 0;
+    while (index < steps.length - 1 && time >= steps[index].duration) time -= steps[index++].duration;
+    state.index = index; state.time = time;
+  }
+  function advance(dt) {
+    if (state.paused || !Number.isFinite(dt) || dt <= 0) return false;
+    const previous = state.index;
+    state.time += Math.min(dt, 100);
+    while (state.time >= steps[state.index].duration) {
+      state.time -= steps[state.index].duration;
+      state.index = (state.index + 1) % steps.length;
+    }
+    return state.index !== previous;
+  }
+  function progress() { return (steps.slice(0, state.index).reduce((s, x) => s + x.duration, 0) + state.time) / total; }
+  return { state, select, seek, advance, progress };
 }
-const STAGES = [
-  { key: 'latent', number: '01', label: 'Latent-action pretraining' },
-  { key: 'routing', number: '02', label: 'Routed attention' },
-  { key: 'control', number: '03', label: 'Action-only deployment' },
-];
 
-// Keep the one deployment film's existing playback policy while releasing
-// incomplete network requests when the film leaves the viewport. Restoration
-// waits for metadata and the saved seek before it may resume playback.
 export function createMethodVideoController(video, { mayPlay, shouldSuspend, signal } = {}) {
   let saved = null, restoring = false, disposed = false;
   function suspend() {
@@ -97,134 +82,105 @@ export function createMethodVideoController(video, { mayPlay, shouldSuspend, sig
 
 export function mountMethodFigure(root) {
   if (!root) return;
-  const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
-  let paused = motionQuery.matches;
-  let inView = false, destroyed = false;
   const abort = new AbortController(), { signal } = abort;
-  root.classList.add('method-explorer');
+  const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  const clock = createMethodClock(METHOD_STEPS, motionQuery.matches);
+  let inView = false, destroyed = false, frame = 0, last = 0, drawn = 0, routeOverride = null;
+  root.classList.add('method-explorer', 'method-story');
   root.innerHTML = `
-    <div class="mf-toolbar"><div class="mf-tools"><button type="button" class="mf-motion" aria-pressed="${!paused}">${paused ? 'Play motion' : 'Pause motion'}</button><button type="button" class="mf-expand">Original figure ↗</button></div></div>
-    <div class="mf-tabs" role="group" aria-label="Explore the three method contributions">${STAGES.map(stage => `<button type="button" data-stage="${stage.key}" aria-pressed="false"><span class="mf-nav-number">${stage.number}</span><span>${stage.label}</span><span class="mf-nav-dot" aria-hidden="true"></span></button>`).join('')}</div>
-    <div class="mf-scene">
-      <p class="mf-mobile-hint">Swipe across the architecture <span aria-hidden="true">→</span></p>
-      <div class="mf-board" tabindex="0" role="region" aria-label="Unified WE-Dream architecture; scroll horizontally on small screens">
-        <div class="mf-architecture">
-          <section class="mf-panel mf-latent" data-panel="latent" aria-label="Pretraining and post-training">
-            <div class="mf-training-figures">
-              <button type="button" class="mf-training-figure" data-part="latent" aria-label="Explore pretraining"><img loading="lazy" decoding="async" data-src="${FIGURES.latent}" width="1149" height="702" alt="Pretraining: original Figure 2a, with consecutive human frames, frozen LAM and 32D latent actions."></button>
-              <span class="mf-transfer-arrow" aria-hidden="true">↓</span>
-              <button type="button" class="mf-training-figure" data-part="transfer" aria-label="Explore post-training"><img loading="lazy" decoding="async" data-src="${FIGURES.robot}" width="1149" height="743" alt="Post-training: original Figure 2b, adapting the pretrained model to robot video, 80D commands and 45D states."></button>
-            </div>
-          </section>
-          <section class="mf-panel mf-model" data-panel="routing">
-            <div class="mf-model-wrap"><div class="mf-paper-model"><img loading="lazy" decoding="async" data-src="${FIGURES.backbone}" width="1645" height="1551" alt="Original Figure 2c: modality encoders, block-causal shared DiT, routed attention and video/action training losses.">
-              <button type="button" class="mf-region mf-region-encoders" data-part="backbone" aria-label="Explore modality encoders and conditioning"></button>
-              <button type="button" class="mf-region mf-region-context" data-part="context" aria-label="Explore block-causal attention"></button>
-              <button type="button" class="mf-region mf-region-routing" data-part="routing" aria-label="Explore routed attention during training"></button>
-              <button type="button" class="mf-region mf-region-objectives" data-part="objectives" aria-label="Explore video and action training losses"></button>
-              <span class="mf-signal mf-signal-context" aria-hidden="true"></span><span class="mf-signal mf-signal-action" aria-hidden="true"></span><span class="mf-signal mf-signal-future" aria-hidden="true"></span>
-            </div></div>
-          </section>
-          <section class="mf-panel mf-output" data-panel="control">
-            <button type="button" class="mf-controller" data-part="execution" aria-label="Explore the original paper's command decomposition and SONIC controller"><img loading="lazy" decoding="async" data-src="${FIGURES.control}" width="925" height="898" alt="Original Figure 2d: 80D commands split into 14D hand targets, 2D neck targets and 64D latent body commands; SONIC generates body joint targets for a continuous 30 Hz action stream."></button>
-            <div class="mf-execution" data-panel="execution">${film('execution')}</div>
-          </section>
-        </div>
-      </div>
+    <div class="mf-story-top">
+      <div class="mf-story-copy"><span class="mf-story-category">THE LEARNING JOURNEY</span><h3 id="mf-chapter-title"></h3><p class="mf-story-caption"></p></div>
+      <div class="mf-story-controls"><button class="mf-play" type="button" aria-label="Pause method animation"><span aria-hidden="true">Ⅱ</span></button><button class="mf-replay" type="button" aria-label="Replay the method walkthrough"><span aria-hidden="true">↺</span></button></div>
     </div>
-    <div class="mf-detail" aria-live="polite"><div class="mf-detail-heading"><span class="mf-detail-number" aria-hidden="true"></span><div><p class="mf-kicker"></p><h3></h3></div></div><div class="mf-detail-body"><p class="mf-description"></p><div class="mf-facts"></div></div></div>
-    <div class="mf-footnote"><a href="assets/paper.pdf#page=3" target="_blank" rel="noopener">Figure 2 · Sections III-C–F ↗</a></div>
-    <dialog class="mf-dialog" aria-label="Original WE-Dream architecture"><form method="dialog"><p>WE-Dream · Figure 2</p><button type="submit" aria-label="Close original figure">Close ×</button></form><div class="mf-dialog-image"><img loading="lazy" decoding="async" data-src="${FIGURES.overview}" width="4108" height="1572" alt="Original full-resolution WE-Dream architecture from Figure 2."></div><p>Training uses mixed routing. The deployed policy uses action-only inference with real-time chunking.</p></dialog>`;
-  const scene = root.querySelector('.mf-scene'), board = root.querySelector('.mf-board');
-  const videos = [...root.querySelectorAll('.mf-execution video')], dialog = root.querySelector('dialog');
-  const motionButton = root.querySelector('.mf-motion');
-  const on = (target, event, callback) => target.addEventListener(event, callback, { signal });
+    <div class="mf-viewport" role="tabpanel" id="mf-stage" aria-labelledby="mf-tab-pretrain">
+      <div class="mf-diagram"></div>
+      <div class="mf-execution" hidden><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4" poster="assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v32" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div><span>Whole-body execution</span></div>
+    </div>
+    <div class="mf-understage"><div class="mf-route-controls" role="group" aria-label="Compare the two training attention routes" hidden><span>Training route</span><button type="button" data-route="joint" aria-pressed="true">Joint</button><button type="button" data-route="action" aria-pressed="false">Action-only</button></div><p class="mf-stage-note"></p></div>
+    <div class="mf-chapters" role="tablist" aria-label="Explore the WE-Dream method">${METHOD_STEPS.map((step,i)=>`<button type="button" role="tab" id="mf-tab-${step.key}" data-chapter="${i}" aria-controls="mf-stage" aria-selected="${i===0}" tabindex="${i===0?0:-1}"><span class="mf-chapter-index">0${i+1}</span><span class="mf-chapter-label">${step.label}</span><span class="mf-chapter-track" aria-hidden="true"><i></i></span></button>`).join('')}</div>
+    <div class="mf-story-footer"><span class="mf-story-position" aria-hidden="true">01 / 04</span><input class="mf-story-scrub" type="range" min="0" max="1000" value="0" aria-label="Method walkthrough progress"><a href="assets/paper.pdf#page=3" target="_blank" rel="noopener">Method in the paper ↗</a></div>`;
+  const viewport = root.querySelector('.mf-viewport');
+  const diagram = createMethodDiagram(root.querySelector('.mf-diagram'));
+  const tabs = [...root.querySelectorAll('[data-chapter]')];
+  const play = root.querySelector('.mf-play'), scrub = root.querySelector('.mf-story-scrub');
+  const execution = root.querySelector('.mf-execution');
+  const videos = [...root.querySelectorAll('.mf-execution video')];
+  const on = (target,event,fn) => target.addEventListener(event,fn,{signal});
+  const notes = ['Visual transitions become action targets.', 'One pretrained backbone. One humanoid policy.', 'Used in both training stages · both prediction losses stay active.', '24 actions per chunk · replan every 12'];
   function videoVisible(video) {
-    const rect = video.getBoundingClientRect(), clip = board.getBoundingClientRect();
-    const width = Math.max(0, Math.min(rect.right, clip.right, innerWidth) - Math.max(rect.left, clip.left, 0));
-    const height = Math.max(0, Math.min(rect.bottom, clip.bottom, innerHeight) - Math.max(rect.top, clip.top, 0));
-    return rect.width > 0 && rect.height > 0 && width * height >= rect.width * rect.height * .25;
+    const r=video.getBoundingClientRect();
+    return r.width>0 && r.height>0 && Math.min(r.bottom,innerHeight)-Math.max(r.top,0)>r.height*.25;
   }
-  function mayPlay(video) { return !destroyed && inView && !paused && !document.hidden && !dialog.open && video.isConnected && videoVisible(video); }
-  const videoControllers=videos.map(video=>createMethodVideoController(video,{mayPlay:()=>mayPlay(video),shouldSuspend:()=>document.hidden||!inView||!videoVisible(video),signal}));
-  function syncMotion() {
-    if (destroyed) return;
-    scene.classList.toggle('is-paused', !inView || paused || document.hidden || dialog.open);
-    motionButton.textContent = paused ? 'Play motion' : 'Pause motion';
-    motionButton.setAttribute('aria-pressed', String(!paused));
-    videoControllers.forEach(controller=>controller.sync());
+  const mayPlay = video => !destroyed && inView && clock.state.index===3 && !clock.state.paused && !motionQuery.matches && !document.hidden && videoVisible(video);
+  const controllers=videos.map(video=>createMethodVideoController(video,{mayPlay:()=>mayPlay(video),shouldSuspend:()=>document.hidden||!inView||clock.state.index!==3||!videoVisible(video),signal}));
+  function render() {
+    const {index,time}=clock.state;
+    const route = index === 3 ? 'action' : (routeOverride || (time < METHOD_STEPS[index].duration*.52 ? 'joint' : 'action'));
+    diagram.render({step:index,time,route,still:motionQuery.matches});
+    root.dataset.methodRoute=route;
+    root.style.setProperty('--chapter-progress',String(Math.min(1,time/METHOD_STEPS[index].duration)));
+    scrub.value=String(Math.round(clock.progress()*1000));
+    root.querySelectorAll('[data-route]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.route===route)));
   }
-  function selectPart(key, animate = true) {
-    if (!DETAILS[key] || destroyed) return;
-    const detail = DETAILS[key];
-    const stageKey = detail.panel === 'execution' ? 'control' : detail.panel;
-    scene.dataset.selectedStage = stageKey;
-    const selectedPart = key === 'control' ? 'execution' : key;
-    scene.dataset.selectedPart = selectedPart;
-    root.querySelectorAll('.mf-tabs [data-stage]').forEach(button => {
-      const active = button.dataset.stage === stageKey;
-      button.classList.toggle('is-selected', active);
-      button.setAttribute('aria-pressed', String(active));
-    });
-    root.querySelectorAll('[data-part]').forEach(button => { const active = button.dataset.part === selectedPart; button.classList.toggle('is-selected', active); button.setAttribute('aria-pressed', String(active)); });
-    const stage = STAGES.find(item => item.key === stageKey);
-    root.querySelector('.mf-kicker').textContent = detail.label;
-    root.querySelector('.mf-detail').dataset.stage = stageKey;
-    root.querySelector('.mf-detail-number').textContent = stage.number;
-    root.querySelector('.mf-detail h3').textContent = detail.title;
-    root.querySelector('.mf-description').textContent = detail.text;
-    root.querySelector('.mf-facts').replaceChildren(...detail.facts.map(fact => { const span = document.createElement('span'); span.textContent = fact; return span; }));
-    if (animate && !paused && !motionQuery.matches) root.querySelector('.mf-detail').animate?.([{ opacity: .4 }, { opacity: 1 }], { duration: 250 });
+  function updateChapter() {
+    const {index}=clock.state, step=METHOD_STEPS[index];
+    root.dataset.methodStep=step.key;
+    root.querySelector('#mf-chapter-title').textContent=step.title;
+    root.querySelector('.mf-story-caption').textContent=step.caption;
+    root.querySelector('.mf-stage-note').textContent=notes[index];
+    root.querySelector('.mf-story-position').textContent=`0${index+1} / 04`;
+    root.querySelector('.mf-route-controls').hidden=index!==2;
+    execution.hidden=index!==3;
+    viewport.setAttribute('aria-labelledby',`mf-tab-${step.key}`);
+    scrub.setAttribute('aria-valuetext',`${index+1} of 4: ${step.label}`);
+    tabs.forEach((button,i)=>{button.setAttribute('aria-selected',String(i===index));button.tabIndex=i===index?0:-1;button.classList.toggle('is-past',i<index);});
+    controllers.forEach(controller=>controller.sync());
   }
-  function selectStage(key) {
-    selectPart(key);
-    const target = root.querySelector(`[data-panel="${key}"]`)?.closest('.mf-panel');
-    if (!target || board.scrollWidth <= board.clientWidth + 2) return;
-    const rect = target.getBoundingClientRect(), viewport = board.getBoundingClientRect();
-    board.scrollBy({ left: rect.left - viewport.left - (board.clientWidth - rect.width) / 2, behavior: motionQuery.matches || paused ? 'instant' : 'smooth' });
+  function syncControls() {
+    play.disabled=motionQuery.matches;
+    play.setAttribute('aria-label',motionQuery.matches?'Reduced motion enabled':clock.state.paused?'Play method animation':'Pause method animation');
+    play.innerHTML=`<span aria-hidden="true">${clock.state.paused?'▷':'Ⅱ'}</span>`;
+    root.dataset.methodMotion=clock.state.paused||motionQuery.matches?'paused':'playing';
   }
-  const stageButtons = [...root.querySelectorAll('.mf-tabs [data-stage]')];
-  stageButtons.forEach(button => on(button, 'click', () => selectStage(button.dataset.stage)));
-  on(root.querySelector('.mf-tabs'), 'keydown', event => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    const current = stageButtons.indexOf(event.target);
-    if (current < 0) return;
-    event.preventDefault();
-    const index = event.key === 'Home' ? 0 : event.key === 'End' ? stageButtons.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + stageButtons.length) % stageButtons.length;
-    selectStage(stageButtons[index].dataset.stage);
-    stageButtons[index].focus({ preventScroll: true });
+  function tick(now) {
+    frame=0;
+    if (destroyed||!inView||document.hidden||clock.state.paused||motionQuery.matches) {last=0;return;}
+    const dt=last?now-last:0;last=now;
+    if(clock.advance(dt)){routeOverride=null;updateChapter();}
+    if(now-drawn>=1000/30){render();drawn=now;}
+    frame=requestAnimationFrame(tick);
+  }
+  function sync() {
+    if(destroyed)return;
+    syncControls();
+    controllers.forEach(controller=>controller.sync());
+    if(!inView||document.hidden||clock.state.paused||motionQuery.matches){cancelAnimationFrame(frame);frame=0;last=0;}
+    else if(!frame){last=0;frame=requestAnimationFrame(tick);}
+  }
+  function selectChapter(index) {
+    clock.select(index);
+    // A paused chapter jump should still reveal its complete diagram.
+    if(clock.state.paused&&!motionQuery.matches)clock.state.time=METHOD_STEPS[index].duration*.72;
+    routeOverride=null;updateChapter();render();sync();
+  }
+  tabs.forEach((button,i)=>on(button,'click',()=>selectChapter(i)));
+  on(root.querySelector('.mf-chapters'),'keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    const current=tabs.indexOf(event.target);if(current<0)return;
+    event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(current+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+    selectChapter(next);tabs[next].focus({preventScroll:true});
   });
-  root.querySelectorAll('[data-part]').forEach(button => on(button, 'click', () => selectPart(button.dataset.part)));
-  let scrollFrame = 0;
-  on(board, 'scroll', () => { if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; syncMotion(); }); });
-  on(window, 'resize', syncMotion);
-  on(motionButton, 'click', () => { paused = !paused; syncMotion(); });
-  on(root.querySelector('.mf-expand'), 'click', () => { const image=dialog.querySelector('img');if(!image.src)image.src=image.dataset.src;dialog.showModal(); syncMotion(); });
-  on(dialog, 'close', syncMotion); on(dialog, 'click', event => { if (event.target === dialog) dialog.close(); });
-  on(document, 'visibilitychange', syncMotion);
-  on(motionQuery, 'change', event => { paused = event.matches; syncMotion(); });
-  // Mounting the interaction shell must not eagerly download all paper crops
-  // while a visitor jumps past this section to the demonstration player.
-  const figures = [...scene.querySelectorAll('img[data-src]')];
-  const loadFigures = () => figures.forEach(image => { if (!image.getAttribute('src')) image.src = image.dataset.src; });
-  let observer, figureObserver, figureTimer;
-  if ('IntersectionObserver' in window) {
-    figureObserver = new IntersectionObserver(entries => {
-      clearTimeout(figureTimer);
-      if (!destroyed && entries.some(entry => entry.isIntersecting)) {
-        // A smooth anchor jump passes through this section briefly. Keep its
-        // large paper crops out of the requested destination's network queue.
-        figureTimer = setTimeout(() => { if (!destroyed) { loadFigures(); figureObserver.disconnect(); } }, 220);
-      }
-    }, { rootMargin: '100px 0px' });
-    figureObserver.observe(scene);
-    observer = new IntersectionObserver(entries => {
-      if (destroyed) return;
-      entries.forEach(entry => { if (entry.target === scene) inView = entry.isIntersecting; });
-      syncMotion();
-    }, { threshold: [0, .12, .25, .5] });
-    observer.observe(scene); videos.forEach(video => observer.observe(video));
-  } else { inView = true; loadFigures(); }
-  selectPart('routing', false); syncMotion();
-  return { selectStage: selectPart, destroy() { destroyed = true; abort.abort(); observer?.disconnect(); figureObserver?.disconnect(); clearTimeout(figureTimer); cancelAnimationFrame(scrollFrame); videoControllers.forEach(controller=>controller.destroy()); if (dialog.open) dialog.close(); root.replaceChildren(); root.classList.remove('method-explorer'); } };
+  on(play,'click',()=>{clock.state.paused=!clock.state.paused;sync();});
+  on(root.querySelector('.mf-replay'),'click',()=>{clock.state.paused=motionQuery.matches;selectChapter(0);});
+  on(scrub,'input',()=>{clock.state.paused=true;routeOverride=null;clock.seek(Number(scrub.value)/1000);updateChapter();render();sync();});
+  root.querySelectorAll('[data-route]').forEach(button=>on(button,'click',()=>{routeOverride=button.dataset.route;render();}));
+  on(document,'visibilitychange',sync);
+  on(motionQuery,'change',()=>{clock.state.paused=motionQuery.matches;render();sync();});
+  on(window,'resize',()=>{diagram.resize();render();sync();});
+  on(window,'scroll',()=>{if(inView&&clock.state.index===3)controllers.forEach(controller=>controller.sync());});
+  let observer;
+  if('IntersectionObserver' in window){observer=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting&&entries[0].intersectionRatio>=.12;sync();},{threshold:[0,.12,.25]});observer.observe(viewport);}
+  else inView=true;
+  updateChapter();render();sync();
+  return {selectStage(key){const i=METHOD_STEPS.findIndex(s=>s.key===key);if(i>=0)selectChapter(i);},destroy(){destroyed=true;abort.abort();observer?.disconnect();cancelAnimationFrame(frame);controllers.forEach(c=>c.destroy());diagram.destroy();root.replaceChildren();root.classList.remove('method-explorer','method-story');}};
 }

@@ -6,7 +6,14 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v31 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v32 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 32
+
+- Replaced the paper-image Method panel with an original animated SVG walkthrough: latent-action pretraining, robot post-training, routed attention and action-only deployment. A shared backbone stays in view while inputs, outputs and attention paths change.
+- Four chapter controls, a scrubber, pause/replay and manual route comparison explain the method. Both training routes retain both losses; deployment retains observed context and predicts only actions.
+- Desktop and mobile layouts, motion reduction and offscreen pausing are supported. The deployment video remains scoped to the deployment chapter.
+- Existing wall, gallery, dataset, result and streaming behavior are unchanged.
 
 ## Release 31
 

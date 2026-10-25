@@ -35,3 +35,7 @@ The source uses a precomposed background video. WE-Dream's independent full-leng
 [WB-WAM](https://wb-wam.github.io/) and [Tactile Force Survey](https://jingliangli.com/tactile-force-survey/) informed the research-page presentation. WB-WAM's current repository did not provide a general website reuse license, so its site code/media are not included here. An icon-specific license is not treated as a license for that entire site.
 
 Retrieved and verified: 2026-10-19. The development repository's `docs/website-research/SOURCE_REUSE.md` records exact upstream functions, revisions, adaptations and integration details.
+
+## Method presentation references (v32)
+
+The native method walkthrough independently implements presentation patterns studied in [Dream-1](https://dreamlabs.ai/research/dream-1/assets/wam.html) (SVG information flow and token reveal) and [FIBER](https://fiberaa.github.io/) (chapter navigation and continuous scene changes). Their research claims and artwork are not used as WE-Dream content. No website-source license was found for these references; no upstream animation code is redistributed in the site. The implementation is original, and its technical content follows WE-Dream Figure 2 and Sections III-B–F. Detailed source inspection and provenance are retained in the development repository under `docs/website-research/method-v32/references/`.
