@@ -1,4 +1,4 @@
-import { videoFullyBuffered } from './video-warm.js?v=18';
+import { videoFullyBuffered } from './video-warm.js?v=v19';
 
 // Original Figure 2 regions are the visual source of truth. These overlays
 // highlight existing modules, rather than replacing the architecture.
@@ -111,13 +111,13 @@ export function mountMethodFigure(root) {
         <div class="mf-architecture">
           <section class="mf-panel mf-latent" data-panel="latent" aria-label="Pretraining and post-training">
             <div class="mf-training-figures">
-              <button type="button" class="mf-training-figure" data-part="latent" aria-label="Explore pretraining"><img src="${FIGURES.latent}" width="1149" height="702" alt="Pretraining: original Figure 2a, with consecutive human frames, frozen LAM and 32D latent actions."></button>
+              <button type="button" class="mf-training-figure" data-part="latent" aria-label="Explore pretraining"><img loading="lazy" decoding="async" data-src="${FIGURES.latent}" width="1149" height="702" alt="Pretraining: original Figure 2a, with consecutive human frames, frozen LAM and 32D latent actions."></button>
               <span class="mf-transfer-arrow" aria-hidden="true">↓</span>
-              <button type="button" class="mf-training-figure" data-part="transfer" aria-label="Explore post-training"><img src="${FIGURES.robot}" width="1149" height="743" alt="Post-training: original Figure 2b, adapting the pretrained model to robot video, 80D commands and 45D states."></button>
+              <button type="button" class="mf-training-figure" data-part="transfer" aria-label="Explore post-training"><img loading="lazy" decoding="async" data-src="${FIGURES.robot}" width="1149" height="743" alt="Post-training: original Figure 2b, adapting the pretrained model to robot video, 80D commands and 45D states."></button>
             </div>
           </section>
           <section class="mf-panel mf-model" data-panel="routing">
-            <div class="mf-model-wrap"><div class="mf-paper-model"><img src="${FIGURES.backbone}" width="1645" height="1551" alt="Original Figure 2c: modality encoders, block-causal shared DiT, routed attention and video/action training losses.">
+            <div class="mf-model-wrap"><div class="mf-paper-model"><img loading="lazy" decoding="async" data-src="${FIGURES.backbone}" width="1645" height="1551" alt="Original Figure 2c: modality encoders, block-causal shared DiT, routed attention and video/action training losses.">
               <button type="button" class="mf-region mf-region-encoders" data-part="backbone" aria-label="Explore modality encoders and conditioning"></button>
               <button type="button" class="mf-region mf-region-context" data-part="context" aria-label="Explore block-causal attention"></button>
               <button type="button" class="mf-region mf-region-routing" data-part="routing" aria-label="Explore routed attention during training"></button>
@@ -126,7 +126,7 @@ export function mountMethodFigure(root) {
             </div></div>
           </section>
           <section class="mf-panel mf-output" data-panel="control">
-            <button type="button" class="mf-controller" data-part="execution" aria-label="Explore the original paper's command decomposition and SONIC controller"><img src="${FIGURES.control}" width="925" height="898" alt="Original Figure 2d: 80D commands split into 14D hand targets, 2D neck targets and 64D latent body commands; SONIC generates body joint targets for a continuous 30 Hz action stream."></button>
+            <button type="button" class="mf-controller" data-part="execution" aria-label="Explore the original paper's command decomposition and SONIC controller"><img loading="lazy" decoding="async" data-src="${FIGURES.control}" width="925" height="898" alt="Original Figure 2d: 80D commands split into 14D hand targets, 2D neck targets and 64D latent body commands; SONIC generates body joint targets for a continuous 30 Hz action stream."></button>
             <div class="mf-execution" data-panel="execution">${film('execution')}</div>
           </section>
         </div>
@@ -134,7 +134,7 @@ export function mountMethodFigure(root) {
     </div>
     <div class="mf-detail" aria-live="polite"><div class="mf-detail-heading"><span class="mf-detail-number" aria-hidden="true"></span><div><p class="mf-kicker"></p><h3></h3></div></div><div class="mf-detail-body"><p class="mf-description"></p><div class="mf-facts"></div></div></div>
     <div class="mf-footnote"><a href="assets/paper.pdf#page=3" target="_blank" rel="noopener">Figure 2 · Sections III-C–F ↗</a></div>
-    <dialog class="mf-dialog" aria-label="Original WE-Dream architecture"><form method="dialog"><p>WE-Dream · Figure 2</p><button type="submit" aria-label="Close original figure">Close ×</button></form><div class="mf-dialog-image"><img src="${FIGURES.overview}" width="4108" height="1572" alt="Original full-resolution WE-Dream architecture from Figure 2."></div><p>Training uses mixed routing. The deployed policy uses action-only inference with real-time chunking.</p></dialog>`;
+    <dialog class="mf-dialog" aria-label="Original WE-Dream architecture"><form method="dialog"><p>WE-Dream · Figure 2</p><button type="submit" aria-label="Close original figure">Close ×</button></form><div class="mf-dialog-image"><img loading="lazy" decoding="async" data-src="${FIGURES.overview}" width="4108" height="1572" alt="Original full-resolution WE-Dream architecture from Figure 2."></div><p>Training uses mixed routing. The deployed policy uses action-only inference with real-time chunking.</p></dialog>`;
   const scene = root.querySelector('.mf-scene'), board = root.querySelector('.mf-board');
   const videos = [...root.querySelectorAll('.mf-execution video')], dialog = root.querySelector('dialog');
   const motionButton = root.querySelector('.mf-motion');
@@ -199,19 +199,32 @@ export function mountMethodFigure(root) {
   on(board, 'scroll', () => { if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; syncMotion(); }); });
   on(window, 'resize', syncMotion);
   on(motionButton, 'click', () => { paused = !paused; syncMotion(); });
-  on(root.querySelector('.mf-expand'), 'click', () => { dialog.showModal(); syncMotion(); });
+  on(root.querySelector('.mf-expand'), 'click', () => { const image=dialog.querySelector('img');if(!image.src)image.src=image.dataset.src;dialog.showModal(); syncMotion(); });
   on(dialog, 'close', syncMotion); on(dialog, 'click', event => { if (event.target === dialog) dialog.close(); });
   on(document, 'visibilitychange', syncMotion);
   on(motionQuery, 'change', event => { paused = event.matches; syncMotion(); });
-  let observer;
+  // Mounting the interaction shell must not eagerly download all paper crops
+  // while a visitor jumps past this section to the demonstration player.
+  const figures = [...scene.querySelectorAll('img[data-src]')];
+  const loadFigures = () => figures.forEach(image => { if (!image.getAttribute('src')) image.src = image.dataset.src; });
+  let observer, figureObserver, figureTimer;
   if ('IntersectionObserver' in window) {
+    figureObserver = new IntersectionObserver(entries => {
+      clearTimeout(figureTimer);
+      if (!destroyed && entries.some(entry => entry.isIntersecting)) {
+        // A smooth anchor jump passes through this section briefly. Keep its
+        // large paper crops out of the requested destination's network queue.
+        figureTimer = setTimeout(() => { if (!destroyed) { loadFigures(); figureObserver.disconnect(); } }, 220);
+      }
+    }, { rootMargin: '100px 0px' });
+    figureObserver.observe(scene);
     observer = new IntersectionObserver(entries => {
       if (destroyed) return;
       entries.forEach(entry => { if (entry.target === scene) inView = entry.isIntersecting; });
       syncMotion();
     }, { threshold: [0, .12, .25, .5] });
     observer.observe(scene); videos.forEach(video => observer.observe(video));
-  } else inView = true;
+  } else { inView = true; loadFigures(); }
   selectPart('routing', false); syncMotion();
-  return { selectStage: selectPart, destroy() { destroyed = true; abort.abort(); observer?.disconnect(); cancelAnimationFrame(scrollFrame); videoControllers.forEach(controller=>controller.destroy()); if (dialog.open) dialog.close(); root.replaceChildren(); root.classList.remove('method-explorer'); } };
+  return { selectStage: selectPart, destroy() { destroyed = true; abort.abort(); observer?.disconnect(); figureObserver?.disconnect(); clearTimeout(figureTimer); cancelAnimationFrame(scrollFrame); videoControllers.forEach(controller=>controller.destroy()); if (dialog.open) dialog.close(); root.replaceChildren(); root.classList.remove('method-explorer'); } };
 }

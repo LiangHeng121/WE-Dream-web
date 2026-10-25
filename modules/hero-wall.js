@@ -1,4 +1,5 @@
-import { seekVideo } from './video-seek.js?v=18';
+import { seekVideo } from './video-seek.js?v=v19';
+import { createStreamVideo } from './stream-video.js?v=v19';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -85,19 +86,17 @@ export function createWallPlaybackController({ onChange = () => {}, onWarning = 
   };
 }
 
-// Prepare the small, complete action loops in center-first batches. A slot is
-// released when its first frame is decoded, not when the entire MP4 has arrived.
-// Native media buffering may continue after that; this bounds startup work, not
-// the browser's eventual number of HTTP connections.
+// First frames play immediately, but a network slot belongs to that native
+// request until the complete loop is buffered or its source is cancelled.
 export function createWallLoadQueue(items, { load, concurrency = 8, onChange = () => {}, onError = () => {} } = {}) {
   const entries = items.map((item, index) => ({ item, index, state: 'queued' }));
-  let active = false, destroyed = false, loading = 0;
+  let active = false, destroyed = false, loading = 0, eligible = null;
   const snapshot = () => ({ loading, ready: entries.filter(entry => entry.state === 'ready').length, total: entries.length });
   function pump() {
     if (!active || destroyed) return;
     for (const entry of entries) {
       if (loading >= concurrency) break;
-      if (entry.state !== 'queued') continue;
+      if (entry.state !== 'queued' || (eligible && !eligible.has(entry.item))) continue;
       entry.state = 'loading'; loading += 1;
       const attempt = { controller: new AbortController() }; entry.attempt = attempt;
       Promise.resolve().then(() => {
@@ -120,7 +119,7 @@ export function createWallLoadQueue(items, { load, concurrency = 8, onChange = (
     onChange(snapshot());
   }
   return {
-    setActive(value) { active = value; pump(); },
+    setActive(value, allowed = null) { active = value; eligible = allowed; pump(); },
     prioritize(item) {
       const index = entries.findIndex(entry => entry.item === item);
       if (index > 0) entries.unshift(...entries.splice(index, 1));
@@ -143,6 +142,56 @@ export function createWallLoadQueue(items, { load, concurrency = 8, onChange = (
       for (const entry of entries) { entry.attempt?.controller.abort(); entry.attempt = null; }
       loading = 0;
     }
+  };
+}
+
+// Posters are decorative fallbacks, never a 40-request prerequisite for video.
+// Decode a small low-priority batch first, then give video.poster the cached URL.
+export function createWallPosterQueue(items, { concurrency = 3, createImage = () => new Image() } = {}) {
+  const entries = items.map(item => ({ item, state: 'queued', attempt: null }));
+  let active = false, destroyed = false, allowed = null, loading = 0;
+  const eligible = entry => !allowed || allowed.has(entry.item);
+  function cancel(entry) {
+    const attempt = entry.attempt;
+    if (!attempt) return;
+    entry.attempt = null; entry.state = 'queued'; loading -= 1;
+    attempt.clean(); attempt.image.removeAttribute('src');
+  }
+  function pump() {
+    if (!active || destroyed) return;
+    for (const entry of entries) {
+      if (loading >= concurrency) break;
+      if (entry.state !== 'queued' || !eligible(entry)) continue;
+      if (!entry.item.item.poster) { entry.state = 'ready'; continue; }
+      const image = createImage();
+      const attempt = { image, clean: () => { image.removeEventListener('load', loaded); image.removeEventListener('error', failed); } };
+      const settle = ready => {
+        if (entry.attempt !== attempt) return;
+        attempt.clean(); entry.attempt = null; loading -= 1;
+        entry.state = ready ? 'ready' : 'error';
+        if (ready) entry.item.video.poster = entry.item.item.poster;
+        pump();
+      };
+      const loaded = () => settle(true), failed = () => settle(false);
+      entry.attempt = attempt; entry.state = 'loading'; loading += 1;
+      image.fetchPriority = 'low'; image.decoding = 'async';
+      image.addEventListener('load', loaded); image.addEventListener('error', failed);
+      image.src = entry.item.item.poster;
+      if (image.complete && image.naturalWidth > 0) loaded();
+    }
+  }
+  return {
+    setActive(value, candidates = null) {
+      const resuming = value && !active;
+      active = value; allowed = candidates;
+      for (const entry of entries) {
+        if (!active || !eligible(entry)) cancel(entry);
+        if (resuming && entry.state === 'error') entry.state = 'queued';
+      }
+      pump();
+    },
+    destroy() { destroyed = true; active = false; entries.forEach(cancel); },
+    snapshot() { return { loading, ready: entries.filter(entry => entry.state === 'ready').length, total: entries.length }; }
   };
 }
 
@@ -176,28 +225,39 @@ export async function restoreWallVideo(video, saved, { signal } = {}) {
 
 // Let the native media pipeline decode the faststart MP4 as bytes arrive. Fetch
 // + blob() delays even the first frame until the complete action is downloaded.
-// Some data-saving browsers suppress loadeddata, so neither that event nor a
-// stalled request may hold the remaining previews behind it indefinitely.
-export function loadWallPreview(video, src, { signal, onAssigned = () => {}, timeout = 1000 } = {}) {
+// Playback does not wait for this promise. It tracks the lifetime of incomplete
+// native I/O, so the next preview cannot borrow the same network slot early.
+export function loadWallPreview(video, src, { signal, onAssigned = () => {}, timeout = 15000 } = {}) {
   if (signal?.aborted) return Promise.reject(new DOMException('Preview loading cancelled', 'AbortError'));
-  if (video.getAttribute('src') === src && video.readyState >= 2 && !video.error) return Promise.resolve('ready');
+  if (video.getAttribute('src') === src && wallVideoFullyBuffered(video) && !video.error) return Promise.resolve('ready');
   return new Promise((resolve, reject) => {
-    let timer;
+    let timer, settled = false, progress = '';
+    const events = ['loadedmetadata', 'durationchange', 'loadeddata', 'canplay', 'canplaythrough', 'playing', 'progress', 'timeupdate'];
     const clean = () => {
       clearTimeout(timer);
-      for (const event of ['loadeddata', 'canplay', 'playing']) video.removeEventListener(event, ready);
+      for (const event of events) video.removeEventListener(event, ready);
       video.removeEventListener('error', failed); signal?.removeEventListener('abort', aborted);
     };
-    const settle = (value, error) => { clean(); if (error) reject(error); else resolve(value); };
-    const ready = () => { if (video.readyState >= 2) settle('ready'); };
-    const failed = () => settle(null, new Error(`Wall preview MediaError ${video.error?.code || ''}`));
-    const aborted = () => {
-      video.pause(); video.removeAttribute('src'); video.load();
-      settle(null, new DOMException('Preview loading cancelled', 'AbortError'));
+    const settle = (value, error) => {
+      if (settled) return;
+      settled = true; clean();
+      if (error) {
+        // Releasing a slot never leaves its failed native request running.
+        if (video.getAttribute('src') === src) { video.pause(); video.removeAttribute('src'); video.preload = 'none'; video.load(); }
+        reject(error);
+      } else resolve(value);
     };
-    for (const event of ['loadeddata', 'canplay', 'playing']) video.addEventListener(event, ready);
+    const stalled = () => settle(null, new Error('Wall preview made no buffer progress'));
+    const ready = () => {
+      if (wallVideoFullyBuffered(video)) { settle('ready'); return; }
+      const ranges = video.buffered;
+      const next = `${Math.min(video.readyState, 2)}:${Array.from({ length: ranges?.length || 0 }, (_, i) => `${ranges.start(i)}-${ranges.end(i)}`).join(',')}`;
+      if (next !== progress) { progress = next; clearTimeout(timer); timer = setTimeout(stalled, timeout); }
+    };
+    const failed = () => settle(null, new Error(`Wall preview MediaError ${video.error?.code || ''}`));
+    const aborted = () => settle(null, new DOMException('Preview loading cancelled', 'AbortError'));
+    for (const event of events) video.addEventListener(event, ready);
     video.addEventListener('error', failed); signal?.addEventListener('abort', aborted, { once: true });
-    timer = setTimeout(() => settle('pending'), timeout);
     video.preload = 'auto'; video.dataset.loadMode = 'native-progressive';
     if (video.getAttribute('src') !== src) video.src = src;
     else if (video.error) video.load();
@@ -301,10 +361,10 @@ export function waitWallHdFrame(video, { signal, metadataOnly = false, timeout =
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=18').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v19').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=18').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v19').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -328,6 +388,7 @@ export async function mountHeroWall(root) {
   let networkSuspended = false, resumeFocusedHd = null;
   let cameraMoveRevision = 0, cameraMoving = false, hoverTimer = null;
   const retiredFrames = new Set();
+  const hdStreams = new WeakMap();
   const playbackNotice = document.createElement('button');
   playbackNotice.type = 'button'; playbackNotice.className = 'wall-playback-notice'; playbackNotice.hidden = true;
   playbackNotice.textContent = 'Some previews could not play. Retry motion';
@@ -361,7 +422,7 @@ export async function mountHeroWall(root) {
     const video = document.createElement('video');
     video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.preload = 'none';
     video.dataset.clipId = id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
-    video.poster = item.poster || ''; video.dataset.source = item.src;
+    video.dataset.source = item.src;
     video.setAttribute('aria-hidden', 'true');
     video.addEventListener('loadeddata', () => {
       if (video.dataset.firstDataAt) return;
@@ -396,6 +457,23 @@ export async function mountHeroWall(root) {
     };
     return distance(a) - distance(b);
   });
+  const posterCandidates = new Set();
+  const posterQueue = createWallPosterQueue(loadOrder);
+  const syncPosters = () => posterQueue.setActive(visible && !document.hidden, posterCandidates);
+  // The overflow-clipped, transformed tile bounds determine which fallbacks
+  // are about to appear during the unchanged reveal/camera animation.
+  const posterObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      const unit = units.find(unit => unit.tile === entry.target);
+      if (entry.isIntersecting) posterCandidates.add(unit); else posterCandidates.delete(unit);
+    }
+    syncPosters();
+  }, { rootMargin: '120px 0px', threshold: 0 }) : null;
+  for (const unit of loadOrder) {
+    const box = unit.tile.getBoundingClientRect();
+    if (box.bottom > -120 && box.top < innerHeight + 120 && box.right > 0 && box.left < innerWidth) posterCandidates.add(unit);
+    posterObserver?.observe(unit.tile);
+  }
   let queuedPlaybackFrame = null;
   function schedulePlayback() {
     if (queuedPlaybackFrame !== null) return;
@@ -406,10 +484,13 @@ export async function mountHeroWall(root) {
       const saved = unit.suspendedPreview;
       unit.resuming = Boolean(saved);
       try {
-        await loadWallPreview(unit.video, unit.item.src, { signal, onAssigned: schedulePlayback });
-        if (saved && !await restoreWallVideo(unit.video, saved, { signal })) return;
-        if (signal.aborted) return;
-        if (unit.suspendedPreview === saved) unit.suspendedPreview = null;
+        const transfer = loadWallPreview(unit.video, unit.item.src, { signal, onAssigned: schedulePlayback });
+        const restore = saved ? restoreWallVideo(unit.video, saved, { signal }).then(restored => {
+          if (!restored || signal.aborted) return;
+          if (unit.suspendedPreview === saved) unit.suspendedPreview = null;
+          unit.resuming = false; schedulePlayback();
+        }) : Promise.resolve();
+        await Promise.all([transfer, restore]);
       } finally {
         if (!signal.aborted) { unit.resuming = false; schedulePlayback(); }
       }
@@ -489,6 +570,7 @@ export async function mountHeroWall(root) {
     focusNavigation.hidden = false;
   }
   function releaseHdVideo(video) {
+    hdStreams.get(video)?.destroy(); hdStreams.delete(video);
     video.pause(); video.removeAttribute('src'); video.load(); video.remove();
   }
   function clearRetiredFrames(index = null) {
@@ -646,26 +728,20 @@ export async function mountHeroWall(root) {
   const sourceStart = unit => Number(unit.item.trim_start || 0);
   const sourceEnd = unit => Number(unit.item.trim_end || unit.item.source_duration || unit.item.duration);
   function suspendNetwork() {
-    // Only visibility changes reach this path. Explicit Pause keeps the cache.
+    // Visibility also suspends HD; explicit Pause/focus only reclaim previews.
     networkSuspended = true; loadQueue.setActive(false);
     focusCoordinator.cancel(); clearTimeout(hoverTimer);
-    const cancelled = [];
-    units.forEach(unit => {
-      playbackController.sync(unit.video, false);
-      if (wallVideoFullyBuffered(unit.video)) return;
-      const saved = suspendWallVideo(unit.video);
-      if (saved) unit.suspendedPreview ||= saved;
-      unit.resuming = false; cancelled.push(unit);
-    });
-    loadQueue.invalidate(cancelled);
-    if (preparedHd && !wallVideoFullyBuffered(preparedHd.video)) {
+    suspendPreviews();
+    if (preparedHd?.ready && preparedHd.stream?.isStreaming) preparedHd.stream.stop();
+    else if (preparedHd && !wallVideoFullyBuffered(preparedHd.video)) {
       if (preparedHd.index === focused && !focusedHd) {
         const unit = units[focused];
         resumeFocusedHd = preparedHd.resume || { index: focused, time: sourceStart(unit) + (unit.suspendedPreview?.time ?? unit.video.currentTime), rate: preparedHd.video.playbackRate };
       }
       discardPrepared();
     }
-    if (focusedHd && !wallVideoFullyBuffered(focusedHd.video)) {
+    if (focusedHd?.stream?.isStreaming) focusedHd.stream.stop();
+    else if (focusedHd && !wallVideoFullyBuffered(focusedHd.video)) {
       const hd = focusedHd; focusedHd = null;
       resumeFocusedHd = { index: hd.index, time: hd.video.currentTime, rate: hd.video.playbackRate };
       disposeHd(hd);
@@ -674,13 +750,28 @@ export async function mountHeroWall(root) {
     for (const hd of retiredFrames) { retiredFrames.delete(hd); disposeHd(hd); }
     root.dataset.wallNetworkState = 'suspended';
   }
+  function suspendPreviews(keep = null) {
+    loadQueue.setActive(false);
+    const cancelled = [];
+    units.forEach(unit => {
+      if (unit === keep) return;
+      playbackController.sync(unit.video, false);
+      if (wallVideoFullyBuffered(unit.video)) return;
+      const saved = suspendWallVideo(unit.video);
+      if (saved) unit.suspendedPreview ||= saved;
+      unit.resuming = false; cancelled.push(unit);
+    });
+    loadQueue.invalidate(cancelled);
+  }
   function playback(reset = false) {
     const active = !paused && visible && !document.hidden;
+    syncPosters();
     if ((!visible || document.hidden) && !networkSuspended) suspendNetwork();
     if (visible && !document.hidden && networkSuspended) {
       networkSuspended = false; root.dataset.wallNetworkState = 'visible';
     }
-    loadQueue.setActive(active);
+    if (!active || focused >= 0) suspendPreviews(active ? units[focused] : null);
+    loadQueue.setActive(active, focused >= 0 ? new Set([units[focused]]) : null);
     if (reset) loadQueue.retry();
     root.classList.toggle('motion-paused', !active);
     root.dataset.wallIntent = paused ? (manualPlaybackChoice ? 'user-paused' : 'reduced-motion') : document.hidden ? 'background' : !visible ? 'offscreen' : focused >= 0 ? 'focused' : 'all-playing';
@@ -734,7 +825,32 @@ export async function mountHeroWall(root) {
     hd.video.classList.add('is-ready');
     if (immediate) requestAnimationFrame(() => { if (hd.video.isConnected) hd.video.style.removeProperty('transition'); });
     root.dataset.wallFocusedQuality = `${hd.video.videoWidth}x${hd.video.videoHeight}`;
+    hd.stream?.start().then(() => {
+      if (!hd.abort.signal.aborted && (focusedHd === hd || retiredFrames.has(hd))) playback();
+    });
     playback();
+  }
+  function connectHdStream(hd, unit) {
+    const { video } = hd, { signal } = hd.abort;
+    const foreground = () => focusedHd === hd || retiredFrames.has(hd);
+    hd.stream = createStreamVideo(video, {
+      src: unit.item.full_src, hlsSrc: unit.item.full_hls_src,
+      canPlay: () => !signal.aborted && visible && !document.hidden &&
+        // Native MP4 cannot be bounded. Unsupported/fatal hover preparation
+        // therefore waits for a real focus click instead of downloading it.
+        (hd.stream?.mode !== 'native' || focused === hd.index) &&
+        (hd.preparing || hd.aligning || hd.loopSeeking || (foreground() && !paused))
+    });
+    hdStreams.set(video, hd.stream);
+    video.addEventListener('play', () => { if (foreground()) hd.stream.start(); }, { signal });
+    video.addEventListener('pause', () => {
+      if (!hd.preparing && !hd.aligning && !hd.loopSeeking) hd.stream.stop();
+    }, { signal });
+    video.addEventListener('loadeddata', () => { if (foreground() && hd.ready) playback(); }, { signal });
+    video.addEventListener('streamfallback', () => {
+      if (focused !== hd.index) hd.abort.abort();
+      else if (foreground() && hd.ready) playback();
+    }, { signal });
   }
   function primeHd(index) {
     clearTimeout(hoverTimer);
@@ -755,13 +871,14 @@ export async function mountHeroWall(root) {
     if (preparedHd?.index === index) return preparedHd.promise.then(hd => align ? alignHd(hd) : hd);
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
-    const hd = { video, index, ready: false, aligning: false, loopSeeking: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
+    const hd = { video, index, ready: false, preparing: true, aligning: false, loopSeeking: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
     video.className = 'wall-hd'; video.muted = true; video.defaultMuted = true; video.playsInline = true; video.preload = 'auto';
     video.dataset.clipId = unit.item.id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.setAttribute('aria-hidden', 'true');
     const loopAction = async () => {
       if (!visible || document.hidden || (focusedHd !== hd && !retiredFrames.has(hd)) || !hd.ready || hd.loopSeeking || video.currentTime < sourceEnd(unit) - .08) return;
       hd.loopSeeking = true; playback();
+      await hd.stream.start();
       const reached = await seekVideo(video, sourceStart(unit), { signal: hd.abort.signal });
       if (focusedHd !== hd && !retiredFrames.has(hd)) return;
       hd.loopSeeking = false;
@@ -770,19 +887,26 @@ export async function mountHeroWall(root) {
     video.addEventListener('timeupdate', loopAction);
     video.addEventListener('ended', loopAction);
     video.addEventListener('error', () => { if (focusedHd === hd) { clearHd(); playback(); } }, { once: true });
-    unit.frame.append(video); video.src = unit.item.full_src;
+    // Only the enlarged HD source changes transport; the 40-tile camera and
+    // outgoing-frame animation keep their existing geometry and lifecycle.
+    unit.frame.append(video); connectHdStream(hd, unit);
     hd.promise = (async () => {
+      if (!await hd.stream.load() || hd.abort.signal.aborted) return null;
+      if (!hd.stream.isStreaming && focused !== index) return null;
+      if (!await hd.stream.start()) return null;
       const available = await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true });
       if (!available) return null;
       const ready = resume ? await restoreWallVideo(video, resume, { signal: hd.abort.signal }) : await alignHd(hd);
       if (!ready) return null;
-      hd.ready = true;
+      hd.ready = true; hd.preparing = false;
       video.dataset.firstDataAt = performance.now().toFixed(1);
       // A slow request may complete after the bounded preview fallback. Upgrade
       // only that still-focused tile, never a stale selection.
       if (focused === index && !focusedHd && visible && !document.hidden) activateHd(hd);
+      else if (focusedHd !== hd && !retiredFrames.has(hd)) hd.stream.stop();
       return hd;
     })().catch(() => null).then(ready => {
+      hd.preparing = false;
       if (!ready && preparedHd === hd) { preparedHd = null; disposeHd(hd); }
       return ready;
     });
@@ -791,12 +915,19 @@ export async function mountHeroWall(root) {
   async function alignHd(hd) {
     if (!hd || hd.abort.signal.aborted) return null;
     const { video, index } = hd, unit = units[index];
-    const time = Math.max(0, Math.min(sourceStart(unit) + unit.video.currentTime, sourceEnd(unit) - .05, video.duration - .05));
-    if (Math.abs(video.currentTime - time) > .12 || video.readyState < 2) {
-      if (!await seekVideo(video, time, { signal: hd.abort.signal })) return null;
+    hd.aligning = true;
+    try {
+      if (!await hd.stream.start()) return null;
+      const time = Math.max(0, Math.min(sourceStart(unit) + unit.video.currentTime, sourceEnd(unit) - .05, video.duration - .05));
+      if (Math.abs(video.currentTime - time) > .12 || video.readyState < 2) {
+        if (!await seekVideo(video, time, { signal: hd.abort.signal })) return null;
+      }
+      if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
+      hd.ready = true; return hd;
+    } finally {
+      hd.aligning = false;
+      if (!hd.preparing && focusedHd !== hd && !retiredFrames.has(hd)) hd.stream.stop();
     }
-    if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
-    hd.ready = true; return hd;
   }
   function showPrompt(unit) {
     const clip = prompts.get(unit.item.id), text = clip?.promptExact || clip?.prompt_exact || clip?.promptDisplay;
@@ -916,6 +1047,7 @@ export async function mountHeroWall(root) {
     if (event.persisted) return;
     focusCoordinator.cancel(); clearTimeout(hoverTimer); discardPrepared();
     loadQueue.destroy();
+    posterObserver?.disconnect(); posterQueue.destroy();
     clearTimeout(revealTimer);
     frameStates.forEach(state => state.stop());
   });

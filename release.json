@@ -1,17 +1,5 @@
 {
-  "version": 18,
-  "published_date": "2026-10-25",
-  "release": "early-media-loading-and-faststart",
-  "full_demonstrations": 57,
-  "skill_excerpts": 6,
-  "full_video_resolution": "1920x1080",
-  "full_video_fps": 24,
-  "video_encoding": "H.264 CRF29, faststart",
-  "full_media_bytes": 358158333,
-  "wall_demonstrations": 40,
-  "wall_columns": 8,
-  "wall_rows": 5,
-  "patch": 0,
-  "document_cache_version": "18",
-  "dataset_local_delivery": 17
+  "review": "v19",
+  "date": "2026-10-25",
+  "description": "Bounded 1080p streaming, foreground media priority, lazy posters and compressed web fonts."
 }
