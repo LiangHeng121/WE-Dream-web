@@ -1,7 +1,7 @@
 {
-  "version": 44,
+  "version": 45,
   "published_date": "2026-10-26",
-  "release": "wam-research-framing-and-method-titles",
+  "release": "dataset-copy-cleanup-paper-duration",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v44",
+  "review": "v45",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -47,5 +47,6 @@
   "method_deployment_video": "Native1920x1080 source,29.97fps,spatial anti-alias prefilter for small-window rendering; primary demonstrations unchanged",
   "method_motion_studies": "method-motion-options.html",
   "hero_atlas_integrity": "Regenerated60978bytefirst-frameWebP;sourceandpackagedshellmustmatchactualposters;URL-awarecacheversioningpreservesinlinebytes",
-  "frozen_motion_studies": "frozen-motion-options.html"
+  "frozen_motion_studies": "frozen-motion-options.html",
+  "dataset_presentation": "Simplified data copy and controls; robot task durations and 4.02-hour total from paper Table IX; original media snapshot retained as provenance."
 }

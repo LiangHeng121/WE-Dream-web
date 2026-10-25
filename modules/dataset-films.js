@@ -90,14 +90,13 @@ export async function mountDatasetFilms(root) {
   root.innerHTML = `<div class="df-toolbar"><div class="df-mode-tabs" role="tablist" aria-label="Training stage">
       <button type="button" role="tab" id="${prefix}-pre" data-mode="pretraining" aria-controls="${prefix}-panel">Pretraining</button>
       <button type="button" role="tab" id="${prefix}-post" data-mode="posttraining" aria-controls="${prefix}-panel">Post-training</button>
-    </div><button type="button" class="df-play-all">Pause videos</button></div>
+    </div></div>
     <div class="df-workspace" id="${prefix}-panel" role="tabpanel" aria-labelledby="${prefix}-pre">
       <div class="df-composition"><div class="df-composition-copy">
         <div class="df-composition-head"><div><p class="df-eyebrow"></p><h3 class="df-total"></h3></div><div class="df-scales" role="group" aria-label="Pretraining data scale"></div></div>
-        <p class="df-distribution-scope"></p></div><div class="df-donut"></div><div class="df-legend" role="group" aria-label="Choose a dataset source"></div>
+        </div><div class="df-donut"></div><div class="df-legend" role="group" aria-label="Choose a dataset source"></div>
       </div>
       <div class="df-feature"><div class="df-feature-heading"><h3 class="df-feature-title"></h3><p class="df-feature-note" hidden></p></div><div class="df-grid" aria-label="Dataset videos"></div></div>
-      <details class="df-sources"><summary>Sources &amp; details</summary><div class="df-source-content"></div></details>
     </div><p class="df-announcement" aria-live="polite" aria-atomic="true"></p>`;
   const $ = selector => root.querySelector(selector);
   const sourceURL = (clip, source) => clip.source_page_url || source.source_url || clip.source_url;
@@ -117,20 +116,16 @@ export async function mountDatasetFilms(root) {
     tile.play.setAttribute('aria-label', `${paused ? 'Play' : 'Pause'} ${tile.title}`);
     tile.card.classList.toggle('is-playing', !paused);
   }
-  function updateGlobalControl() {
-    $('.df-play-all').textContent = allPaused ? 'Play videos' : 'Pause videos';
-    $('.df-play-all').setAttribute('aria-label', `${allPaused ? 'Play' : 'Pause'} all dataset videos`);
-  }
   function graphRows() {
-    if (mode === 'posttraining') return distribution.posttraining.items.map(item => ({ ...item, value: item.frames }));
+    if (mode === 'posttraining') return distribution.posttraining.items.map(item => ({ ...item, value: item.hours }));
     const setting = distribution.pretraining.scales.find(item => item.id === scale);
     return distribution.pretraining.sources.filter(item => setting.hours[item.id] > 0).map(item => ({ ...item, value: setting.hours[item.id] }));
   }
-  const amount = item => mode === 'pretraining' ? `≈${format(item.value)} h` : `${(item.seconds / 60).toFixed(1)} min`;
+  const amount = item => mode === 'pretraining' ? `≈${format(item.value)} h` : `${item.value.toFixed(2)} h`;
   function highlight(id) {
     const item = graphItems.find(row => row.id === id);
-    $('.df-donut-value').textContent = item ? `${(item.value / graphTotal * 100).toFixed(1)}%` : mode === 'pretraining' ? `${graphItems.length} sources` : `${distribution.posttraining.hours.toFixed(3)} h`;
-    $('.df-donut-label').textContent = item ? amount(item) : mode === 'pretraining' ? 'human video' : '0917 snapshot';
+    $('.df-donut-value').textContent = item ? `${(item.value / graphTotal * 100).toFixed(1)}%` : mode === 'pretraining' ? `${graphItems.length} sources` : `${distribution.posttraining.hours.toFixed(2)} h`;
+    $('.df-donut-label').textContent = item ? amount(item) : mode === 'pretraining' ? 'human video' : `${distribution.posttraining.families} task families`;
     root.querySelectorAll('.df-slice').forEach(node => node.classList.toggle('is-highlighted', node.dataset.compositionId === id));
   }
   function refreshSelection() {
@@ -145,7 +140,7 @@ export async function mountDatasetFilms(root) {
   function selectItem(id, focusCard = false) {
     selected = id;
     if (mode === 'pretraining' && sourceId !== id) {
-      sourceId = id; buildTiles(); buildSources();
+      sourceId = id; buildTiles();
     }
     refreshSelection();
     const tile = tiles.find(item => item.id === id);
@@ -162,7 +157,7 @@ export async function mountDatasetFilms(root) {
       selected = mode === 'pretraining' ? graphItems[0].id : null;
       if (mode === 'pretraining') sourceId = selected;
     }
-    const chart = svgNode('svg', { viewBox: '0 0 320 320', role: 'group', 'aria-label': `${mode === 'pretraining' ? 'Approximate paper pretraining' : 'Public 0917 snapshot'} duration shares. Select a slice to ${mode === 'pretraining' ? 'show the source mosaic' : 'highlight a robot video'}.` });
+    const chart = svgNode('svg', { viewBox: '0 0 320 320', role: 'group', 'aria-label': `${mode === 'pretraining' ? 'Human video duration by source' : 'Robot demonstration duration by task family'}. Select a slice to ${mode === 'pretraining' ? 'show the source mosaic' : 'highlight a robot video'}.` });
     const defs = svgNode('defs'); chart.append(defs);
     chart.append(svgNode('circle', { cx: 160, cy: 160, r: 80, class: 'df-donut-core' }));
     const center = svgNode('g', { 'aria-hidden': 'true' });
@@ -395,7 +390,7 @@ export async function mountDatasetFilms(root) {
       if (!tile.video.paused) { tile.paused = true; tile.video.pause(); }
       else {
         tile.paused = false;
-        if (allPaused) { liveTiles().forEach(other => { other.paused = other !== tile; }); allPaused = false; updateGlobalControl(); }
+        if (allPaused) { liveTiles().forEach(other => { other.paused = other !== tile; }); allPaused = false; }
         loadTile(tile, { retry: true }); safePlay(tile);
       }
       updatePlayback(tile);
@@ -407,7 +402,7 @@ export async function mountDatasetFilms(root) {
       const ok = await seekVideo(tile.video, Number(tile.seek.value) / 1000 * tile.video.duration, { signal: tile.seekAbort.signal });
       if (ticket !== tile.seekNumber || tile.abort.signal.aborted) return;
       tile.seeking = false;
-      if (!ok) $('.df-announcement').textContent = `Seeking ${title} is unavailable. Open the original source in Sources & details.`;
+      if (!ok) $('.df-announcement').textContent = `Seeking ${title} is unavailable. Please try another position.`;
       safePlay(tile);
     }, tile.abort.signal);
     on(fullscreen, 'click', () => {
@@ -430,46 +425,17 @@ export async function mountDatasetFilms(root) {
     else {
       const source = media.posttraining.sources[0];
       if (!restored) distribution.posttraining.items.forEach(item => createTile(item.id, source, source.clips.find(clip => clip.id === item.clip_id), shortNames[item.id] || item.label, item.color));
-      $('.df-feature-title').textContent = 'Robot first-person demonstrations';
+      $('.df-feature-title').textContent = 'Unitree G1 demonstrations';
       $('.df-feature-note').hidden = true;
     }
     $('.df-grid').dataset.count = tiles.length;
     $('.df-grid').setAttribute('aria-label', mode === 'pretraining' ? `${$('.df-feature-title').textContent}, ${tiles.length} independent preview videos` : 'Nine first-person robot training videos');
     refreshSelection();
   }
-  function buildSources() {
-    const content = $('.df-source-content'); content.replaceChildren();
-    content.append(element('p', 'df-provenance-note', mode === 'pretraining' ? distribution.pretraining.note : `${distribution.posttraining.note} Duration shares use ${format(distribution.posttraining.frames)} frames at ${distribution.posttraining.fps} FPS; the snapshot contains ${distribution.posttraining.instructions} instructions across ${distribution.posttraining.families} task families.`));
-    if (mode === 'posttraining') {
-      const paragraph = element('p', '', 'The nine videos are complete first-person head-camera training segments from the public repository. H.264 web delivery preserves dimensions, frame rate and timing, with no cuts or crops. ');
-      const link = element('a', '', 'ModelScope dataset ↗'); link.href = distribution.posttraining.source_url; link.target = '_blank'; link.rel = 'noopener noreferrer'; paragraph.append(link); content.append(paragraph);
-      content.append(element('p', 'df-revision', `Apache-2.0 · Snapshot revision ${distribution.posttraining.revision}`));
-    }
-    const list = element('div', 'df-source-list');
-    if (mode === 'pretraining' && tiles.length) {
-      const source = tiles[0].source;
-      content.append(element('p', '', `${source.description} ${source.attribution} ${source.license}`));
-      content.append(element('p', '', 'These independent publisher examples illustrate the data source; they are not asserted to be the exact samples used in WE-Dream training.'));
-      if (source.id === 'egowe') content.append(element('p', 'df-placeholder-note', 'Temporary preview: all videos in this mosaic are distinct EgoVerse episodes, not EgoWE footage.'));
-    }
-    tiles.forEach(tile => {
-      const item = element('div', 'df-source-entry'); item.append(element('h5', '', tile.title));
-      if (mode === 'pretraining') {
-        item.append(element('p', '', tile.clip.description || tile.clip.label));
-        item.append(element('p', 'df-episode', tile.clip.archive_member || `Episode ${tile.clip.episode_id}`));
-      } else {
-        item.append(element('p', '', `“${tile.clip.prompt_exact}”`));
-        item.append(element('p', 'df-episode', `Episode ${tile.clip.episode_index} · task ${tile.clip.task_index} · ${clock(tile.clip.duration)}. Instruction joined to this episode in repository metadata.`));
-      }
-      const link = element('a', '', mode === 'pretraining' ? 'Original source ↗' : 'Original dataset ↗'); link.href = sourceURL(tile.clip, tile.source); link.target = '_blank'; link.rel = 'noopener noreferrer'; item.append(link); list.append(item);
-    });
-    content.append(list);
-  }
   function renderComposition() {
     const pre = mode === 'pretraining';
-    $('.df-eyebrow').textContent = pre ? 'Human pretraining · paper' : 'Robot training · paper';
-    $('.df-total').textContent = pre ? `≈${scale} hours` : `${distribution.posttraining.paper_hours.toFixed(2)} hours`;
-    $('.df-distribution-scope').textContent = pre ? 'Video duration by source' : 'Chart: public 0917 snapshot, a different dataset version';
+    $('.df-eyebrow').textContent = pre ? 'Egocentric human video' : 'Humanoid demonstrations';
+    $('.df-total').textContent = pre ? `≈${scale} hours` : `${distribution.posttraining.hours.toFixed(2)} hours`;
     $('.df-legend').setAttribute('aria-label', pre ? 'Choose a human-video source' : 'Highlight a robot task family');
     $('.df-scales').hidden = !pre; $('.df-scales').replaceChildren();
     if (pre) distribution.pretraining.scales.forEach(item => {
@@ -482,7 +448,7 @@ export async function mountDatasetFilms(root) {
     const pre = mode === 'pretraining'; root.dataset.mode = mode; selected = pre ? sourceId : null;
     root.querySelectorAll('[data-mode]').forEach(button => { const active = button.dataset.mode === mode; button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; });
     $('.df-workspace').setAttribute('aria-labelledby', `${prefix}-${pre ? 'pre' : 'post'}`);
-    renderComposition(); buildTiles(); buildSources(); updateGlobalControl();
+    renderComposition(); buildTiles();
   }
   on(root, 'click', event => {
     const item = event.target.closest('[data-composition-id]');
@@ -491,13 +457,10 @@ export async function mountDatasetFilms(root) {
     if (button.dataset.mode && button.dataset.mode !== mode) { mode = button.dataset.mode; renderMode(); }
     else if (button.dataset.scale && button.dataset.scale !== scale) {
       const previousSource = sourceId; scale = button.dataset.scale; renderComposition();
-      if (sourceId !== previousSource) { buildTiles(); buildSources(); }
+      if (sourceId !== previousSource) { buildTiles(); }
       $('.df-scales').querySelector('[aria-pressed=true]')?.focus({ preventScroll: true });
     }
-    else if (button.matches('.df-play-all')) {
-      allPaused = !allPaused;
-      liveTiles().forEach(tile => { tile.paused = allPaused; if (allPaused) tile.video.pause(); else { loadTile(tile, { retry: true }); safePlay(tile); } }); updateGlobalControl();
-    }
+
   });
   on(root, 'keydown', event => {
     const composition = event.target.closest('[data-composition-id]');
@@ -517,7 +480,7 @@ export async function mountDatasetFilms(root) {
   on(root, 'focusin', event => { const node = event.target.closest('[data-composition-id]'); if (node) highlight(node.dataset.compositionId); });
   on(root, 'focusout', event => { if (event.target.closest('[data-composition-id]')) highlight(selected); });
   on(document, 'visibilitychange', syncVisibility);
-  on(reduced, 'change', () => { if (reduced.matches) { allPaused = true; liveTiles().forEach(tile => tile.video.pause()); updateGlobalControl(); } });
+  on(reduced, 'change', () => { if (reduced.matches) { allPaused = true; liveTiles().forEach(tile => tile.video.pause()); } });
   renderMode();
   root.dataset.mountReadyAt = performance.now().toFixed(1);
   const controller = {
