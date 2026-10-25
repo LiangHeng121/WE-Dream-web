@@ -81,7 +81,7 @@ export async function mountDatasetFilms(root) {
   const prewarmMargin = 600, prewarmCount = 1;
   const inViewport = (margin = 0) => { const box = root.getBoundingClientRect(); return box.height > 0 && box.width > 0 && box.bottom > -margin && box.top < innerHeight + margin && box.right > 0 && box.left < innerWidth; };
   let sectionVisible = inViewport(), sectionNear = inViewport(prewarmMargin);
-  let navigationWarmUntil = 0, navigationWarmTimer = null;
+  let navigationWarmUntil = 0, navigationWarmTimer = null, navigationWarmCount = 1;
   let loadQueue = [];
   let activeGroupKey = null, cachedGroup = null, gridEntered = false;
   let visibleReady = false, visibleDwellTimer = null;
@@ -127,6 +127,8 @@ export async function mountDatasetFilms(root) {
     $('.df-donut-value').textContent = item ? `${(item.value / graphTotal * 100).toFixed(1)}%` : mode === 'pretraining' ? `${graphItems.length} sources` : `${distribution.posttraining.hours.toFixed(2)} h`;
     $('.df-donut-label').textContent = item ? amount(item) : mode === 'pretraining' ? 'human video' : `${distribution.posttraining.families} task families`;
     root.querySelectorAll('.df-slice').forEach(node => node.classList.toggle('is-highlighted', node.dataset.compositionId === id));
+    root.querySelectorAll('.df-legend-item').forEach(node => node.classList.toggle('is-highlighted', node.dataset.compositionId === id));
+    tiles.forEach(tile => tile.card.classList.toggle('is-selected', mode === 'posttraining' && tile.id === id));
   }
   function refreshSelection() {
     const tabStop = selected || graphItems[0]?.id;
@@ -134,7 +136,6 @@ export async function mountDatasetFilms(root) {
       node.setAttribute('aria-pressed', String(node.dataset.compositionId === selected));
       node.tabIndex = node.dataset.compositionId === tabStop ? 0 : -1;
     });
-    tiles.forEach(tile => tile.card.classList.toggle('is-selected', mode === 'posttraining' && tile.id === selected));
     highlight(selected);
   }
   function selectItem(id, focusCard = false) {
@@ -204,7 +205,8 @@ export async function mountDatasetFilms(root) {
   }
   function eligibleTile(tile) {
     if (inViewport() && gridEntered) return tile.visible && (visibleReady || tiles[0] === tile);
-    return tiles.slice(0, prewarmCount).includes(tile) || (inViewport() && tile.visible);
+    const count = performance.now() < navigationWarmUntil ? navigationWarmCount : prewarmCount;
+    return tiles.slice(0, count).includes(tile) || (inViewport() && tile.visible);
   }
   function loadTile(tile, { retry = false } = {}) {
     if (retry) tile.retryBlocked = false;
@@ -334,9 +336,17 @@ export async function mountDatasetFilms(root) {
     playObserver.disconnect();
     clearTimeout(visibleDwellTimer); visibleDwellTimer = null; visibleReady = false;
     loadQueue = []; loadingTiles.clear();
-    if (cache && tiles.length && tiles.every(tile => datasetVideoFullyBuffered(tile.video) && !tile.restoring && !tile.seeking)) {
+    const reusable = tile => datasetVideoFullyBuffered(tile.video) && !tile.restoring && !tile.seeking;
+    if (cache && tiles.some(reusable)) {
       if (cachedGroup) disposeTiles(cachedGroup.tiles);
-      tiles.forEach(tile => { tile.video.pause(); tile.visible = false; tile.queued = false; tile.loadRequest?.abort.abort(); tile.loadRequest = null; clearTimeout(tile.timer); });
+      // Keep each completed video even when another tile is still downloading.
+      // Incomplete sources are cancelled, so the detached group owns no network
+      // transfers; returning resumes them through the same bounded queue.
+      tiles.forEach(tile => {
+        tile.video.pause(); tile.visible = false; tile.queued = false;
+        if (reusable(tile)) { tile.loadRequest?.abort.abort(); tile.loadRequest = null; clearTimeout(tile.timer); }
+        else cancelTileRequest(tile);
+      });
       cachedGroup = { key: activeGroupKey, tiles };
     } else disposeTiles(tiles);
     tiles = []; gridEntered = false; $('.df-grid').replaceChildren();
@@ -475,17 +485,27 @@ export async function mountDatasetFilms(root) {
       root.querySelector(`[data-mode="${next}"]`).click(); root.querySelector(`[data-mode="${next}"]`).focus();
     }
   });
-  on(root, 'pointerover', event => { const node = event.target.closest('[data-composition-id]'); if (node && event.pointerType !== 'touch') highlight(node.dataset.compositionId); });
-  on(root, 'pointerout', event => { if (event.target.closest('[data-composition-id]') && !event.relatedTarget?.closest?.('[data-composition-id]')) highlight(selected); });
-  on(root, 'focusin', event => { const node = event.target.closest('[data-composition-id]'); if (node) highlight(node.dataset.compositionId); });
-  on(root, 'focusout', event => { if (event.target.closest('[data-composition-id]')) highlight(selected); });
+  // Preview the same task across chart, legend and film, without selecting,
+  // scrolling, rebuilding a source group or restarting any video.
+  const linkedNode = target => target?.closest?.(mode === 'posttraining' ? '[data-composition-id], .df-card' : '[data-composition-id]');
+  const linkedId = node => node?.dataset.compositionId || node?.dataset.cardId;
+  on(root, 'pointerover', event => {
+    const node = linkedNode(event.target);
+    if (node && event.pointerType !== 'touch') highlight(linkedId(node));
+  });
+  on(root, 'pointerout', event => {
+    if (linkedNode(event.target) && !linkedNode(event.relatedTarget)) highlight(selected);
+  });
+  on(root, 'focusin', event => { const node = linkedNode(event.target); if (node) highlight(linkedId(node)); });
+  on(root, 'focusout', event => { if (linkedNode(event.target) && !linkedNode(event.relatedTarget)) highlight(selected); });
   on(document, 'visibilitychange', syncVisibility);
   on(reduced, 'change', () => { if (reduced.matches) { allPaused = true; liveTiles().forEach(tile => tile.video.pause()); } });
   renderMode();
   root.dataset.mountReadyAt = performance.now().toFixed(1);
   const controller = {
-    prepare() {
+    prepare({ intent = false } = {}) {
       if (destroyed || document.hidden) return;
+      navigationWarmCount = performance.now() < navigationWarmUntil ? Math.max(navigationWarmCount, intent ? 3 : 1) : intent ? 3 : 1;
       navigationWarmUntil = performance.now() + 6000;
       clearTimeout(navigationWarmTimer);
       navigationWarmTimer = setTimeout(() => { navigationWarmUntil = 0; syncVisibility(); }, 6000);

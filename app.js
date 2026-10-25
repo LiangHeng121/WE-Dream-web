@@ -440,7 +440,7 @@ async function boot(){
   mountNear($('#method-root'),()=>mountMethodFigure($('#method-root')));
   const datasetMount=mountNear($('#dataset-root'),()=>mountDatasetFilms($('#dataset-root')),{margin:1200});
   document.querySelectorAll('a[href="#dataset"]').forEach(link=>{
-    for(const event of ['pointerenter','focus','click'])link.addEventListener(event,()=>datasetMount().then(dataset=>dataset?.prepare?.()));
+    for(const event of ['pointerenter','focus','click'])link.addEventListener(event,()=>datasetMount().then(dataset=>dataset?.prepare?.({intent:event==='click'})));
   });
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
   const chapterData=getJSON('data/chapters.json?v=v38').then(data=>{chapters=data;});

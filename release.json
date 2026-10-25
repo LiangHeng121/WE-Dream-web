@@ -1,7 +1,7 @@
 {
-  "version": 45,
+  "version": 46,
   "published_date": "2026-10-26",
-  "release": "dataset-copy-cleanup-paper-duration",
+  "release": "dataset-curation-linked-hover-and-loading",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v45",
+  "review": "v46",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -48,5 +48,16 @@
   "method_motion_studies": "method-motion-options.html",
   "hero_atlas_integrity": "Regenerated60978bytefirst-frameWebP;sourceandpackagedshellmustmatchactualposters;URL-awarecacheversioningpreservesinlinebytes",
   "frozen_motion_studies": "frozen-motion-options.html",
-  "dataset_presentation": "Simplified data copy and controls; robot task durations and 4.02-hour total from paper Table IX; original media snapshot retained as provenance."
+  "dataset_presentation": "Simplified data copy and controls; robot task durations and 4.02-hour total from paper Table IX; original media snapshot retained as provenance.",
+  "dataset_robot_media": {
+    "curation": "Nine carpet-free robot training episodes, selected for steadier camera motion and complete task segments",
+    "native_resolution": "672x384",
+    "fps": 30,
+    "bytes": 8141571,
+    "previous_bytes": 10361308,
+    "head_trim_seconds": "0 to 1",
+    "gop_seconds": 1
+  },
+  "dataset_interaction": "Chart, legend and robot film respond together to hover and keyboard focus, without restarting videos.",
+  "dataset_loading": "Intentional Data navigation prewarms the first three videos; completed native video buffers are reused even when a neighboring tile was incomplete; three-transfer limit and hidden-request cancellation remain."
 }
