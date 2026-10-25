@@ -8,6 +8,12 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 This repository contains the buildless research website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
+## Release 37
+
+- Restore the embedded first-frame wall atlas. A broad version-string replacement had changed one base64 character inside the WebP, producing visible corruption while videos were still loading.
+- Publication now validates the source and final packaged atlas against all40 source first frames. Regression coverage reproduces the decodable-but-corrupt WebP and verifies URL-only cache versioning.
+- All40 native preview videos verified by complete decoding, manifest SHA and public byte comparisons. Playback, wall layout, selection, zoom and Method remain unchanged.
+
 ## Release 36
 
 - Numbered section names now lead each section, with smaller descriptive subtitles.

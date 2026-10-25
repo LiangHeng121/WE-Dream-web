@@ -1,5 +1,5 @@
 /* Original WE-Dream overview: a fixed architecture, not a sequence of slides. */
-import { createRoutingVisual } from './method-routing.js?v=v36';
+import { createRoutingVisual } from './method-routing.js?v=v37';
 export const METHOD_PARTS = [
   { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn actions from human video.', caption: 'A frozen latent action model extracts 32D visual-transition targets from human first-person video.' },
   { key: 'posttrain', label: 'Robot post-training', title: 'Adapt the pretrained model to robot control.', caption: 'Transfer model weights and jointly learn from robot demonstrations, states, and 80D action targets.' },

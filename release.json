@@ -1,7 +1,7 @@
 {
-  "version": 36,
+  "version": 37,
   "published_date": "2026-10-26",
-  "release": "method-detail-and-stable-mosaics",
+  "release": "hero-first-frame-integrity-fix",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,9 +12,9 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v36",
+  "document_cache_version": "v37",
   "dataset_local_delivery": 17,
-  "review": "v36",
+  "review": "v37",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -45,5 +45,6 @@
   "wall_startup_cache_lookup": "Relative HLS fragment URLs resolve against document base for exact cache lookup; original request callbacks and query strings preserved",
   "method_presentation": "Prominent numbered section headings; concise Method structure; paper C/V-tilde/A-tilde/S attention notation; snowflake Frozen LAM; half EgoDex/half EgoVerse human mosaic and steadier active robot excerpts",
   "method_deployment_video": "Native1920x1080 source,29.97fps,spatial anti-alias prefilter for small-window rendering; primary demonstrations unchanged",
-  "method_motion_studies": "method-motion-options.html"
+  "method_motion_studies": "method-motion-options.html",
+  "hero_atlas_integrity": "Regenerated60978bytefirst-frameWebP;sourceandpackagedshellmustmatchactualposters;URL-awarecacheversioningpreservesinlinebytes"
 }
