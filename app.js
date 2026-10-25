@@ -1,14 +1,14 @@
-import { mountHeroWall } from './modules/hero-wall.js?v=v19';
-import { createStreamVideo } from './modules/stream-video.js?v=v19';
-import { createDemoDeck } from './modules/demo-deck.js?v=v19';
-import { createStagePlayer } from './modules/stage-player.js?v=v19';
-import { createSkillMix } from './modules/skill-mix.js?v=v19';
-import { seekVideo } from './modules/video-seek.js?v=v19';
-import { createVideoWarmScheduler, monitorVideoPlayback } from './modules/video-warm.js?v=v19';
-import { mountScrollReveal } from './modules/scroll-reveal.js?v=v19';
-const mountMethodFigure = root => import('./modules/method-figure.js?v=v19').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js?v=v19').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js?v=v19').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=v19.1';
+import { createStreamVideo } from './modules/stream-video.js?v=v19.1';
+import { createDemoDeck } from './modules/demo-deck.js?v=v19.1';
+import { createStagePlayer } from './modules/stage-player.js?v=v19.1';
+import { createSkillMix } from './modules/skill-mix.js?v=v19.1';
+import { seekVideo } from './modules/video-seek.js?v=v19.1';
+import { createVideoWarmScheduler, monitorVideoPlayback } from './modules/video-warm.js?v=v19.1';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=v19.1';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=v19.1').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=v19.1').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=v19.1').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -370,9 +370,61 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   };galleries.push(gallery);return gallery;
 }
 
+// Hold only explicit anchor navigation while lazy content above it settles.
+// Ordinary scroll and carousel gestures never create a navigation hold.
+function createAnchorStabilizer(){
+  const mounting=new Set();
+  let pending=null,timer=null,lastScrollAt=-Infinity;
+  const now=()=>performance.now();
+  const cancel=()=>{pending=null;clearTimeout(timer);timer=null;};
+  const affectsTarget=host=>pending&&(pending.target.contains(host)||host.getBoundingClientRect().top<=pending.target.getBoundingClientRect().top);
+  function check(){
+    timer=null;
+    if(!pending)return;
+    const time=now(),state=pending,target=state.target;
+    if(!target.isConnected||time-state.started>=5000){cancel();return;}
+    const absolute=target.getBoundingClientRect().top+window.scrollY;
+    if(Math.abs(absolute-state.position)>1){state.position=absolute;state.changed=time;}
+    // Leave the browser's original smooth anchor transition intact. Once it
+    // settles, follow only layout movement using non-animated corrections.
+    const settled=time-lastScrollAt>=120&&time-state.started>=120;
+    if(settled){
+      const max=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+      const desired=Math.min(max,Math.max(0,absolute-state.offset));
+      if(Math.abs(window.scrollY-desired)>1){window.scrollTo({top:desired,behavior:'instant'});state.changed=time;}
+      const host=target.querySelector('.gallery-root,[id$="-root"]');
+      const ready=!host||host.classList.contains('is-mounted');
+      if(ready&&![...mounting].some(affectsTarget)&&time-state.changed>=350){cancel();return;}
+    }
+    timer=setTimeout(check,80);
+  }
+  function begin(hash){
+    cancel();
+    let id;try{id=decodeURIComponent(hash.slice(1));}catch{return;}
+    const target=document.getElementById(id);if(!target)return;
+    const offset=(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0)+(parseFloat(getComputedStyle(target).scrollMarginTop)||0);
+    pending={target,started:now(),changed:now(),position:target.getBoundingClientRect().top+window.scrollY,offset};
+    timer=setTimeout(check,80);
+  }
+  window.addEventListener('scroll',()=>{if(pending)lastScrollAt=now();},{passive:true});
+  for(const event of ['wheel','touchstart','pointerdown'])document.addEventListener(event,cancel,{passive:true,capture:true});
+  document.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' ','Escape'].includes(event.key))cancel();},{capture:true});
+  document.addEventListener('click',event=>{
+    const link=event.target.closest?.('a[href^="#"]');
+    if(!link||event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    begin(link.getAttribute('href'));
+  });
+  return {begin,cancel,
+    mounting(host){mounting.add(host);if(affectsTarget(host))pending.changed=now();},
+    mounted(host){mounting.delete(host);if(affectsTarget(host))pending.changed=now();}
+  };
+}
+const anchorNavigation=createAnchorStabilizer();
+if(location.hash)anchorNavigation.begin(location.hash);
+
 function mountNear(host,mount,{margin=650}={}){
   let runPromise=null,observer;
-  const run=()=>{if(!runPromise){observer?.disconnect();host.dataset.mountRequestedAt=performance.now().toFixed(1);runPromise=Promise.resolve().then(mount).then(value=>{host.classList.add('is-mounted');scrollReveal.refresh();return value;}).catch(error=>console.error('Section failed to load',host.id,error));}return runPromise;};
+  const run=()=>{if(!runPromise){observer?.disconnect();host.dataset.mountRequestedAt=performance.now().toFixed(1);anchorNavigation.mounting(host);runPromise=Promise.resolve().then(mount).then(value=>{host.classList.add('is-mounted');scrollReveal.refresh();return value;}).catch(error=>console.error('Section failed to load',host.id,error)).finally(()=>anchorNavigation.mounted(host));}return runPromise;};
   if(!('IntersectionObserver' in window)){run();return run;}
   observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))run();},{rootMargin:`${margin}px 0px`,threshold:0});
   observer.observe(host);
@@ -391,9 +443,9 @@ async function boot(){
     for(const event of ['pointerenter','focus','click'])link.addEventListener(event,()=>datasetMount().then(dataset=>dataset?.prepare?.()));
   });
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
-  const chapterData=getJSON('data/chapters.json?v=v19').then(data=>{chapters=data;});
-  const skillData=getJSON('data/skill-media.json?v=v19').then(data=>{skillMedia=data;});
-  const [content,media]=await Promise.all([getJSON('data/content.json?v=v19'),getJSON('assets/media/manifest.json?v=v19')]);
+  const chapterData=getJSON('data/chapters.json?v=v19.1').then(data=>{chapters=data;});
+  const skillData=getJSON('data/skill-media.json?v=v19.1').then(data=>{skillMedia=data;});
+  const [content,media]=await Promise.all([getJSON('data/content.json?v=v19.1'),getJSON('assets/media/manifest.json?v=v19.1')]);
   manifest=media;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],

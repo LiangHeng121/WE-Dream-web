@@ -1,4 +1,4 @@
-import { videoFullyBuffered } from './video-warm.js?v=v19';
+import { videoFullyBuffered } from './video-warm.js?v=v19.1';
 
 // Original Figure 2 regions are the visual source of truth. These overlays
 // highlight existing modules, rather than replacing the architecture.

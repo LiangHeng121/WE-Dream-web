@@ -11,10 +11,11 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 0,
-  "document_cache_version": "v19",
+  "patch": 1,
+  "document_cache_version": "v19.1",
   "dataset_local_delivery": 17,
-  "review": "v19",
+  "review": "v19.1",
   "streaming_representations": 57,
-  "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding"
+  "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
+  "delivery": "Single JS and CSS entry bundles; foreground-priority streaming; stabilized explicit section navigation"
 }
