@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v29.1';
-import { createStreamVideo } from './stream-video.js?v=v29.1';
+import { seekVideo } from './video-seek.js?v=v30';
+import { createStreamVideo } from './stream-video.js?v=v30';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -610,10 +610,10 @@ export async function alignWallHandoff(video, preview, {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v29.1').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v30').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v29.1').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v30').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -828,7 +828,11 @@ export async function mountHeroWall(root) {
     };
     const animations = camera.getAnimations().filter(animation => animation.transitionProperty === 'transform');
     const finished = animations.length ? Promise.allSettled(animations.map(animation => animation.finished)) : Promise.resolve();
-    return finished.then(() => { settle(); if (revision === cameraMoveRevision) root.dataset.wallCameraSettledAt = performance.now().toFixed(1); });
+    return finished.then(() => {
+      if (revision === cameraMoveRevision) root.dataset.wallCameraAnimationDoneAt = performance.now().toFixed(1);
+      settle();
+      if (revision === cameraMoveRevision) root.dataset.wallCameraSettledAt = performance.now().toFixed(1);
+    });
   }
   function moveFocus(direction) {
     if (!exploring || focused < 0) return;
@@ -1223,7 +1227,7 @@ export async function mountHeroWall(root) {
       if (hd.firstFramePending && (!focusStart?.previewReleased || focusStart.handedOff) && Math.abs(frame.mediaTime - (hd.resume?.time ?? sourceStart(units[hd.index]))) <= .12) {
         hd.firstFramePending = false; hd.selection = null; activateHd(hd); return;
       }
-      if (hd.selection !== focusStart || hd.handoffAttempts < 3) return;
+      if (hd.selection !== focusStart || (hd.handoffAttempts || 0) < 3) return;
       if (frame.sequence > (hd.handoffExhaustedFrame || 0)) {
         hd.handoffAttempts = 0; hd.selection = null; root.dataset.wallHandoffState = 'frame-resumed'; schedulePlayback();
       }
@@ -1372,10 +1376,11 @@ export async function mountHeroWall(root) {
     const { video } = hd, { signal } = hd.abort;
     const foreground = () => focusedHd === hd || retiredFrames.has(hd);
     hd.stream = createStreamVideo(video, {
-      // An explicit cold selection uses the faststart MP4 directly: its first
-      // frame does not wait for a playlist, initialization file and fragment.
-      // A decoded hover keeps its existing bounded HLS buffer instead.
-      src: unit.item.full_src, hlsSrc: hd.transport === 'native' ? undefined : unit.item.full_hls_src,
+      // Cold clicks and warmed selections share the same HLS media URL and
+      // controller. Playlists/init bytes are bundled by the stream adapter;
+      // native MP4 is reserved for missing playlists, capability/fatal errors,
+      // or the shared foreground startup-stall policy.
+      src: unit.item.full_src, hlsSrc: unit.item.full_hls_src, startupTimeout: 2500,
       canPlay: () => !signal.aborted && visible && !document.hidden &&
         // Native MP4 cannot be bounded. Unsupported/fatal hover preparation
         // therefore waits for a real focus click instead of downloading it.
@@ -1439,21 +1444,18 @@ export async function mountHeroWall(root) {
     if (retained) { discardPrepared(); return Promise.resolve(retained); }
     if (!units[index]?.item.full_src) return Promise.resolve(null);
     if (preparedHd?.index === index) {
-      const decoded = preparedHd.video.readyState >= 2 && !preparedHd.video.seeking;
-      // Reuse useful bytes already arriving in the first HLS fragment. Only
-      // library/manifest-only speculation switches to the one-request MP4.
-      if (focused === index && preparedHd.stream.state === 'warming') {
-        // Promote the existing in-flight fragment immediately. Keeping the
-        // speculative intent would stopLoad at FRAG_BUFFERED even after a click.
-        // start() changes intent before awaiting I/O and reuses the same source.
+      if (focused === index) {
+        // Explicit selection promotes even a pending library/manifest request.
+        // start() sets foreground intent before awaiting initialization, so its
+        // first fragment cannot remain speculative or be cancelled and reloaded.
         preparedHd.stream.start().catch(() => false);
         root.dataset.wallHdPromotedAt = performance.now().toFixed(1);
       }
-      if (focused !== index || preparedHd.transport === 'native' || decoded || preparedHd.stream.state === 'warming' || preparedHd.stream.state === 'streaming') return preparedHd.promise;
+      return preparedHd.promise;
     }
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
-    const hd = { video, index, loadStartedAt: performance.now(), transport: focused === index ? 'native' : 'hls', ready: false, preparing: true, aligning: false, loopSeeking: false, playbackReady: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
+    const hd = { video, index, loadStartedAt: performance.now(), transport: unit.item.full_hls_src ? 'hls' : 'native', ready: false, preparing: true, aligning: false, loopSeeking: false, playbackReady: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
     video.className = 'wall-hd'; video.muted = true; video.defaultMuted = true; video.playsInline = true; video.preload = 'auto';
     video.dataset.clipId = unit.item.id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.setAttribute('aria-hidden', 'true');
@@ -1488,7 +1490,10 @@ export async function mountHeroWall(root) {
     hd.frames = trackWallFrames(video, { signal: hd.abort.signal });
     unit.frame.append(video); connectHdStream(hd, unit);
     hd.promise = (async () => {
-      if (!await hd.stream.load() || hd.abort.signal.aborted) return null;
+      // Start the foreground budget before library initialization as well as
+      // media I/O. Optional hover preparation still has no foreground timer.
+      const initialized = focused === index ? await hd.stream.start() : await hd.stream.load();
+      if (!initialized || hd.abort.signal.aborted) return null;
       if (!hd.stream.isStreaming && focused !== index) return null;
       if (focused !== index) {
         // Only one media fragment is speculative. Calling start()/alignHd()
@@ -1501,7 +1506,6 @@ export async function mountHeroWall(root) {
           if (!await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true }) || !await alignHd(hd)) return null;
         } else if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
       } else {
-        if (!await hd.stream.start()) return null;
         const available = await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true });
         if (!available) return null;
         const ready = resume ? await restoreWallVideo(video, resume, { signal: hd.abort.signal }) : await alignHd(hd);
@@ -1634,7 +1638,7 @@ export async function mountHeroWall(root) {
     const selection = focusStart = { index, released: false, timedOut: false, previewReleased: false, handedOff: false, abort: new AbortController() };
     root.dataset.wallFocusSelectedAt = performance.now().toFixed(1);
     root.dataset.wallFocusTargetStart = sourceStart(units[index]).toFixed(3);
-    for (const key of ['wallCameraSettledAt', 'wallHdFadeSettledAt', 'wallFocusPlaybackReleasedAt', 'wallFocusPlaybackStartTime', 'wallFocusFirstPlayAt', 'wallFocusFirstPlayTime']) delete root.dataset[key];
+    for (const key of ['wallCameraAnimationDoneAt', 'wallCameraSettledAt', 'wallHdFadeSettledAt', 'wallFocusPlaybackReleasedAt', 'wallFocusPlaybackStartTime', 'wallFocusFirstPlayAt', 'wallFocusFirstPlayTime']) delete root.dataset[key];
     for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffFrameTime', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta', 'wallHdRecoveryState', 'wallHdRecoveryReason', 'wallHdRecoveryAttempt', 'wallHdPromotedAt']) delete root.dataset[key];
     camera.setAttribute('aria-busy', 'true');
     selection.timer = setTimeout(() => {

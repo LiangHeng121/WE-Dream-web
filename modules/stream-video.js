@@ -1,7 +1,7 @@
 // hls.js owns demuxing, MediaSource and its rolling buffer. This adapter only
 // owns request intent: one-fragment speculation versus foreground playback.
 // API: https://github.com/video-dev/hls.js/blob/v1.6.19/docs/API.md
-import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v29.1';
+import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v30';
 
 let libraryPromise;
 const loadLibrary = () => libraryPromise ||= import('../vendor/hls.js/hls.light.mjs');
@@ -30,13 +30,17 @@ function complete(video) {
  * Native fallback intentionally has no speculative download: warm returns
  * false; only start assigns the original MP4. On fallback the owner should
  * retry its guarded video.play() on loadeddata or the streamfallback event.
+ * startupTimeout optionally checks foreground startup for stalled media I/O.
+ * Growing media bytes get 1.5s progress windows, up to 8s before decoded data;
+ * speculation never starts that budget. Zero preserves the default policy.
  * loadHls is an injectable loader for deterministic lifecycle tests.
  */
-export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, loadHls = loadLibrary, warmTimeout = 12000 } = {}) {
+export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, loadHls = loadLibrary, warmTimeout = 12000, startupTimeout = 0 } = {}) {
   let destroyed = false, requested = false, intent = 'idle', mode = hlsSrc ? 'pending' : 'native';
   let state = 'idle', reason = hlsSrc ? '' : 'no-playlist', hls = null, initializing = null;
   let manifestReady = false, loading = false, nativeResume = null;
-  const waiters = new Set(), events = new AbortController();
+  let startupTimer = null, startupBegan = 0, startupProgress = null, firstDecoded = false;
+  const waiters = new Set(), initializationWaiters = new Set(), events = new AbortController();
   function status(next) {
     state = next;
     video.dataset.streamMode = mode;
@@ -44,6 +48,45 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
     video.dataset.streamFallback = reason;
   }
   function settleWarm(ready) { for (const waiter of [...waiters]) waiter.finish(ready); }
+  function cancelStartup() { clearTimeout(startupTimer); startupTimer = null; startupProgress = null; }
+  function settleInitialization(ready) { for (const finish of [...initializationWaiters]) finish(ready); }
+  function awaitInitialization(promise) {
+    if (!(startupTimeout > 0)) return promise;
+    // An optional startup fallback must unblock the owner even when the shared
+    // library import never settles. A late import cannot recreate the old HLS.
+    return new Promise(resolve => {
+      const finish = ready => { if (initializationWaiters.delete(finish)) resolve(ready); };
+      initializationWaiters.add(finish); promise.then(finish, () => finish(false));
+    });
+  }
+  function beginStartup() {
+    if (video.readyState >= 2) firstDecoded = true;
+    if (!(startupTimeout > 0) || firstDecoded || mode === 'native' || startupTimer !== null) return;
+    const mediaProgress = () => {
+      // The public in-flight fragment exposes the loader's live stats, including
+      // XHR byte progress before FRAG_LOADED. Metadata/init bytes do not count.
+      // Custom loaders without these stats retain the initial bounded fallback.
+      try {
+        const frag = hls?.inFlightFragments?.main?.frag, stats = frag?.stats;
+        return frag && frag.sn !== 'initSegment' && Number.isFinite(stats?.loaded)
+          ? { stats, loaded: stats.loaded } : null;
+      } catch { return null; }
+    };
+    startupBegan = performance.now(); startupProgress = mediaProgress();
+    const deadline = Math.max(startupTimeout, 8000);
+    const check = () => {
+      startupTimer = null;
+      if (destroyed || !requested || intent !== 'playing' || !canPlay() || firstDecoded || video.readyState >= 2) return;
+      const progress = mediaProgress(), elapsed = performance.now() - startupBegan;
+      const growing = progress?.loaded > 0 && (progress.stats !== startupProgress?.stats || progress.loaded > startupProgress.loaded);
+      startupProgress = progress;
+      if (growing && elapsed < deadline) {
+        startupTimer = setTimeout(check, Math.min(1500, deadline - elapsed)); return;
+      }
+      fallback('startup-timeout');
+    };
+    startupTimer = setTimeout(check, startupTimeout);
+  }
   function releaseHls() {
     const old = hls; hls = null; manifestReady = false; loading = false;
     if (old) { old.stopLoad(); old.destroy(); }
@@ -57,11 +100,13 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
   }
   function fallback(why) {
     if (destroyed || mode === 'native') return;
+    cancelStartup();
     nativeResume = { time: position(video), rate: video.playbackRate || 1 };
     releaseHls(); mode = 'native'; reason = why;
     settleWarm(false);
     status('native-idle');
     if (intent === 'playing' && canPlay()) nativeStart();
+    settleInitialization(true);
     const event = new Event('streamfallback');
     Object.defineProperty(event, 'detail', { value: { reason, src } });
     video.dispatchEvent(event);
@@ -85,11 +130,12 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
     if (destroyed || !requested) return false;
     if (mode === 'native') return true;
     if (hls) return true;
-    if (initializing) return initializing;
+    if (initializing) return awaitInitialization(initializing);
     initializing = (async () => {
       try {
         const module = await loadHls(), Hls = module.default || module;
         if (destroyed || !requested) return false;
+        if (mode === 'native') return true;
         if (!Hls.isSupported()) { fallback('mse-unsupported'); return true; }
         const bootstrapLoader = createStreamBootstrapLoader(Hls);
         const instance = new Hls({ ...PLAY_BUFFER, autoStartLoad: false, backBufferLength: 6, lowLatencyMode: false, startLevel: 0, capLevelToPlayerSize: false, testBandwidth: false, ...(bootstrapLoader ? { loader: bootstrapLoader } : {}) });
@@ -120,7 +166,7 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
         return !destroyed && requested && mode === 'native';
       }
     })().finally(() => { initializing = null; });
-    return initializing;
+    return awaitInitialization(initializing);
   }
   async function load() {
     if (destroyed) return false;
@@ -157,12 +203,14 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
   async function start() {
     if (destroyed || !canPlay()) return false;
     requested = true; intent = 'playing';
+    beginStartup();
     const ready = await ensure();
     if (!ready || destroyed || !requested || intent !== 'playing' || !canPlay()) return false;
     drive(); return true;
   }
   function stop() {
     requested = false; intent = 'idle';
+    cancelStartup(); settleInitialization(false);
     settleWarm(false);
     if (hls) {
       hls.stopLoad(); loading = false;
@@ -187,6 +235,7 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
     if (saved.time > 0) video.currentTime = Math.max(0, Math.min(saved.time, video.duration - .05));
   }, { signal: events.signal });
   video.addEventListener('loadeddata', () => {
+    if (video.readyState >= 2) { firstDecoded = true; cancelStartup(); }
     if (mode === 'native' && !destroyed) status(intent === 'playing' ? 'native-ready' : 'stopped');
   }, { signal: events.signal });
   status('idle');
