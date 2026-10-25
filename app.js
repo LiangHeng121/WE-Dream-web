@@ -1,13 +1,13 @@
-import { mountHeroWall } from './modules/hero-wall.js';
-import { createDemoDeck } from './modules/demo-deck.js';
-import { createStagePlayer } from './modules/stage-player.js';
-import { createSkillMix } from './modules/skill-mix.js';
-import { seekVideo } from './modules/video-seek.js';
-import { warmVideo, createVideoWarmScheduler } from './modules/video-warm.js';
-import { mountScrollReveal } from './modules/scroll-reveal.js';
-const mountMethodFigure = root => import('./modules/method-figure.js').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=17';
+import { createDemoDeck } from './modules/demo-deck.js?v=17';
+import { createStagePlayer } from './modules/stage-player.js?v=17';
+import { createSkillMix } from './modules/skill-mix.js?v=17';
+import { seekVideo } from './modules/video-seek.js?v=17';
+import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, monitorVideoPlayback } from './modules/video-warm.js?v=17';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=17';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=17').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,6 +18,7 @@ let manifest;
 let chapters;
 let skillMedia;
 const galleries=[];
+const mediaDebug=new URLSearchParams(location.search).get('mediaDebug')==='1';
 const scrollReveal=mountScrollReveal();
 
 function buildL1TaskGroups(groups) {
@@ -96,7 +97,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     video.dataset.clipId=item.id;
     if(media.ready||media.poster_ready) video.poster=media.poster;
     else if(item.poster) video.poster=item.poster;
-    let loaded=false,userPaused=false,speed=1,wantPlay=false,seekTicket=0;
+    let loaded=false,userPaused=false,speed=1,wantPlay=false,seekTicket=0,resumeAt=0;
     const player={item,frame,video,remote,
       load(preload='metadata'){
         const m=manifest.videos[item.id]||{};
@@ -108,33 +109,51 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
       },
       warm(options){this.load('auto');return loaded?warmVideo(video,1200,options):undefined;},
       relax(){if(loaded)video.preload='metadata';},
-      play(){this.load('auto');wantPlay=loaded&&!document.hidden&&!userPaused&&!reduced.matches;if(wantPlay)guardedPlay();},
+      suspend(){
+        if(!loaded||this.canResume()||videoFullyBuffered(video))return;
+        // preload is a hint; detach an obsolete incomplete request to stop it
+        // competing with the selected clip. Fully cached visits stay reusable.
+        resumeAt=Number.isFinite(video.currentTime)?video.currentTime:0;
+        video.pause();video.removeAttribute('src');video.load();loaded=false;
+        if(mediaDebug)video.dataset.suspendedAt=performance.now().toFixed(1);
+      },
+      play(){this.load('auto');wantPlay=loaded&&!document.hidden&&!userPaused&&!reduced.matches;if(wantPlay){playback.requestPlay();guardedPlay();}},
       pause(){wantPlay=false;video.pause();if(!warmer.isPreparing(this))this.relax();if(!remote.hidden){remote.removeAttribute('src');remote.hidden=true;}},
       dispose(){this.pause();video.removeAttribute('src');video.load();},
       resetUserPause(){userPaused=false;wantPlay=true;},
       canResume(){return wantPlay&&!userPaused&&visible&&!document.hidden&&(activePlayer===this||transitioning.has(this));}
     };
+    const playback=monitorVideoPlayback(video,{enabled:mediaDebug,isWanted:()=>player.canResume()});
     function guardedPlay(){if(!player.canResume())return;video.play().then(()=>{if(!player.canResume())video.pause();}).catch(()=>{});}
     const update=()=>{play.textContent=video.paused?'▶':'Ⅱ';play.setAttribute('aria-label',video.paused?'Play video':'Pause video');};
-    function toggle(){player.load();userPaused=!video.paused;wantPlay=!userPaused;if(wantPlay)guardedPlay();else video.pause();}
+    function toggle(){player.load();userPaused=!video.paused;wantPlay=!userPaused;if(wantPlay){playback.requestPlay();guardedPlay();}else video.pause();}
     play.addEventListener('click',toggle);video.addEventListener('click',toggle);
     video.addEventListener('play',()=>{if(!player.canResume())video.pause();update();});video.addEventListener('pause',update);
     video.addEventListener('loadeddata',()=>{
       if(!video.dataset.firstDataAt){const at=performance.now().toFixed(1);video.dataset.firstDataAt=at;if(!root.dataset.firstDataAt)root.dataset.firstDataAt=at;}
       // A native stream can finish after warm() timed out. Only the still-current
       // primary may resume its neighbor queue; never an old hovered target.
-      if(player===activePlayer&&near&&!document.hidden&&!warmer.priorityPlayer)warmNeighbors(Math.max(0,deck.getActiveIndex()));
+      if(player===activePlayer&&visible&&!document.hidden&&!warmer.priorityPlayer)warmNeighbors(Math.max(0,deck.getActiveIndex()));
     });
     video.addEventListener('playing',()=>{
       if(!player.canResume()){video.pause();return;}
+      frame.removeAttribute('aria-busy');play.removeAttribute('title');
       if(!video.dataset.firstPlayingAt){const at=performance.now().toFixed(1);video.dataset.firstPlayingAt=at;if(!root.dataset.firstPlayingAt)root.dataset.firstPlayingAt=at;}
     });
-    video.addEventListener('loadedmetadata',()=>{seek.disabled=false;time.textContent=`${clock(video.currentTime)} / ${clock(video.duration)}`;});
-    video.addEventListener('timeupdate',()=>{if(!seek.matches(':active'))seek.value=video.duration?video.currentTime/video.duration*100:0;time.textContent=`${clock(video.currentTime)} / ${clock(video.duration)}`;});
+    const updateTime=()=>{
+      const duration=Number.isFinite(video.duration)&&video.duration>0?video.duration:media.duration||item.duration;
+      seek.disabled=!(Number.isFinite(video.duration)&&video.duration>0);
+      if(!seek.matches(':active'))seek.value=duration?video.currentTime/duration*100:0;
+      time.textContent=`${clock(video.currentTime)} / ${clock(duration)}`;
+    };
+    video.addEventListener('loadedmetadata',()=>{if(resumeAt>0){try{video.currentTime=resumeAt;}catch{}resumeAt=0;}updateTime();});
+    video.addEventListener('durationchange',updateTime);video.addEventListener('timeupdate',updateTime);video.addEventListener('emptied',updateTime);
+    video.addEventListener('waiting',()=>{if(player.canResume()){frame.setAttribute('aria-busy','true');play.title='Buffering…';}});
+    video.addEventListener('pause',()=>{frame.removeAttribute('aria-busy');play.removeAttribute('title');});
     video.addEventListener('error',()=>{if(loaded)$('.video-error',frame).hidden=false;});
     seek.addEventListener('input',async()=>{
       if(!Number.isFinite(video.duration))return;
-      const ticket=++seekTicket;
+      const ticket=++seekTicket;playback.requestSeek();
       const reached=await seekVideo(video,Number(seek.value)/100*video.duration);
       if(reached&&ticket===seekTicket&&player.canResume())guardedPlay();
     });
@@ -159,14 +178,14 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     }
     $('.original-video-link',root).href=item.sourceUrl;
     if(long&&chapters.clips[item.id]){
-      // The chapter UI can mount before media; approaching the section warms it.
-      if(near||visible)activePlayer.load();
+      // Chapter controls can mount with posters; playback gets bandwidth once visible.
+      if(visible)activePlayer.load();
       const stagePlayer=activePlayer;
       stageController=createStagePlayer(stageRoot,chapters.clips[item.id],stagePlayer.video,{requestPlay:()=>stagePlayer.resetUserPause(),canPlay:()=>stagePlayer.canResume()});
     }else if(stages&&chapters.clips[item.id]){stageController=createSkillMix(stageRoot,chapters.clips[item.id],skillMedia);}
     else stageRoot.replaceChildren();
     if(visible)activePlayer.play();
-    if(near)warmNeighbors(index);
+    if(visible)warmNeighbors(index);
   }
   const deckHost=$('.deck-host',root);
   deckHost.classList.add('gallery-deck-stack');
@@ -179,7 +198,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     }
     if(!moving){
       transitioning.clear();
-      players.forEach(p=>{if(p!==activePlayer)p.pause();});
+      players.forEach(p=>{if(p!==activePlayer){p.pause();if(!warmer.isPreparing(p))p.suspend();}});
       if(visible)activePlayer?.play();
     }
   }
@@ -196,13 +215,13 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     return ready;
   }
   function warmNeighbors(index,{force=false,neighbors=true}={}) {
-    if((!near&&!force)||!currentGroup||document.hidden)return Promise.resolve();
+    if((!visible&&!force)||!currentGroup||document.hidden)return Promise.resolve();
     const record=currentGroup,clips=record.items,primary=playerCache.get(clips[index]?.id);
     if(!primary)return Promise.resolve();
     // A recent explicit hover/click outranks incidental observer/resize work.
     if(warmer.priorityPlayer&&warmer.priorityPlayer!==primary)return warmer.pending;
     const adjacent=constrained||!neighbors?[]:[index+1,index-1].map(i=>playerCache.get(clips[i]?.id)).filter(Boolean);
-    return warmer.sequence(primary,adjacent,{isCurrent:()=>currentGroup===record&&activePlayer===primary&&(near||force)&&!document.hidden});
+    return warmer.sequence(primary,adjacent,{isCurrent:()=>currentGroup===record&&activePlayer===primary&&(visible||force)&&!document.hidden});
   }
   function prioritizePlayer(player,{navigation=false}={}){
     if(!player||document.hidden)return;
@@ -212,7 +231,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
       // Completed hovers release their priority back to the visible deck once.
       // A stale completion cannot replace newer hover or observer work, and a
       // navigation still entering another card must retain its own transition.
-      if(generation!==warmer.generation||warmer.pending||!near||document.hidden)return;
+      if(generation!==warmer.generation||warmer.pending||!visible||document.hidden)return;
       if(navigation&&player!==activePlayer)return;
       warmNeighbors(Math.max(0,deck.getActiveIndex()));
     };
@@ -282,11 +301,11 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
   }
   tabs.forEach((t,i)=>{
     t.addEventListener('click',()=>selectGroup(i));
-    const prime=()=>{if(!near||constrained)return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
+    const prime=()=>{if(!visible||constrained||!videoFullyBuffered(activePlayer.video))return;const record=getGroup(single?0:i),clip=record.items[single?i:Math.max(0,record.deck.getActiveIndex())];prioritizePlayer(playerCache.get(clip.id));};
     t.addEventListener('pointerenter',prime);t.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>{
-    const prime=()=>{if(!near||constrained)return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
+    const prime=()=>{if(!visible||constrained||!videoFullyBuffered(activePlayer.video))return;const condition=Number(row.dataset.l1Condition),task=l1Tasks[condition][Number(row.dataset.l1Task)],record=getGroup(condition);prioritizePlayer(playerCache.get(record.items[task.indices[0]].id));};
     row.addEventListener('pointerenter',prime);row.addEventListener('focus',prime);
   });
   l1Rows.forEach(row=>row.addEventListener('click',async()=>{
@@ -302,9 +321,9 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     const index=e.key==='Home'?0:e.key==='End'?tabs.length-1:(current+(['ArrowRight','ArrowDown'].includes(e.key)?1:-1)+tabs.length)%tabs.length;
     selectGroup(index);tabs[index].focus({preventScroll:true});
   });
-  new IntersectionObserver(([entry])=>{const wasNear=near;near=entry.isIntersecting;if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));else if(wasNear&&!visible)warmer.cancel();},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
-  new IntersectionObserver(([entry])=>{const wasVisible=visible;visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else{players.forEach(p=>p.pause());if(wasVisible&&!near)warmer.cancel();}},{threshold:.15}).observe(deckHost);
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){warmer.cancel();players.forEach(p=>p.pause());}else{if(near)warmNeighbors(Math.max(0,deck.getActiveIndex()));if(visible)activePlayer?.play();}});
+  new IntersectionObserver(([entry])=>{const wasNear=near;near=entry.isIntersecting;if(!near&&wasNear&&!visible){warmer.cancel();players.forEach(p=>p.suspend());}},{rootMargin:'450px 0px',threshold:0}).observe(deckHost);
+  new IntersectionObserver(([entry])=>{const wasVisible=visible;visible=entry.isIntersecting;if(visible){warmNeighbors(Math.max(0,deck.getActiveIndex()));activePlayer?.play();}else{players.forEach(p=>p.pause());if(wasVisible){warmer.cancel();players.forEach(p=>p.suspend());}}},{threshold:.15}).observe(deckHost);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){warmer.cancel();players.forEach(p=>{p.pause();p.suspend();});}else{if(visible)warmNeighbors(Math.max(0,deck.getActiveIndex()));if(visible)activePlayer?.play();}});
   const gallery={refresh(){if(visible)activePlayer?.play();},prepare(){if(!root.dataset.prepareAt)root.dataset.prepareAt=performance.now().toFixed(1);return prioritizePlayer(activePlayer);},get deck(){return deck;}};galleries.push(gallery);return gallery;
 }
 
@@ -322,7 +341,7 @@ function mountNear(host,mount){
 async function boot(){
   // Start the wall before the lower-page data and gallery DOM work.
   const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
-  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json'),getJSON('assets/media/manifest.json'),getJSON('data/chapters.json'),getJSON('data/skill-media.json')]);
+  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17'),getJSON('assets/media/manifest.json?v=17'),getJSON('data/chapters.json?v=17'),getJSON('data/skill-media.json?v=17')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],

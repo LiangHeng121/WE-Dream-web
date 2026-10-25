@@ -1,13 +1,13 @@
 {
-  "version": 16,
+  "version": 17,
   "published_date": "2026-10-25",
-  "release": "native-frame-hq-progressive-playback-and-smooth-edges",
+  "release": "1080p-playback-priority",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
-  "full_video_fps": "source-native ~29.97",
-  "hq_media_origin": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/",
-  "hq_media_bytes": 2192475613,
+  "full_video_fps": 24,
+  "video_encoding": "H.264 CRF29, faststart",
+  "full_media_bytes": 358158333,
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5

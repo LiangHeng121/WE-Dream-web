@@ -9,7 +9,7 @@ const FIGURES = {
 };
 const MEDIA = {
   execution: {
-    src: "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+    src: 'assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4',
     poster: 'assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg',
     label: 'Policy execution',
     source: 'https://drive.google.com/file/d/1puOhktSpme4E-M6At185A0rK9V-ax5ez/view',

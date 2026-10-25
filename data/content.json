@@ -183,12 +183,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 18.65,
+            "duration": 18.67,
             "level": "ID",
             "category": "household",
             "task": "pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+            "src": "assets/media/hd1080/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
             "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg"
           },
           {
@@ -208,12 +208,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 21.12,
+            "duration": 21.13,
             "level": "ID",
             "category": "household",
             "task": "pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV.mp4",
+            "src": "assets/media/hd1080/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV.mp4",
             "poster": "assets/media/curated/1q3sGIZWamNQnocWsaSCH7N-t4rIvd5AV.jpg"
           },
           {
@@ -238,7 +238,7 @@
             "category": "household",
             "task": "pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__.mp4",
+            "src": "assets/media/hd1080/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__.mp4",
             "poster": "assets/media/curated/1cNu1NZfqMmQKSpubMOmYYEHESe2Bmd__.jpg"
           },
           {
@@ -258,12 +258,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 17.12,
+            "duration": 17.13,
             "level": "ID",
             "category": "household",
             "task": "pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I.mp4",
+            "src": "assets/media/hd1080/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I.mp4",
             "poster": "assets/media/curated/1E5tZjGL-llsDG5D6q_Y6MRci5-rs2z4I.jpg"
           }
         ]
@@ -305,12 +305,12 @@
               "Walking",
               "Pushing"
             ],
-            "duration": 28.9,
+            "duration": 28.92,
             "level": "ID",
             "category": "household",
             "task": "chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm.mp4",
+            "src": "assets/media/hd1080/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm.mp4",
             "poster": "assets/media/curated/1Bms4afwbZeVRwbLAN15KhPd_GcdMddVm.jpg"
           },
           {
@@ -331,12 +331,12 @@
               "Walking",
               "Pushing"
             ],
-            "duration": 23.26,
+            "duration": 23.29,
             "level": "ID",
             "category": "household",
             "task": "chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn.mp4",
+            "src": "assets/media/hd1080/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn.mp4",
             "poster": "assets/media/curated/1AutW4awvEHBXAo1YgoqNYcQ4e6khsppn.jpg"
           },
           {
@@ -357,12 +357,12 @@
               "Walking",
               "Pushing"
             ],
-            "duration": 21.65,
+            "duration": 21.67,
             "level": "ID",
             "category": "household",
             "task": "chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY.mp4",
+            "src": "assets/media/hd1080/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY.mp4",
             "poster": "assets/media/curated/1nwjQhb1sORTKOvtyoFM0Q5hCNT8K28zY.jpg"
           },
           {
@@ -383,12 +383,12 @@
               "Walking",
               "Pushing"
             ],
-            "duration": 28.86,
+            "duration": 28.88,
             "level": "ID",
             "category": "household",
             "task": "chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu.mp4",
+            "src": "assets/media/hd1080/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu.mp4",
             "poster": "assets/media/curated/1LFe-QmGUPbElkRXX4QwoZRGrYpfBvOUu.jpg"
           }
         ]
@@ -435,7 +435,7 @@
             "category": "household",
             "task": "pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
+            "src": "assets/media/hd1080/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
             "poster": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.jpg"
           },
           {
@@ -456,12 +456,12 @@
               "Bimanual lift",
               "Placement"
             ],
-            "duration": 50.62,
+            "duration": 50.63,
             "level": "ID",
             "category": "household",
             "task": "pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb.mp4",
+            "src": "assets/media/hd1080/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb.mp4",
             "poster": "assets/media/curated/1ahVyzEKOQPPV1oeSNFKjBQZ3RbE_Ctcb.jpg"
           },
           {
@@ -487,7 +487,7 @@
             "category": "household",
             "task": "pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD.mp4",
+            "src": "assets/media/hd1080/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD.mp4",
             "poster": "assets/media/curated/1Z7oKOsX7232dCHzxL8nSNWmFD-fEcrxD.jpg"
           },
           {
@@ -508,12 +508,12 @@
               "Bimanual lift",
               "Placement"
             ],
-            "duration": 47.48,
+            "duration": 47.46,
             "level": "ID",
             "category": "household",
             "task": "pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I.mp4",
+            "src": "assets/media/hd1080/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I.mp4",
             "poster": "assets/media/curated/1O27rInelE5tX0pPKlXdWMmoNVKHlYl7I.jpg"
           }
         ]
@@ -560,7 +560,7 @@
             "category": "household",
             "task": "cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+            "src": "assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
             "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg"
           },
           {
@@ -581,12 +581,12 @@
               "Turning",
               "Basket placement"
             ],
-            "duration": 27.23,
+            "duration": 27.25,
             "level": "ID",
             "category": "household",
             "task": "cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU.mp4",
+            "src": "assets/media/hd1080/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU.mp4",
             "poster": "assets/media/curated/161L4AxU_-9fX-iX9pFVuSPue3CG2h5JU.jpg"
           },
           {
@@ -612,7 +612,7 @@
             "category": "household",
             "task": "cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q.mp4",
+            "src": "assets/media/hd1080/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q.mp4",
             "poster": "assets/media/curated/1GFlKsxclk2wPfc8OY7AIUH3bwVr41g9Q.jpg"
           },
           {
@@ -633,12 +633,12 @@
               "Turning",
               "Basket placement"
             ],
-            "duration": 27.69,
+            "duration": 27.71,
             "level": "ID",
             "category": "household",
             "task": "cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC.mp4",
+            "src": "assets/media/hd1080/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC.mp4",
             "poster": "assets/media/curated/1ObT_-i3okQEKWtANbu8sJgSjG7wgycTC.jpg"
           }
         ]
@@ -687,7 +687,7 @@
             "category": "household",
             "task": "rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+            "src": "assets/media/hd1080/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
             "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg"
           },
           {
@@ -709,12 +709,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 26.89,
+            "duration": 26.92,
             "level": "ID",
             "category": "household",
             "task": "rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI.mp4",
+            "src": "assets/media/hd1080/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI.mp4",
             "poster": "assets/media/curated/17QO-owm_XhDBGG4_XQFIEA1GODfFMIbI.jpg"
           },
           {
@@ -736,12 +736,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 35.44,
+            "duration": 35.46,
             "level": "ID",
             "category": "household",
             "task": "rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5.mp4",
+            "src": "assets/media/hd1080/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5.mp4",
             "poster": "assets/media/curated/13bbZF7ozjU8sdSKRoIY-JoxLuOpz_Cc5.jpg"
           },
           {
@@ -763,12 +763,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 30.23,
+            "duration": 30.25,
             "level": "ID",
             "category": "household",
             "task": "rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6.mp4",
+            "src": "assets/media/hd1080/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6.mp4",
             "poster": "assets/media/curated/1rsuAXP0WQE08QdZCazrbmJFysHC-Z3o6.jpg"
           }
         ]
@@ -812,12 +812,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 50.98,
+            "duration": 50.96,
             "level": "ID",
             "category": "household",
             "task": "shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+            "src": "assets/media/hd1080/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
             "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg"
           },
           {
@@ -839,12 +839,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 51.32,
+            "duration": 51.29,
             "level": "ID",
             "category": "household",
             "task": "shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt.mp4",
+            "src": "assets/media/hd1080/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt.mp4",
             "poster": "assets/media/curated/1B9vOpFZ821vqLgPA2At9andIS6LCqPdt.jpg"
           },
           {
@@ -866,12 +866,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 50.55,
+            "duration": 50.54,
             "level": "ID",
             "category": "household",
             "task": "shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT.mp4",
+            "src": "assets/media/hd1080/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT.mp4",
             "poster": "assets/media/curated/1ZEGe4PAFe_dQjiEpWfjqoz2juFrrWwRT.jpg"
           },
           {
@@ -893,12 +893,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 45.01,
+            "duration": 45.0,
             "level": "ID",
             "category": "household",
             "task": "shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4.mp4",
+            "src": "assets/media/hd1080/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4.mp4",
             "poster": "assets/media/curated/1c9SrmxI9CBUHRybLXSQ7K5qTFvTWO8Z4.jpg"
           }
         ]
@@ -940,12 +940,12 @@
               "Bimanual coordination",
               "Sweeping"
             ],
-            "duration": 38.64,
+            "duration": 38.63,
             "level": "ID",
             "category": "household",
             "task": "clean",
             "taskLabel": "Sweep a table",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-.mp4",
+            "src": "assets/media/hd1080/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-.mp4",
             "poster": "assets/media/curated/1eH2rmy2ws-pKX9hyq0CgZ7IklfGwGAY-.jpg"
           },
           {
@@ -966,12 +966,12 @@
               "Bimanual coordination",
               "Sweeping"
             ],
-            "duration": 38.07,
+            "duration": 38.08,
             "level": "ID",
             "category": "household",
             "task": "clean",
             "taskLabel": "Sweep a table",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox.mp4",
+            "src": "assets/media/hd1080/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox.mp4",
             "poster": "assets/media/curated/1suyd-flRSr28kzpX8E95G8Lh9wWLNmox.jpg"
           },
           {
@@ -992,12 +992,12 @@
               "Bimanual coordination",
               "Sweeping"
             ],
-            "duration": 35.44,
+            "duration": 35.46,
             "level": "ID",
             "category": "household",
             "task": "clean",
             "taskLabel": "Sweep a table",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/15l6senzjyaf8JleY7duy__bwyt09rKHZ.mp4",
+            "src": "assets/media/hd1080/15l6senzjyaf8JleY7duy__bwyt09rKHZ.mp4",
             "poster": "assets/media/curated/15l6senzjyaf8JleY7duy__bwyt09rKHZ.jpg"
           },
           {
@@ -1018,12 +1018,12 @@
               "Bimanual coordination",
               "Sweeping"
             ],
-            "duration": 55.82,
+            "duration": 55.83,
             "level": "ID",
             "category": "household",
             "task": "clean",
             "taskLabel": "Sweep a table",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z.mp4",
+            "src": "assets/media/hd1080/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z.mp4",
             "poster": "assets/media/curated/1Sx2skupFRJyLGxu5-WL0M9Z07TW8f34Z.jpg"
           }
         ]
@@ -1067,12 +1067,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 42.11,
+            "duration": 42.13,
             "level": "ID",
             "category": "household",
             "task": "cabinet",
             "taskLabel": "Retrieve from a cabinet",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+            "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
             "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg"
           },
           {
@@ -1094,12 +1094,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 51.22,
+            "duration": 51.21,
             "level": "ID",
             "category": "household",
             "task": "cabinet",
             "taskLabel": "Retrieve from a cabinet",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE.mp4",
+            "src": "assets/media/hd1080/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE.mp4",
             "poster": "assets/media/curated/1UhpbDHrznY4MF9aWrVcimEpeLSw1gvqE.jpg"
           },
           {
@@ -1121,12 +1121,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 47.41,
+            "duration": 47.42,
             "level": "ID",
             "category": "household",
             "task": "cabinet",
             "taskLabel": "Retrieve from a cabinet",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4.mp4",
+            "src": "assets/media/hd1080/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4.mp4",
             "poster": "assets/media/curated/1TohEi0X0JG78-sKkIRkHm8n8TdPGNvn4.jpg"
           },
           {
@@ -1148,12 +1148,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 45.81,
+            "duration": 45.83,
             "level": "ID",
             "category": "household",
             "task": "cabinet",
             "taskLabel": "Retrieve from a cabinet",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/160ZBx56pCieA8lbANSPMNFcyr5imSt0j.mp4",
+            "src": "assets/media/hd1080/160ZBx56pCieA8lbANSPMNFcyr5imSt0j.mp4",
             "poster": "assets/media/curated/160ZBx56pCieA8lbANSPMNFcyr5imSt0j.jpg"
           }
         ]
@@ -1197,12 +1197,12 @@
               "Placement",
               "Closing"
             ],
-            "duration": 41.24,
+            "duration": 41.21,
             "level": "ID",
             "category": "household",
             "task": "storage",
             "taskLabel": "Store in a drawer",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+            "src": "assets/media/hd1080/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
             "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg"
           },
           {
@@ -1224,12 +1224,12 @@
               "Placement",
               "Closing"
             ],
-            "duration": 47.01,
+            "duration": 47.0,
             "level": "ID",
             "category": "household",
             "task": "storage",
             "taskLabel": "Store in a drawer",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ.mp4",
+            "src": "assets/media/hd1080/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ.mp4",
             "poster": "assets/media/curated/1mn-Nr_s-vh9jXjbknKnsv-5cxM2hJAzJ.jpg"
           },
           {
@@ -1251,12 +1251,12 @@
               "Placement",
               "Closing"
             ],
-            "duration": 42.84,
+            "duration": 42.83,
             "level": "ID",
             "category": "household",
             "task": "storage",
             "taskLabel": "Store in a drawer",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2.mp4",
+            "src": "assets/media/hd1080/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2.mp4",
             "poster": "assets/media/curated/1p1j129F9Nn9kbkGv6zaJWft0z-8N_tu2.jpg"
           },
           {
@@ -1283,7 +1283,7 @@
             "category": "household",
             "task": "storage",
             "taskLabel": "Store in a drawer",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E.mp4",
+            "src": "assets/media/hd1080/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E.mp4",
             "poster": "assets/media/curated/1kTIuhsMVWzxCOFl_lj_cRGesNByqsq7E.jpg"
           }
         ]
@@ -1319,7 +1319,7 @@
             "category": "position",
             "task": "position_cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD.mp4",
+            "src": "assets/media/hd1080/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD.mp4",
             "poster": "assets/media/curated/1S49dEAznQzIsN_HqaitC5nLONS7QkKJD.jpg"
           },
           {
@@ -1340,12 +1340,12 @@
               "Turning",
               "Basket placement"
             ],
-            "duration": 30.73,
+            "duration": 30.75,
             "level": "L1",
             "category": "position",
             "task": "position_cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT.mp4",
+            "src": "assets/media/hd1080/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT.mp4",
             "poster": "assets/media/curated/1es3tihuGqDiWqN9cYK2BT6ioBAL7HeKT.jpg"
           },
           {
@@ -1366,12 +1366,12 @@
               "Turning",
               "Basket placement"
             ],
-            "duration": 40.64,
+            "duration": 40.67,
             "level": "L1",
             "category": "position",
             "task": "position_cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/193K297UfnmKiRArGEl_-0hrvhFdp5QJr.mp4",
+            "src": "assets/media/hd1080/193K297UfnmKiRArGEl_-0hrvhFdp5QJr.mp4",
             "poster": "assets/media/curated/193K297UfnmKiRArGEl_-0hrvhFdp5QJr.jpg"
           },
           {
@@ -1392,12 +1392,12 @@
               "Walking",
               "Pushing"
             ],
-            "duration": 29.93,
+            "duration": 29.92,
             "level": "L1",
             "category": "position",
             "task": "position_chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA.mp4",
+            "src": "assets/media/hd1080/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA.mp4",
             "poster": "assets/media/curated/1C7pUlXeCJ_6jcHAWBykRp-hKbOItiFgA.jpg"
           },
           {
@@ -1423,7 +1423,7 @@
             "category": "position",
             "task": "position_chair",
             "taskLabel": "Push a chair",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5.mp4",
+            "src": "assets/media/hd1080/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5.mp4",
             "poster": "assets/media/curated/1S86kLMcxOpgGTT1ngKK-S1JRJzsRpMT5.jpg"
           }
         ]
@@ -1452,12 +1452,12 @@
               "Bimanual lift",
               "Placement"
             ],
-            "duration": 62.16,
+            "duration": 62.17,
             "level": "L1",
             "category": "object",
             "task": "object_pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW.mp4",
+            "src": "assets/media/hd1080/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW.mp4",
             "poster": "assets/media/curated/1-3S8YYjZ0_imamr7krqrBx0OlvdZ_-VW.jpg"
           },
           {
@@ -1478,12 +1478,12 @@
               "Bimanual lift",
               "Placement"
             ],
-            "duration": 57.52,
+            "duration": 57.54,
             "level": "L1",
             "category": "object",
             "task": "object_pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM.mp4",
+            "src": "assets/media/hd1080/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM.mp4",
             "poster": "assets/media/curated/1r27kSr1yTnu37RWlZgLyc0Se_7BX5uxM.jpg"
           },
           {
@@ -1509,7 +1509,7 @@
             "category": "object",
             "task": "object_pillow",
             "taskLabel": "Arrange a pillow",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR.mp4",
+            "src": "assets/media/hd1080/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR.mp4",
             "poster": "assets/media/curated/18MCbaY6dGPvC0GOux2lYq-xA7WQ_M_DR.jpg"
           },
           {
@@ -1531,12 +1531,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 46.51,
+            "duration": 46.5,
             "level": "L1",
             "category": "object",
             "task": "object_shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM.mp4",
+            "src": "assets/media/hd1080/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM.mp4",
             "poster": "assets/media/curated/10srPyabtx0-u5ctaDO-cE_Cz3VLnraqM.jpg"
           },
           {
@@ -1558,12 +1558,12 @@
               "Turning",
               "Placement"
             ],
-            "duration": 41.07,
+            "duration": 41.08,
             "level": "L1",
             "category": "object",
             "task": "object_shoe",
             "taskLabel": "Retrieve shoes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT.mp4",
+            "src": "assets/media/hd1080/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT.mp4",
             "poster": "assets/media/curated/1kjUH8ifiIQBKAMAzi2xu2NLP50AHp8ZT.jpg"
           }
         ]
@@ -1591,12 +1591,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 20.45,
+            "duration": 20.46,
             "level": "L1",
             "category": "background",
             "task": "background_pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut.mp4",
+            "src": "assets/media/hd1080/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut.mp4",
             "poster": "assets/media/curated/1Nk899bxYjRCQK4nlhAIIwnQcPGMh8wut.jpg"
           },
           {
@@ -1616,12 +1616,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 13.91,
+            "duration": 13.92,
             "level": "L1",
             "category": "background",
             "task": "background_pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY.mp4",
+            "src": "assets/media/hd1080/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY.mp4",
             "poster": "assets/media/curated/1A0cNH5mk4Q0aGpzzk2-B83l6FYv_pgrY.jpg"
           },
           {
@@ -1641,12 +1641,12 @@
               "Top-down grasp",
               "Placement"
             ],
-            "duration": 20.02,
+            "duration": 20.04,
             "level": "L1",
             "category": "background",
             "task": "background_pnp",
             "taskLabel": "Pick & place",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl.mp4",
+            "src": "assets/media/hd1080/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl.mp4",
             "poster": "assets/media/curated/1uxXow8ZJFdimSsLiSGiJ-AyW2QmwBgNl.jpg"
           },
           {
@@ -1668,12 +1668,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 28.76,
+            "duration": 28.79,
             "level": "L1",
             "category": "background",
             "task": "background_rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV.mp4",
+            "src": "assets/media/hd1080/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV.mp4",
             "poster": "assets/media/curated/1eOvSo4QyKOn3lF1cKHPRR_z9OC1xDNNV.jpg"
           },
           {
@@ -1695,12 +1695,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 35.94,
+            "duration": 35.96,
             "level": "L1",
             "category": "background",
             "task": "background_rubbish",
             "taskLabel": "Dispose of rubbish",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.mp4",
+            "src": "assets/media/hd1080/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.mp4",
             "poster": "assets/media/curated/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.jpg"
           }
         ]
@@ -1744,12 +1744,12 @@
               "Pedal opening",
               "Release"
             ],
-            "duration": 46.55,
+            "duration": 46.58,
             "level": "L2",
             "category": "composition",
             "task": "cabinet_storage_rubbish",
             "taskLabel": "Discard a bottle",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
+            "src": "assets/media/hd1080/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
             "poster": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.jpg"
           }
         ]
@@ -1787,12 +1787,12 @@
               "Lateral grasp",
               "Container placement"
             ],
-            "duration": 23.06,
+            "duration": 23.08,
             "level": "L2",
             "category": "composition",
             "task": "pnp_storage_chip",
             "taskLabel": "Pack chips",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
+            "src": "assets/media/hd1080/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
             "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg"
           }
         ]
@@ -1837,7 +1837,7 @@
             "category": "composition",
             "task": "shoe_cloth_cloth",
             "taskLabel": "Collect clothes",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+            "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
             "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg"
           }
         ]
@@ -1877,12 +1877,12 @@
               "Retrieval",
               "Container placement"
             ],
-            "duration": 45.15,
+            "duration": 45.17,
             "level": "L2",
             "category": "composition",
             "task": "cabinet_pnp_medicine",
             "taskLabel": "Organize medicine",
-            "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
+            "src": "assets/media/hd1080/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
             "poster": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.jpg"
           }
         ]
@@ -1914,12 +1914,12 @@
         "Clothes into the basket",
         "Pillow onto the bed"
       ],
-      "duration": 69.2,
+      "duration": 69.21000000000001,
       "level": "long-horizon",
       "category": "extended-demonstration",
       "task": "bedroom-tidying",
       "taskLabel": "Put the bedroom in order",
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
+      "src": "assets/media/hd1080/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
       "poster": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.jpg"
     },
     {
@@ -1946,12 +1946,12 @@
         "Packaging into the bin",
         "Basket into the cabinet"
       ],
-      "duration": 81.55,
+      "duration": 81.58,
       "level": "long-horizon",
       "category": "extended-demonstration",
       "task": "table-tidying",
       "taskLabel": "Clear and organize the table",
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
+      "src": "assets/media/hd1080/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
       "poster": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.jpg"
     }
   ]

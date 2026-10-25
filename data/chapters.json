@@ -8,7 +8,7 @@
       "title": "Collect clothes",
       "level": "L2",
       "duration": 35.17,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+      "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
       "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg",
       "stages": [
         {
@@ -21,7 +21,7 @@
               "key": "shoe",
               "label": "Kneeling · from shoe retrieval",
               "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "src": "assets/media/hd1080/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
               "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
               "source_task": "Retrieve shoes"
             }
@@ -46,7 +46,7 @@
               "key": "shoe",
               "label": "Kneeling · from shoe retrieval",
               "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "src": "assets/media/hd1080/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
               "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
               "source_task": "Retrieve shoes"
             },
@@ -54,7 +54,7 @@
               "key": "cloth",
               "label": "Cloth handling & basket placement · from clothes collection",
               "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "src": "assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
               "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
               "source_task": "Collect clothes"
             }
@@ -81,7 +81,7 @@
               "key": "cloth",
               "label": "Cloth handling & basket placement · from clothes collection",
               "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "src": "assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
               "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
               "source_task": "Collect clothes"
             }
@@ -106,7 +106,7 @@
               "key": "cloth",
               "label": "Cloth handling & basket placement · from clothes collection",
               "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "src": "assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
               "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
               "source_task": "Collect clothes"
             }
@@ -134,8 +134,8 @@
       "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT",
       "title": "Pack chips",
       "level": "L2",
-      "duration": 23.06,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
+      "duration": 23.08,
+      "src": "assets/media/hd1080/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.mp4",
       "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg",
       "stages": [
         {
@@ -148,7 +148,7 @@
               "key": "storage",
               "label": "Horizontal grasp · from drawer storage",
               "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "src": "assets/media/hd1080/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
               "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
               "source_task": "Store in a drawer"
             }
@@ -173,7 +173,7 @@
               "key": "storage",
               "label": "Horizontal grasp · from drawer storage",
               "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "src": "assets/media/hd1080/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
               "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
               "source_task": "Store in a drawer"
             }
@@ -191,14 +191,14 @@
         {
           "id": "1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT-stage-3",
           "start": 13.55,
-          "end": 23.06,
+          "end": 23.08,
           "label": "Pack the chips into the bag",
           "skills": [
             {
               "key": "pnp",
               "label": "Container placement · from pick & place",
               "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "src": "assets/media/hd1080/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
               "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
               "source_task": "Pick & place"
             }
@@ -226,8 +226,8 @@
       "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD",
       "title": "Organize medicine",
       "level": "L2",
-      "duration": 45.15,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
+      "duration": 45.17,
+      "src": "assets/media/hd1080/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.mp4",
       "poster": "assets/media/curated/1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD.jpg",
       "stages": [
         {
@@ -240,7 +240,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -265,7 +265,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -290,7 +290,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -315,7 +315,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -333,14 +333,14 @@
         {
           "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD-stage-5",
           "start": 36.05,
-          "end": 45.15,
+          "end": 45.17,
           "label": "Place the medicine in the tray",
           "skills": [
             {
               "key": "pnp",
               "label": "Container placement · from pick & place",
               "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "src": "assets/media/hd1080/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
               "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
               "source_task": "Pick & place"
             }
@@ -368,8 +368,8 @@
       "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako",
       "title": "Discard a bottle",
       "level": "L2",
-      "duration": 46.55,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
+      "duration": 46.58,
+      "src": "assets/media/hd1080/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.mp4",
       "poster": "assets/media/curated/15xQAZXaPU0w-eViDLR-ycqyZFhvVlako.jpg",
       "stages": [
         {
@@ -382,7 +382,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -407,7 +407,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             },
@@ -415,7 +415,7 @@
               "key": "storage",
               "label": "Lateral bottle grasp · from drawer storage",
               "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "src": "assets/media/hd1080/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
               "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
               "source_task": "Store in a drawer"
             }
@@ -442,7 +442,7 @@
               "key": "cabinet",
               "label": "Cabinet access & retrieval · from cabinet retrieval",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -467,7 +467,7 @@
               "key": "rubbish",
               "label": "Pedal opening & release · from rubbish disposal",
               "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "src": "assets/media/hd1080/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
               "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
               "source_task": "Dispose of rubbish"
             }
@@ -485,14 +485,14 @@
         {
           "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako-stage-5",
           "start": 39.55,
-          "end": 46.55,
+          "end": 46.58,
           "label": "Discard the bottle",
           "skills": [
             {
               "key": "rubbish",
               "label": "Pedal opening & release · from rubbish disposal",
               "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "src": "assets/media/hd1080/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
               "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
               "source_task": "Dispose of rubbish"
             }
@@ -520,8 +520,8 @@
       "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE",
       "title": "Tidy the bedroom",
       "level": "long",
-      "duration": 69.2,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
+      "duration": 69.21000000000001,
+      "src": "assets/media/hd1080/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.mp4",
       "poster": "assets/media/curated/115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE.jpg",
       "stages": [
         {
@@ -534,7 +534,7 @@
               "key": "shoe",
               "label": "Retrieve shoes",
               "clip_id": "1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
+              "src": "assets/media/hd1080/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.mp4",
               "poster": "assets/media/curated/1J6eoMkRDOXKOeL4PkmvAtPqLc3mhalos.jpg",
               "source_task": "Retrieve shoes"
             }
@@ -559,7 +559,7 @@
               "key": "cloth",
               "label": "Collect clothes",
               "clip_id": "1puOhktSpme4E-M6At185A0rK9V-ax5ez",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
+              "src": "assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4",
               "poster": "assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg",
               "source_task": "Collect clothes"
             }
@@ -577,14 +577,14 @@
         {
           "id": "115Ro1Jw5qq5rxPoE6C1rRTYpC3mgEzmE-stage-3",
           "start": 42.2,
-          "end": 69.2,
+          "end": 69.21000000000001,
           "label": "Return the pillow to the bed",
           "skills": [
             {
               "key": "pillow",
               "label": "Arrange a pillow",
               "clip_id": "1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
+              "src": "assets/media/hd1080/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.mp4",
               "poster": "assets/media/curated/1M-Kdx0me626AS9XL4p8A4NiJFHtV4Nob.jpg",
               "source_task": "Arrange a pillow"
             }
@@ -607,8 +607,8 @@
       "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA",
       "title": "Clear and organize the room",
       "level": "long",
-      "duration": 81.55,
-      "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
+      "duration": 81.58,
+      "src": "assets/media/hd1080/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.mp4",
       "poster": "assets/media/curated/1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA.jpg",
       "stages": [
         {
@@ -621,7 +621,7 @@
               "key": "pnp",
               "label": "Pick & place",
               "clip_id": "1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
+              "src": "assets/media/hd1080/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.mp4",
               "poster": "assets/media/curated/1bJR56wkoPrWgVCbbtuNMoxcZCKb4SFcx.jpg",
               "source_task": "Pick & place"
             }
@@ -646,7 +646,7 @@
               "key": "rubbish",
               "label": "Dispose of rubbish",
               "clip_id": "1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
+              "src": "assets/media/hd1080/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.mp4",
               "poster": "assets/media/curated/1c2x4SuPV4Fkhy6x1htrbP_OfLPoIX4gL.jpg",
               "source_task": "Dispose of rubbish"
             }
@@ -671,7 +671,7 @@
               "key": "cabinet",
               "label": "Retrieve from a cabinet",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }
@@ -696,7 +696,7 @@
               "key": "storage",
               "label": "Store in a drawer",
               "clip_id": "1Sml4e99CtNVVS4kI231B92NRn0GUcquE",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
+              "src": "assets/media/hd1080/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.mp4",
               "poster": "assets/media/curated/1Sml4e99CtNVVS4kI231B92NRn0GUcquE.jpg",
               "source_task": "Store in a drawer"
             }
@@ -714,14 +714,14 @@
         {
           "id": "1wcW4e7l3NXaL0tnHUFACullKQhUUJsZA-stage-5",
           "start": 73.55,
-          "end": 81.55,
+          "end": 81.58,
           "label": "Close the cabinet",
           "skills": [
             {
               "key": "cabinet",
               "label": "Retrieve from a cabinet",
               "clip_id": "17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k",
-              "src": "https://github.com/LiangHeng121/WE-Dream-web/releases/download/media-v16/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
+              "src": "assets/media/hd1080/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.mp4",
               "poster": "assets/media/curated/17SfhKgvKPbowiJdYTboZiaxjPPY9WL9k.jpg",
               "source_task": "Retrieve from a cabinet"
             }

@@ -1,4 +1,4 @@
-import { seekVideo } from './video-seek.js';
+import { seekVideo } from './video-seek.js?v=17';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -92,7 +92,6 @@ export function createWallPlaybackController({ onChange = () => {}, onWarning = 
 export function createWallLoadQueue(items, { load, concurrency = 8, onChange = () => {}, onError = () => {} } = {}) {
   const entries = items.map((item, index) => ({ item, index, state: 'queued' }));
   let active = false, destroyed = false, loading = 0;
-  const controller = new AbortController();
   const snapshot = () => ({ loading, ready: entries.filter(entry => entry.state === 'ready').length, total: entries.length });
   function pump() {
     if (!active || destroyed) return;
@@ -100,12 +99,20 @@ export function createWallLoadQueue(items, { load, concurrency = 8, onChange = (
       if (loading >= concurrency) break;
       if (entry.state !== 'queued') continue;
       entry.state = 'loading'; loading += 1;
-      Promise.resolve().then(() => load(entry.item, controller.signal)).then(() => {
+      const attempt = { controller: new AbortController() }; entry.attempt = attempt;
+      Promise.resolve().then(() => {
+        if (entry.attempt !== attempt || attempt.controller.signal.aborted) throw new DOMException('Preview loading cancelled', 'AbortError');
+        return load(entry.item, attempt.controller.signal);
+      }).then(() => {
+        if (entry.attempt !== attempt) return;
         entry.state = 'ready';
       }, error => {
+        if (entry.attempt !== attempt) return;
         entry.state = 'error';
         if (!destroyed) onError(entry.item, error);
       }).finally(() => {
+        if (entry.attempt !== attempt) return;
+        entry.attempt = null;
         loading -= 1;
         if (!destroyed) { onChange(snapshot()); pump(); }
       });
@@ -120,9 +127,51 @@ export function createWallLoadQueue(items, { load, concurrency = 8, onChange = (
       pump();
     },
     retry() { for (const entry of entries) if (entry.state === 'error') entry.state = 'queued'; pump(); },
+    invalidate(items) {
+      const invalid = new Set(items);
+      for (const entry of entries) {
+        if (!invalid.has(entry.item)) continue;
+        const attempt = entry.attempt;
+        if (attempt) { entry.attempt = null; loading -= 1; }
+        entry.state = 'queued'; attempt?.controller.abort();
+      }
+      onChange(snapshot()); pump();
+    },
     snapshot,
-    destroy() { destroyed = true; active = false; controller.abort(); }
+    destroy() {
+      destroyed = true; active = false;
+      for (const entry of entries) { entry.attempt?.controller.abort(); entry.attempt = null; }
+      loading = 0;
+    }
   };
+}
+
+// Pausing a media element does not cancel its network request. Keep a completely
+// buffered loop; otherwise save its position before load() aborts native I/O.
+export function wallVideoFullyBuffered(video) {
+  if (!Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 2) return false;
+  let end = 0;
+  for (let i = 0; i < video.buffered.length; i += 1) {
+    if (video.buffered.start(i) > end + .05) return false;
+    end = Math.max(end, video.buffered.end(i));
+  }
+  return end >= video.duration - .05;
+}
+
+export function suspendWallVideo(video) {
+  if (!video.getAttribute('src') || wallVideoFullyBuffered(video)) return null;
+  const saved = { time: Number.isFinite(video.currentTime) ? video.currentTime : 0, rate: video.playbackRate || 1 };
+  video.pause(); video.removeAttribute('src'); video.preload = 'none'; video.load();
+  return saved;
+}
+
+export async function restoreWallVideo(video, saved, { signal } = {}) {
+  if (!await waitWallHdFrame(video, { signal, metadataOnly: true })) return false;
+  if (signal?.aborted || !video.getAttribute('src')) return false;
+  video.playbackRate = saved.rate;
+  const target = Math.max(0, Math.min(saved.time, Math.max(0, video.duration - .05)));
+  if (Math.abs(video.currentTime - target) > .05) video.currentTime = target;
+  return waitWallHdFrame(video, { signal });
 }
 
 // Let the native media pipeline decode the faststart MP4 as bytes arrive. Fetch
@@ -253,10 +302,10 @@ export function waitWallHdFrame(video, { signal, metadataOnly = false, timeout =
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=17').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=17').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -277,6 +326,7 @@ export async function mountHeroWall(root) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const inViewport = () => { const box = root.getBoundingClientRect(); return box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth; };
   let paused = reduced.matches, manualPlaybackChoice = false, visible = inViewport(), exploring = false, focused = -1, focusedHd = null, preparedHd = null;
+  let networkSuspended = false, resumeFocusedHd = null;
   let cameraMoveRevision = 0, cameraMoving = false, hoverTimer = null;
   const retiredFrames = new Set();
   const playbackNotice = document.createElement('button');
@@ -353,7 +403,18 @@ export async function mountHeroWall(root) {
     queuedPlaybackFrame = requestAnimationFrame(() => { queuedPlaybackFrame = null; if (root.isConnected) playback(); });
   }
   const loadQueue = createWallLoadQueue(loadOrder, {
-    load: (unit, signal) => loadWallPreview(unit.video, unit.item.src, { signal, onAssigned: schedulePlayback }),
+    async load(unit, signal) {
+      const saved = unit.suspendedPreview;
+      unit.resuming = Boolean(saved);
+      try {
+        await loadWallPreview(unit.video, unit.item.src, { signal, onAssigned: schedulePlayback });
+        if (saved && !await restoreWallVideo(unit.video, saved, { signal })) return;
+        if (signal.aborted) return;
+        if (unit.suspendedPreview === saved) unit.suspendedPreview = null;
+      } finally {
+        if (!signal.aborted) { unit.resuming = false; schedulePlayback(); }
+      }
+    },
     onChange({ loading, total }) {
       root.dataset.wallLoading = String(loading);
       root.dataset.wallLoaded = `${units.filter(({ video }) => video.readyState >= 2).length}/${total}`;
@@ -585,8 +646,41 @@ export async function mountHeroWall(root) {
   if (reduced.matches) finishReveal('reduced-motion');
   const sourceStart = unit => Number(unit.item.trim_start || 0);
   const sourceEnd = unit => Number(unit.item.trim_end || unit.item.source_duration || unit.item.duration);
+  function suspendNetwork() {
+    // Only visibility changes reach this path. Explicit Pause keeps the cache.
+    networkSuspended = true; loadQueue.setActive(false);
+    focusCoordinator.cancel(); clearTimeout(hoverTimer);
+    const cancelled = [];
+    units.forEach(unit => {
+      playbackController.sync(unit.video, false);
+      if (wallVideoFullyBuffered(unit.video)) return;
+      const saved = suspendWallVideo(unit.video);
+      if (saved) unit.suspendedPreview ||= saved;
+      unit.resuming = false; cancelled.push(unit);
+    });
+    loadQueue.invalidate(cancelled);
+    if (preparedHd && !wallVideoFullyBuffered(preparedHd.video)) {
+      if (preparedHd.index === focused && !focusedHd) {
+        const unit = units[focused];
+        resumeFocusedHd = preparedHd.resume || { index: focused, time: sourceStart(unit) + (unit.suspendedPreview?.time ?? unit.video.currentTime), rate: preparedHd.video.playbackRate };
+      }
+      discardPrepared();
+    }
+    if (focusedHd && !wallVideoFullyBuffered(focusedHd.video)) {
+      const hd = focusedHd; focusedHd = null;
+      resumeFocusedHd = { index: hd.index, time: hd.video.currentTime, rate: hd.video.playbackRate };
+      disposeHd(hd);
+    }
+    // These frames are only retained for the on-screen camera transition.
+    for (const hd of retiredFrames) { retiredFrames.delete(hd); disposeHd(hd); }
+    root.dataset.wallNetworkState = 'suspended';
+  }
   function playback(reset = false) {
     const active = !paused && visible && !document.hidden;
+    if ((!visible || document.hidden) && !networkSuspended) suspendNetwork();
+    if (visible && !document.hidden && networkSuspended) {
+      networkSuspended = false; root.dataset.wallNetworkState = 'visible';
+    }
     loadQueue.setActive(active);
     if (reset) loadQueue.retry();
     root.classList.toggle('motion-paused', !active);
@@ -594,11 +688,19 @@ export async function mountHeroWall(root) {
     toggle.innerHTML = `<span aria-hidden="true">${paused ? '▶' : 'Ⅱ'}</span> ${paused ? 'Play motion' : 'Pause motion'}`;
     toggle.setAttribute('aria-label', paused ? 'Play background motion' : 'Pause background motion');
     units.forEach(({ video, returning }, i) => {
-      const wanted = active && Boolean(video.getAttribute('src')) && !returning && (focused < 0 || focused === i) && !((focusedHd?.ready || focusedHd?.aligning) && focusedHd.index === i);
+      const wanted = active && Boolean(video.getAttribute('src')) && !units[i].resuming && !returning && (focused < 0 || focused === i) && !((focusedHd?.ready || focusedHd?.aligning) && focusedHd.index === i);
       playbackController.sync(video, wanted, { reset });
     });
     if (focusedHd) playbackController.sync(focusedHd.video, active && focusedHd.ready && !focusedHd.loopSeeking, { reset });
     for (const frame of retiredFrames) playbackController.sync(frame.video, active && frame.ready && !frame.loopSeeking, { reset });
+    if (active && !focusedHd && preparedHd?.index === focused && preparedHd.ready) activateHd(preparedHd);
+    if (active && exploring && focused >= 0 && !focusedHd && (!preparedHd || preparedHd.index !== focused)) {
+      const saved = resumeFocusedHd?.index === focused ? resumeFocusedHd : null;
+      resumeFocusedHd = null;
+      // Resume the same focused tile; this never changes the camera or replay
+      // state of the initial zoom. Background hover targets are not restored.
+      if (saved) prepareHd(focused, { resume: saved });
+    }
     checkReveal();
   }
   function disposeHd(hd, { syncPreview = false } = {}) {
@@ -626,7 +728,7 @@ export async function mountHeroWall(root) {
     if (hd !== focusedHd && !retiredFrames.has(hd)) disposeHd(hd);
   }
   function activateHd(hd, { immediate = false } = {}) {
-    if (!hd?.ready || hd.abort.signal.aborted || focused !== hd.index) return;
+    if (!hd?.ready || hd.abort.signal.aborted || focused !== hd.index || !visible || document.hidden) return;
     if (preparedHd === hd) preparedHd = null;
     retiredFrames.delete(hd); focusedHd = hd;
     if (immediate) hd.video.style.transition = 'none';
@@ -637,12 +739,13 @@ export async function mountHeroWall(root) {
   }
   function primeHd(index) {
     clearTimeout(hoverTimer);
-    if (!exploring || paused || document.hidden || cameraMoving || focusCoordinator.pendingIndex >= 0 || (focused >= 0 && !focusedHd?.ready)) return;
+    if (!exploring || paused || !visible || document.hidden || cameraMoving || focusCoordinator.pendingIndex >= 0 || (focused >= 0 && !focusedHd?.ready)) return;
     hoverTimer = setTimeout(() => {
-      if (exploring && !cameraMoving && focusCoordinator.pendingIndex < 0 && !document.hidden) prepareHd(index);
+      if (exploring && visible && !cameraMoving && focusCoordinator.pendingIndex < 0 && !document.hidden) prepareHd(index);
     }, 120);
   }
-  function prepareHd(index, { align = false } = {}) {
+  function prepareHd(index, { align = false, resume = null } = {}) {
+    if (!visible || document.hidden) return Promise.resolve(null);
     if (focusedHd?.index === index && focusedHd.ready) return Promise.resolve(focusedHd);
     const retained = [...retiredFrames].find(frame => frame.index === index && frame.ready);
     if (retained) { discardPrepared(); return Promise.resolve(retained); }
@@ -650,12 +753,12 @@ export async function mountHeroWall(root) {
     if (preparedHd?.index === index) return preparedHd.promise.then(hd => align ? alignHd(hd) : hd);
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
-    const hd = { video, index, ready: false, aligning: false, loopSeeking: false, abort: new AbortController(), promise: null }; preparedHd = hd;
+    const hd = { video, index, ready: false, aligning: false, loopSeeking: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
     video.className = 'wall-hd'; video.muted = true; video.defaultMuted = true; video.playsInline = true; video.preload = 'auto';
     video.dataset.clipId = unit.item.id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.setAttribute('aria-hidden', 'true');
     const loopAction = async () => {
-      if ((focusedHd !== hd && !retiredFrames.has(hd)) || !hd.ready || hd.loopSeeking || video.currentTime < sourceEnd(unit) - .08) return;
+      if (!visible || document.hidden || (focusedHd !== hd && !retiredFrames.has(hd)) || !hd.ready || hd.loopSeeking || video.currentTime < sourceEnd(unit) - .08) return;
       hd.loopSeeking = true; playback();
       const reached = await seekVideo(video, sourceStart(unit), { signal: hd.abort.signal });
       if (focusedHd !== hd && !retiredFrames.has(hd)) return;
@@ -669,12 +772,13 @@ export async function mountHeroWall(root) {
     hd.promise = (async () => {
       const available = await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true });
       if (!available) return null;
-      const ready = await alignHd(hd);
+      const ready = resume ? await restoreWallVideo(video, resume, { signal: hd.abort.signal }) : await alignHd(hd);
       if (!ready) return null;
+      hd.ready = true;
       video.dataset.firstDataAt = performance.now().toFixed(1);
       // A slow request may complete after the bounded preview fallback. Upgrade
       // only that still-focused tile, never a stale selection.
-      if (focused === index && !focusedHd) activateHd(hd);
+      if (focused === index && !focusedHd && visible && !document.hidden) activateHd(hd);
       return hd;
     })().catch(() => null).then(ready => {
       if (!ready && preparedHd === hd) { preparedHd = null; disposeHd(hd); }
@@ -717,6 +821,7 @@ export async function mountHeroWall(root) {
   function resetCamera() {
     const restoreBackFocus = focusNavigation.contains(document.activeElement);
     focusCoordinator.cancel(); clearTimeout(hoverTimer); discardPrepared();
+    resumeFocusedHd = null;
     cameraMoveRevision += 1; cameraMoving = false; clearRetiredFrames(); clearHd();
     camera.style.removeProperty('--focus-x'); camera.style.removeProperty('--focus-y');
     camera.style.removeProperty('--focus-scale'); focused = -1;
