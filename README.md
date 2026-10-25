@@ -6,7 +6,14 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v32 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v33 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 33
+
+- Method is a complete fixed architecture: both learning stages, shared routed attention and action-only deployment are always visible. Part selection changes emphasis only; hover/focus previews return to the pinned selection.
+- Removed chapter timing, autoplay, scrubbing and scene rearrangement. Simplified labels and routed connections through clear gaps; lower-level dimensions and control details remain in the paper.
+- Both training losses remain active in either route. Deployment retains its execution video and observed context. Responsive layout and video visibility guards were verified.
+- Hero, media, datasets, galleries, results and long-horizon behavior retain the previous implementation.
 
 ## Release 32
 
