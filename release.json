@@ -1,7 +1,7 @@
 {
-  "version": 23,
+  "version": 24,
   "published_date": "2026-10-25",
-  "release": "preview-first-continuous-hd-handoff",
+  "release": "retain-preview-and-warm-neighbors",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,14 +12,14 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v23",
+  "document_cache_version": "v24",
   "dataset_local_delivery": 17,
-  "review": "v23",
+  "review": "v24",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
   "loading_posters": 139,
   "wall_first_paint": "40 tiles, one 61,286-byte embedded first-frame WebP atlas",
-  "wall_focus_start": "Cached preview playback is independent of HD readiness; presented HD frames are aligned to current preview time before fade-in",
+  "wall_focus_start": "Retain selected preview after HD handoff; serially warm and rewind neighboring previews after HD has 3s safe buffer; start at zero after camera settlement",
   "favicon": "Rounded gradient W ribbon and star"
 }
