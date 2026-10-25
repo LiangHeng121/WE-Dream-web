@@ -6,9 +6,12 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v20 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v21 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
-## Release 20
+## Release 21
+
+- Explore wall starts every newly selected 1080p clip from its first frame only after the clear HD frame, camera transition, and fade are ready. Rapid directional changes cancel stale playback starts; returning from an offscreen section preserves the current selection’s progress.
+- Removed the extra hero eyebrow, demonstration counter, method tagline strip, and Pause motion control. Added an original gradient W ribbon favicon with a small star. Existing layout, rounded corners, and wall navigation are retained.
 
 - 1080p resolution and continuous playback take priority. All 57 full demonstrations and 6 skill excerpts use 1920 × 1080 H.264, 24 fps, CRF29, and MP4 faststart. Lossy bitrate is intentional; the 63 files total 358 MB, versus 2.19 GB in v16.
 - The opening wall paints all 40 first-frame tiles directly from initial HTML before scripts or video downloads; each video takes over after a decoded frame is presented. One embedded WebP atlas replaces the separate 40-poster request queue.

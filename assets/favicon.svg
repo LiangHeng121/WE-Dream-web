@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2563eb"/><path d="m12 20 8 26 12-21 12 21 8-26" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="glass" x2="1" y2="1">
+      <stop stop-color="#edf6ff"/>
+      <stop offset=".54" stop-color="#f5f1ff"/>
+      <stop offset="1" stop-color="#fff0f7"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="8" y1="25" x2="54" y2="41" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#527cc6"/>
+      <stop offset=".48" stop-color="#8065bd"/>
+      <stop offset="1" stop-color="#c46ea5"/>
+    </linearGradient>
+  </defs>
+  <rect x=".75" y=".75" width="62.5" height="62.5" rx="18" fill="url(#glass)" stroke="#dce1f1" stroke-width="1.5"/>
+  <path d="M11 22c2 10 2 23 9 23s7-13 11-20c1 10 2 22 9 19 5-2 8-12 10-20" fill="none" stroke="url(#ribbon)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m47.5 6.5 2.3 5.2 5.2 2.3-5.2 2.3-2.3 5.2-2.3-5.2L40 14l5.2-2.3Z" fill="#9273c3"/>
+</svg>
