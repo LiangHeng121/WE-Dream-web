@@ -1,4 +1,5 @@
 /* Original WE-Dream overview: a fixed architecture, not a sequence of slides. */
+import { createRoutingVisual } from './method-routing.js?v=v35';
 export const METHOD_PARTS = [
   { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn actions from human video.', caption: 'A frozen latent action model extracts 32D visual-transition targets from human first-person video.' },
   { key: 'posttrain', label: 'Robot post-training', title: 'Adapt the pretrained model to robot control.', caption: 'Transfer model weights and jointly learn from robot demonstrations, states, and 80D action targets.' },
@@ -22,7 +23,7 @@ function label(parent, value, x, y, attributes = {}) {
   return node;
 }
 function rect(parent, x, y, width, height, attributes = {}) {
-  return element('rect', { x, y, width, height, rx: 14, class: 'wd-node', fill: '#fcfdff', stroke: '#d1deea', 'stroke-width': 1.2, ...attributes }, parent);
+  return element('rect', { x, y, width, height, rx: 14, class: 'wd-node', 'fill-opacity': .94, fill: '#fcfdff', stroke: '#d1deea', 'stroke-width': 1.2, ...attributes }, parent);
 }
 function geometry(mobile) {
   return mobile ? {
@@ -54,7 +55,7 @@ function geometry(mobile) {
   };
 }
 
-export function createMethodDiagram(host, { onFocus } = {}) {
+export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = {}) {
   const prefix = `wd-method-${++instances}`;
   const svg = element('svg', { class: 'wd-diagram', role: 'group', 'aria-label': 'Complete WE-Dream method: human pretraining, robot post-training, mixed training attention, and action-only deployment.', preserveAspectRatio: 'xMidYMid meet' }, host);
   svg.style.cssText = 'display:block;width:100%;height:auto;overflow:visible;';
@@ -65,6 +66,12 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     element('stop', { offset: '100%', 'stop-color': ['#f0ebf8', '#eaf4fa', '#edf0f9', '#eaf5ef'][index], 'stop-opacity': '.86' }, gradient);
     const arrow = element('marker', { id: `${prefix}-arrow-${index}`, markerWidth: 7, markerHeight: 7, refX: 6, refY: 3.5, orient: 'auto', markerUnits: 'userSpaceOnUse' }, defs);
     element('path', { d: 'M0 0 L7 3.5 L0 7', fill: 'none', stroke: color, 'stroke-width': 1.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, arrow);
+  });
+  ACTION_COLORS.forEach((color, index) => {
+    const gradient = element('linearGradient', { id: `${prefix}-action-glass-${index}`, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, defs);
+    element('stop', { offset: '0%', 'stop-color': '#ffffff', 'stop-opacity': '.95' }, gradient);
+    element('stop', { offset: '42%', 'stop-color': color, 'stop-opacity': '.28' }, gradient);
+    element('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': '.72' }, gradient);
   });
   const style = element('style', {}, svg);
   style.textContent = `
@@ -78,11 +85,8 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     .wd-diagram .wd-small{font-size:14px;fill:#8399aa;font-weight:400;letter-spacing:0}
     .wd-diagram .wd-quiet{font-size:13px;fill:#92a3b1;font-weight:400;letter-spacing:0}
     .wd-diagram .wd-core-title{font-size:24px;font-weight:600}
-    .wd-diagram .wd-mask-title{font-size:18px;font-weight:600}
-    .wd-diagram .wd-axis{font-size:16px;fill:#8c9fae}
     .wd-diagram .wd-vector-title{font-size:17px;font-weight:500}
     .wd-diagram .wd-component{font-size:16px}
-    .wd-diagram .wd-node{fill-opacity:.94}
     .wd-diagram .wd-wire{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
     .wd-diagram .wd-flow-dot{stroke:white;stroke-width:1.5}
     .wd-diagram[data-mobile="true"] text{font-size:24px}
@@ -91,26 +95,23 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     .wd-diagram[data-mobile="true"] .wd-small{font-size:20px}
     .wd-diagram[data-mobile="true"] .wd-quiet{font-size:18px}
     .wd-diagram[data-mobile="true"] .wd-core-title{font-size:30px}
-    .wd-diagram[data-mobile="true"] .wd-mask-title{font-size:23px}
-    .wd-diagram[data-mobile="true"] .wd-axis{font-size:21px}
     .wd-diagram[data-mobile="true"] .wd-vector-title{font-size:23px}
     .wd-diagram[data-mobile="true"] .wd-component{font-size:22px}
     @media(prefers-reduced-motion:reduce){.wd-diagram .wd-part,.wd-diagram .wd-panel{transition:none}}
   `;
   let mobile = window.matchMedia('(max-width: 760px)').matches;
   let layout = geometry(mobile);
-  let root, parts = [], flows = [], routedCells = [], chunkCells = [], dynamicDefs = [];
+  let root, parts = [], flows = [], chunkCells = [], routingVisual = null;
   let last = { focus: null, time: 0, still: false };
   let previousFocus = Symbol();
   let destroyed = false;
-  let vectorCount = 0;
 
   function panel(index) {
     const p = layout.parts[index];
     const group = element('g', { class: 'wd-part', 'data-part': METHOD_PARTS[index].key, role: 'button', tabindex: 0, 'aria-label': `Focus ${METHOD_PARTS[index].label}` }, root);
     const background = rect(group, p.x, p.y, p.w, p.h, { class: 'wd-panel', rx: 23, fill: `url(#${prefix}-panel-${index})` });
     label(group, `0${index + 1}${index === 2 ? ' / TRAINING' : index === 3 ? ' / DEPLOYMENT' : ''}`, p.x + 24, p.y + (mobile ? 32 : 27), { class: 'wd-part-number' });
-    label(group, index === 2 ? 'Routed attention · p = 0.5' : METHOD_PARTS[index].label, p.x + 24, p.y + (mobile ? 66 : 55), { class: 'wd-part-title' });
+    label(group, METHOD_PARTS[index].label, p.x + 24, p.y + (mobile ? 66 : 55), { class: 'wd-part-title' });
     group.addEventListener('click', () => onFocus?.(index));
     group.addEventListener('keydown', event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); onFocus?.(index); } });
     parts.push({ group, background });
@@ -136,27 +137,33 @@ export function createMethodDiagram(host, { onFocus } = {}) {
   }
   function actionVector(parent, id, x, y, width, height) {
     const group = element('g', { 'data-node': id, 'data-dimension': '80' }, parent);
-    const clip = element('clipPath', { id: `${prefix}-action-${++vectorCount}` }, defs);
-    rect(clip, x, y, width, height, { rx: 12 });
-    dynamicDefs.push(clip);
-    const cells = element('g', { 'clip-path': `url(#${clip.id})` }, group);
+    // One shared enclosure preserves vector identity; its components are light,
+    // connected capsules rather than three unrelated output boxes.
+    rect(group, x + 1, y + 3, width - 2, height, { rx: 20, fill: '#b9c9d7', 'fill-opacity': .08, stroke: 'none' });
+    rect(group, x, y, width, height, { rx: 20, fill: '#ffffff', 'fill-opacity': .34, stroke: '#ccdbe5', 'stroke-opacity': .74, 'stroke-width': 1 });
+    const pad = mobile ? 6 : 4;
+    const gap = mobile ? 6 : 4;
+    const innerWidth = width - pad * 2 - gap * 2;
     const fractions = [.20, .25, .55];
     const names = ['Neck', 'Hands', 'SONIC token'];
     const dimensions = [2, 14, 64];
-    let offset = 0;
+    let offset = x + pad;
     const centers = [];
     fractions.forEach((fraction, i) => {
-      const w = width * fraction;
-      const center = x + offset + w / 2;
+      const w = innerWidth * fraction;
+      const center = offset + w / 2;
       centers.push(center);
-      element('rect', { x: x + offset, y, width: w, height, fill: ACTION_COLORS[i], 'data-action-component': ['neck', 'hands', 'body'][i], 'data-dimension': dimensions[i] }, cells);
-      if (i) element('path', { d: `M${x + offset} ${y + 7} V${y + height - 7}`, stroke: '#ffffff', 'stroke-width': 1.4, 'stroke-opacity': '.8' }, cells);
+      rect(group, offset, y + pad, w, height - pad * 2, {
+        rx: mobile ? 18 : 15,
+        fill: `url(#${prefix}-action-glass-${i})`, 'fill-opacity': 1,
+        stroke: ACTION_COLORS[i], 'stroke-opacity': .8, 'stroke-width': 1,
+        'data-action-component': ['neck', 'hands', 'body'][i], 'data-dimension': dimensions[i],
+      });
       label(group, names[i], center, y + height / 2 - 3, { class: 'wd-component', 'text-anchor': 'middle' });
       label(group, `${dimensions[i]}D`, center, y + height / 2 + (mobile ? 24 : 18), { class: 'wd-small', 'text-anchor': 'middle' });
-      offset += w;
+      offset += w + gap;
     });
-    rect(group, x, y, width, height, { rx: 12, fill: 'none', stroke: '#c6d8d6', 'stroke-width': 1 });
-    return { direct: x + width * .225, sonic: centers[2] };
+    return { direct: (centers[0] + centers[1]) / 2, sonic: centers[2] };
   }
 
   function drawPretrain() {
@@ -180,40 +187,6 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     label(g, 'Robot action · 2 + 14 + 64 = 80D', x, y - (mobile ? 20 : 14), { class: 'wd-vector-title' });
     actionVector(g, 'robot-targets', x, y, width, mobile ? 70 : 54);
   }
-  function mask(parent, x, y, width, height, enabled) {
-    const group = element('g', { class: 'wd-mask', 'data-attention': enabled ? 'enabled' : 'masked', 'aria-label': `${enabled ? '50 percent future-video access' : '50 percent future-video masked'}; attention matrix with query rows and key columns ordered observed video, future video, action, state.` }, parent);
-    rect(group, x, y, width, height, { fill: '#fcfdff', stroke: '#dbe3ed', rx: 15 });
-    label(group, enabled ? '50% access' : '50% masked', x + width / 2, y + (mobile ? 34 : 28), { class: 'wd-mask-title', 'text-anchor': 'middle' });
-    const cell = mobile ? 34 : 25;
-    const gap = mobile ? 5 : 4;
-    const gridWidth = cell * 4 + gap * 3;
-    const gridX = x + (width - gridWidth) / 2 + (mobile ? 8 : 7);
-    const gridY = y + (mobile ? 93 : 83);
-    ['O', 'V', 'A', 'S'].forEach((kind, i) => {
-      label(group, kind, gridX + i * (cell + gap) + cell / 2, gridY - 12, { class: 'wd-axis', 'text-anchor': 'middle' });
-      label(group, kind, gridX - (mobile ? 20 : 17), gridY + i * (cell + gap) + cell / 2 + (mobile ? 7 : 5), { class: 'wd-axis', 'text-anchor': 'middle' });
-    });
-    label(group, 'Keys', gridX + gridWidth / 2, gridY - (mobile ? 43 : 37), { class: 'wd-quiet', 'text-anchor': 'middle' });
-    const order = ['O', 'V', 'A', 'S'];
-    order.forEach((query, row) => order.forEach((key, col) => {
-      const routed = query === 'A' && key === 'V';
-      const visible = row === 0 ? col === 0 : row === 1 ? true : row === 2 ? col !== 1 || enabled : col === 3;
-      const px = gridX + col * (cell + gap), py = gridY + row * (cell + gap);
-      const square = rect(group, px, py, cell, cell, {
-        rx: 4,
-        fill: routed ? enabled ? '#e8b17c' : '#fff7ed' : visible ? '#c2d8e6' : '#ffffff',
-        stroke: routed ? '#d69d66' : visible ? '#b6cddd' : '#dce5ed',
-        'stroke-width': routed ? 1.7 : 1,
-        'data-query': query, 'data-key': key, 'data-visible': String(visible), ...(routed ? { 'data-routed-cell': 'true' } : {}),
-      });
-      if (routed) {
-        routedCells.push(square);
-        if (!enabled) element('path', { d: `M${px + 6} ${py + cell - 6} L${px + cell - 6} ${py + 6}`, stroke: '#d69d66', 'stroke-width': 1.7, 'stroke-linecap': 'round' }, group);
-      }
-    }));
-    label(group, 'Queries ↓', x + width / 2, y + height - (mobile ? 15 : 12), { class: 'wd-quiet', 'text-anchor': 'middle' });
-    return group;
-  }
   function drawTraining() {
     const g = panel(2);
     const model = mobile ? { x: 50, y: 1245, w: 500, h: 535 } : { x: 424, y: 138, w: 382, h: 483 };
@@ -224,22 +197,10 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     label(core, 'Shared DiT', center, model.y + (mobile ? 42 : 39), { class: 'wd-core-title', 'text-anchor': 'middle' });
     label(core, 'Both training stages', center, model.y + (mobile ? 75 : 66), { class: 'wd-small', 'text-anchor': 'middle' });
     label(core, 'Observed video · language · state', center, model.y + (mobile ? 109 : 94), { class: 'wd-quiet', 'text-anchor': 'middle' });
-    if (mobile) {
-      mask(core, 68, 1390, 220, 282, true);
-      mask(core, 312, 1390, 220, 282, false);
-    } else {
-      mask(core, 438, 279, 170, 239, true);
-      mask(core, 622, 279, 170, 239, false);
-    }
-    const legendY = mobile ? 1705 : 549;
-    label(core, 'O observed · V future video', center, legendY, { class: 'wd-quiet', 'text-anchor': 'middle' });
-    label(core, 'A action · S state', center, legendY + (mobile ? 28 : 23), { class: 'wd-quiet', 'text-anchor': 'middle' });
-    const legendWidth = mobile ? 270 : 226;
-    const lx = center - legendWidth / 2;
-    rect(core, lx, legendY + (mobile ? 43 : 36), mobile ? 15 : 12, mobile ? 15 : 12, { rx: 3, fill: '#c2d8e6', stroke: '#b6cddd' });
-    label(core, 'visible', lx + (mobile ? 23 : 19), legendY + (mobile ? 57 : 47), { class: 'wd-quiet' });
-    rect(core, lx + (mobile ? 128 : 103), legendY + (mobile ? 43 : 36), mobile ? 15 : 12, mobile ? 15 : 12, { rx: 3, fill: '#fff', stroke: '#dce5ed' });
-    label(core, 'masked', lx + (mobile ? 151 : 122), legendY + (mobile ? 57 : 47), { class: 'wd-quiet' });
+    const routingBox = mobile
+      ? { x: 60, y: 1370, width: 480, height: 380 }
+      : { x: 438, y: 260, width: 354, height: 340 };
+    routingVisual = createRoutingVisual(core, { prefix, ...routingBox, mobile, variant: routeVariant });
     const outputY = mobile ? 1840 : 666;
     const outputW = mobile ? 236 : 182;
     const leftX = mobile ? 50 : 424, rightX = mobile ? 314 : 624;
@@ -270,7 +231,7 @@ export function createMethodDiagram(host, { onFocus } = {}) {
       const cell = element('g', { 'data-action-step': i + 1 }, chunk);
       const cx = center - chunkWidth / 2 + i * (cellW + gap);
       const cy = chunkY + (mobile ? 19 : 15);
-      ACTION_COLORS.forEach((color, j) => element('rect', { x: cx, y: cy + j * (mobile ? 7 : 6), width: cellW, height: mobile ? 6 : 5, rx: 1, fill: color }, cell));
+      ACTION_COLORS.forEach((color, j) => element('rect', { x: cx, y: cy + j * (mobile ? 7 : 6), width: cellW, height: mobile ? 6 : 5, rx: 1.7, fill: `url(#${prefix}-action-glass-${j})` }, cell));
       chunkCells.push(cell);
     }
     const vectorY = mobile ? 2440 : 371;
@@ -283,15 +244,12 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     const sonicX = mobile ? 314 : 1100;
     const directCenter = x + controlsW / 2, sonicCenter = sonicX + controlsW / 2;
     const bottom = vectorY + (mobile ? 72 : 58);
-    wire(g, `M${directCenter} ${bottom + 1} V${controlsY - 3}`, 3, { id: 'direct-components' });
     wire(g, `M${sonicCenter} ${bottom + 1} V${controlsY - 3}`, 3, { id: 'body-to-sonic' });
-    box(g, 'direct-control', x, controlsY, controlsW, controlsH, 'Direct targets', 'Neck + hands', { fill: '#f0f4fa' });
     box(g, 'sonic-control', sonicX, controlsY, controlsW, controlsH, 'SONIC controller', 'Body joints', { fill: '#eff7f2' });
-    const mergeY = mobile ? 2650 : 540;
     const video = layout.videos.execution;
-    wire(g, `M${directCenter} ${controlsY + controlsH + 1} V${mergeY - 6} Q${directCenter} ${mergeY} ${directCenter + 6} ${mergeY} H${center - 6} Q${center} ${mergeY} ${center} ${mergeY + 6} V${video.y - 4}`, 3, { id: 'direct-to-execution' });
-    wire(g, `M${sonicCenter} ${controlsY + controlsH + 1} V${mergeY - 6} Q${sonicCenter} ${mergeY} ${sonicCenter - 6} ${mergeY} H${center + 6} Q${center} ${mergeY} ${center} ${mergeY + 6} V${video.y - 4}`, 3, { id: 'sonic-to-execution' });
-    label(g, '30 Hz continuous control', video.x + video.width, video.y - (mobile ? 15 : 10), { class: 'wd-quiet', 'text-anchor': 'end' });
+    wire(g, `M${directCenter} ${bottom + 1} V${video.y - 4}`, 3, { id: 'direct-to-execution' });
+    wire(g, `M${sonicCenter} ${controlsY + controlsH + 1} V${video.y - 4}`, 3, { id: 'sonic-to-execution' });
+    label(g, '30 Hz continuous control', center, video.y - (mobile ? 15 : 10), { class: 'wd-quiet', 'text-anchor': 'middle' });
     videoSlot(g, 'execution');
   }
   function drawConnections() {
@@ -314,10 +272,10 @@ export function createMethodDiagram(host, { onFocus } = {}) {
     }
   }
   function build() {
+    routingVisual?.destroy();
+    routingVisual = null;
     root?.remove();
-    dynamicDefs.forEach(node => node.remove());
-    dynamicDefs = []; parts = []; flows = []; routedCells = []; chunkCells = [];
-    vectorCount = 0;
+    parts = []; flows = []; chunkCells = [];
     previousFocus = Symbol();
     layout = geometry(mobile);
     svg.setAttribute('viewBox', layout.viewBox.join(' '));
@@ -351,8 +309,7 @@ export function createMethodDiagram(host, { onFocus } = {}) {
       flow.dot.setAttribute('cx', point.x);
       flow.dot.setAttribute('cy', point.y);
     });
-    const routeActive = !still && (focus === null || focus === 2);
-    routedCells.forEach(cell => cell.setAttribute('stroke-width', routeActive ? (1.7 + .7 * (Math.sin(time / 850) + 1) / 2).toFixed(2) : '1.7'));
+    routingVisual?.render({ time, still, active: focus === null || focus === 2 });
     const cursor = still ? 12 : Math.floor(((time / 100) % 24 + 24) % 24);
     chunkCells.forEach((cell, i) => cell.style.opacity = focus === null || focus === 3 ? (i <= cursor ? '1' : '.48') : '.8');
   }
@@ -364,5 +321,5 @@ export function createMethodDiagram(host, { onFocus } = {}) {
   }
   build();
   render(last);
-  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; root?.remove(); dynamicDefs.forEach(node => node.remove()); svg.remove(); } };
+  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; routingVisual?.destroy(); root?.remove(); svg.remove(); } };
 }

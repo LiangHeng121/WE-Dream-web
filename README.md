@@ -8,6 +8,13 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 This repository contains the buildless v33 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
+## Release 35
+
+- Both Method training inputs are four-clip first-person mosaics, precomposed into two streams to keep decoding bounded.
+- Routed attention softly animates its sole changing A-query/V-key dependency. Three live presentation proposals are available at `method-motion-options.html`: breathing cell, flowing gate and microbatch samples. These are visual alternatives, not deployment modes.
+- The80D action uses pale translucent rounded gradients. Hands and neck point straight to execution; only the64D body command passes through SONIC.
+- A native1080 Method-only rendition suppresses high-frequency aliasing at mini-player scale, with an inset frame that preserves16:9. Original demonstrations and other runtime modules are unchanged.
+
 ## Release 34
 
 - Method now uses existing first-person human and robot videos. The complete architecture remains fixed; highlighting does not restart playback.

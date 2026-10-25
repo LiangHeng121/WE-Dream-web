@@ -1,4 +1,4 @@
-import { seekVideo } from './video-seek.js?v=v34';
+import { seekVideo } from './video-seek.js?v=v35';
 const clock = t => `${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 // Long-horizon navigation only. Skill composition has its own visual explorer.
 export function createStagePlayer(root, chapter, video, {requestPlay=()=>{},canPlay=()=>!document.hidden}={}) {

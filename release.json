@@ -1,7 +1,7 @@
 {
-  "version": 34,
+  "version": 35,
   "published_date": "2026-10-26",
-  "release": "routed-training-sonic-actions",
+  "release": "method-mosaics-and-motion-studies",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,9 +12,9 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v34",
+  "document_cache_version": "v35",
   "dataset_local_delivery": 17,
-  "review": "v34",
+  "review": "v35",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -43,5 +43,7 @@
   "wall_startup_payload_reduction_percent": 48.25,
   "wall_startup_transfer_validation": "HTTP Content-Encoding-aware length checks; bounded decoded bytes and SHA256 remain mandatory",
   "wall_startup_cache_lookup": "Relative HLS fragment URLs resolve against document base for exact cache lookup; original request callbacks and query strings preserved",
-  "method_presentation": "Fixed complete architecture; human and robot first-person inputs; simultaneous 50/50 training masks; one action-only deployment; 80D action token = Neck 2 + Hands 14 + SONIC body 64; no route selector"
+  "method_presentation": "Two first-person 2x2 video mosaics; p=0.5 animated attention cell with three motion studies; translucent rounded gradient action components; direct hand/neck arrow and SONIC body branch",
+  "method_deployment_video": "Native1920x1080 source,29.97fps,spatial anti-alias prefilter for small-window rendering; primary demonstrations unchanged",
+  "method_motion_studies": "method-motion-options.html"
 }
