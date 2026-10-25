@@ -13,7 +13,7 @@ These two illustrations reuse existing public dataset examples. They are Method-
 
 EgoDex: Apple authors, official [repository](https://github.com/apple-aiml-research/ml-egodex) and public test archive. Exact archive members and hashes are retained in the development record `docs/website-research/method-v36/media-build.json`; existing EgoDex license notices remain at `../datasets/egodex/`.
 
-EgoVerse: consortium, official [dataset browser](https://egoverse-research-workbench.vercel.app/). Pepper episode `2025-05-08-02-34-44-740246`; ironing episode source URL and identifier are retained in `media-build.json` and existing `data/dataset-media.json`. The source browser supplies no explicit reuse license for these human episodes; none is inferred. These are attributed publisher illustrations, not asserted to be exact WE-Dream training examples.
+EgoVerse: consortium, official [dataset browser](https://egoverse-research-workbench.vercel.app/). Pepper episode `2025-05-08-02-34-44-740246`; ironing episode `2026-04-26-18-14-50-858471`; complete source URLs are retained in `media-build.json` and existing `data/dataset-media.json`. The source browser supplies no explicit reuse license for these human episodes; none is inferred. These are attributed publisher illustrations, not asserted to be exact WE-Dream training examples.
 
 ## Robot mosaic — calmer active head-camera excerpts
 
