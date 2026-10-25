@@ -1,5 +1,5 @@
 import { videoFullyBuffered } from './video-warm.js?v=v38';
-import { METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v38';
+import { METHOD_OVERVIEW, METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v38';
 
 export function createMethodVideoController(video, { mayPlay, shouldSuspend, signal } = {}) {
   let saved = null, restoring = false, disposed = false;
@@ -59,7 +59,6 @@ export function mountMethodFigure(root) {
   let selected = null, preview;
   let inView = false, destroyed = false, frame = 0, last = 0, drawn = 0, time = 0;
   const focus = () => preview === undefined ? selected : preview;
-  const overview = 'Two training stages. A 50/50 attention route during training. One action-only policy at deployment.';
   root.classList.add('method-explorer', 'method-overview');
   root.innerHTML = `
     <div class="mf-parts" role="group" aria-label="Highlight a part of the method">
@@ -72,7 +71,7 @@ export function mountMethodFigure(root) {
       <div class="mf-method-film" data-method-film="robot" data-part="1"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v36/robot-posttraining-mosaic.mp4" poster="assets/media/method-v36/robot-posttraining-mosaic.jpg?v=v38" aria-label="Four robot demonstrations from the G1 head camera in a video mosaic"></video></div></div>
       <div class="mf-method-film" data-method-film="execution" data-part="3"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/method-v35/deployment-prefilter1080.mp4" poster="assets/media/method-v35/deployment-prefilter1080.jpg?v=v38" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div></div>
     </div>
-    <div class="mf-overview-footer"><p class="mf-focus-caption"></p></div>`;
+    <div class="mf-overview-footer" aria-label="Method explanation"><h3 class="mf-focus-title"></h3><p class="mf-focus-caption"></p></div>`;
   const viewport = root.querySelector('.mf-viewport');
   const buttons = [...root.querySelectorAll('[data-focus]')];
   const films = [...root.querySelectorAll('[data-method-film]')];
@@ -111,7 +110,9 @@ export function mountMethodFigure(root) {
       button.classList.toggle('is-active',index===active);
     });
     films.forEach(film => film.classList.toggle('is-muted',active!==null && active!==Number(film.dataset.part)));
-    root.querySelector('.mf-focus-caption').textContent=active===null?overview:METHOD_PARTS[active].caption;
+    const explanation=active===null?METHOD_OVERVIEW:METHOD_PARTS[active];
+    root.querySelector('.mf-focus-title').textContent=explanation.title;
+    root.querySelector('.mf-focus-caption').textContent=explanation.caption;
     render();syncVideos();
   }
   function selectPart(index) {
