@@ -31,7 +31,6 @@
 .wall-focus-label{position:absolute;left:50%;width:min(850px,calc(100% - 48px));bottom:88px;transform:translateX(-50%);text-align:center;font-size:14px;line-height:1.5;opacity:0;transition:opacity .5s;pointer-events:none;color:#233e5b;background:#ffffffdc;border:1px solid #fff;border-radius:20px;padding:14px 22px;backdrop-filter:blur(18px);box-shadow:0 8px 32px #20345112}.wall-prompt-label{font-size:10px;letter-spacing:.16em;font-weight:600;color:#5b7693}.wall-prompt-draft{display:inline-block;font-size:10px;margin-left:9px;padding:1px 6px;border-radius:8px;background:#eef1f7;color:#6a7382}.wall-prompt-text{display:block;margin-top:5px;font-size:clamp(13px,1.35vw,18px);line-height:1.5}
 .wall-exploring .hero-content{opacity:0;transform:translateY(-20px);pointer-events:none}.wall-exploring .hero-content a,.wall-exploring .hero-content button{pointer-events:none}
 .wall-level-badge{position:absolute;left:16px;top:0;transform:translateY(-50%);display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid #ffffffed;border-radius:999px;box-shadow:0 3px 12px #3d557510;font:600 11px/1.4 var(--sans);letter-spacing:.015em;white-space:nowrap}
-.wall-level-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
 .wall-level-badge[data-level=id]{background:var(--level-id-tint);color:var(--level-id-ink)}
 .wall-level-badge[data-level=l1]{background:var(--level-l1-tint);color:var(--level-l1-ink)}
 .wall-level-badge[data-level=l2]{background:var(--level-l2-tint);color:var(--level-l2-ink)}
