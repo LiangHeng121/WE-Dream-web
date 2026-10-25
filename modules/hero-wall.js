@@ -1,5 +1,6 @@
-import { seekVideo } from './video-seek.js?v=v30';
-import { createStreamVideo } from './stream-video.js?v=v30';
+import { seekVideo } from './video-seek.js?v=v31';
+import { createStreamVideo } from './stream-video.js?v=v31';
+import { createWallStartPrefetch } from './wall-start-prefetch.js?v=v31';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -610,10 +611,10 @@ export async function alignWallHandoff(video, preview, {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v30').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v31').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v30').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v31').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -691,6 +692,13 @@ export async function mountHeroWall(root) {
     tile.addEventListener('pointerleave', () => clearTimeout(hoverTimer));
     tile.addEventListener('focus', () => primeHd(index));
     return { tile, video, item, frame, firstFrame };
+  });
+  const startPrefetch = createWallStartPrefetch(units.map(unit => unit.item), {
+    onChange: stats => {
+      root.dataset.wallStartupCached = String(stats.ready);
+      root.dataset.wallStartupBytes = String(stats.bytes);
+      root.dataset.wallStartupRequests = String(stats.running);
+    },
   });
   contentData.then(content => {
     if (!content || !root.isConnected) return;
@@ -910,6 +918,7 @@ export async function mountHeroWall(root) {
     }
     publishFrameSnapshot();
     frameStates.forEach(state => state.stop());
+    schedulePlayback();
   }
   drift.addEventListener('animationend', event => {
     if (event.target === drift && event.animationName === 'wall-reveal') finishReveal();
@@ -1062,13 +1071,10 @@ export async function mountHeroWall(root) {
     if (!safe && intent.state === 'loading') cancelNeighborHd(intent, 'failed', document.hidden ? 'document-hidden' : !visible ? 'offscreen' : 'foreground-unsafe');
     if (!units[target].item.full_hls_src && intent.state === 'idle') { intent.state = 'failed'; intent.reason = 'no-playlist'; }
     root.dataset.wallHdWarmTarget = String(intent.index); root.dataset.wallHdWarmState = intent.state; root.dataset.wallHdWarmReason = intent.reason;
-    const unit = units[target];
-    const targetReady = wallVideoFullyBuffered(unit.video) && unit.warmResetReady && !unit.video.seeking && Math.abs(unit.video.currentTime) <= .05;
-    const currentReady = wallVideoFullyBuffered(units[focused].video);
-    // Finish this direction's low preview, then its single HD fragment before
-    // proceeding to other low neighbors. A failed optional warm releases them.
-    return { intent, reserve: safe && (intent.state === 'loading' || (intent.state === 'idle' && targetReady && !units[focused].warmResetFailed)),
-      dispatch: safe && intent.state === 'idle' && targetReady && currentReady };
+    // Once current HD is safely buffered, the next HD first frame matters more
+    // than downloading an entire low-resolution action. Warm just one decoder.
+    return { intent, reserve: safe && (intent.state === 'loading' || intent.state === 'idle'),
+      dispatch: safe && intent.state === 'idle' };
   }
   function prepareNeighborHd(intent) {
     if (!intent || intent !== neighborHdIntent || intent.state !== 'idle') return;
@@ -1141,6 +1147,7 @@ export async function mountHeroWall(root) {
     // later direction reversal can then rewind cached bytes instead of reload.
     const previewUnit = active && focused >= 0 && focusStart ? units[focused] : null;
     const safeNeighbor = previewUnit && neighborPreviewSafe();
+    startPrefetch.sync({ visible: active, ready: exploring || revealState === 'held', focused, safe: Boolean(safeNeighbor) });
     const candidates = focused >= 0 && focusStart ? wallNeighborOrder(focused, preferredDirection, wallColumns(), units.length, hoveredPreview) : [];
     const hdPlan = neighborHdPlan(candidates, Boolean(safeNeighbor));
     warmPreviewIndex = safeNeighbor && !hdPlan?.reserve ? candidates.find(index => {
@@ -1417,6 +1424,7 @@ export async function mountHeroWall(root) {
   }
   function primeHd(index) {
     clearTimeout(hoverTimer);
+    startPrefetch.prime(index);
     if (focused >= 0) {
       if (index === focused) return;
       hoveredPreview = index;
@@ -1425,13 +1433,9 @@ export async function mountHeroWall(root) {
       if (neighborHdIntent?.index === index && neighborHdIntent.state === 'failed') neighborHdIntent = null;
       playback(); return;
     }
-    // Finish the small zero-start preview before spending bandwidth on an HD
-    // hover fragment. A cold focused HD always retains foreground priority.
-    if (!wallVideoFullyBuffered(units[index].video) || (focused >= 0 && (warmPreviewIndex >= 0 || !neighborPreviewSafe() || !units[index].warmResetReady))) return;
     if (!exploring || paused || !visible || document.hidden || cameraMoving || focusCoordinator.pendingIndex >= 0 || (focused >= 0 && !focusedHd?.ready)) return;
     hoverTimer = setTimeout(() => {
-      if (exploring && visible && !cameraMoving && focusCoordinator.pendingIndex < 0 && !document.hidden && wallVideoFullyBuffered(units[index].video) &&
-        (focused < 0 || (warmPreviewIndex < 0 && neighborPreviewSafe() && units[index].warmResetReady))) prepareHd(index);
+      if (exploring && visible && !cameraMoving && focusCoordinator.pendingIndex < 0 && !document.hidden) prepareHd(index);
     }, 120);
   }
   function prepareHd(index, { resume = null } = {}) {
@@ -1605,6 +1609,7 @@ export async function mountHeroWall(root) {
   function focus(index) {
     if (!exploring || !units[index]?.tile.offsetWidth) return Promise.resolve(false);
     clearTimeout(hoverTimer);
+    startPrefetch.prime(index, { foreground: true });
     if (index === focused && preparedHd?.index !== index) discardPrepared();
     return focusCoordinator.go(index);
   }
@@ -1734,7 +1739,7 @@ export async function mountHeroWall(root) {
     if (event.persisted) return;
     focusCoordinator.cancel(); clearTimeout(hoverTimer); discardPrepared();
     clearTimeout(focusStart?.timer); focusStart?.abort?.abort(); focusStart = null;
-    loadQueue.destroy();
+    loadQueue.destroy(); startPrefetch.destroy();
     units.forEach(unit => unit.firstFrame.destroy());
     clearTimeout(revealTimer);
     frameStates.forEach(state => state.stop());

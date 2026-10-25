@@ -6,7 +6,15 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v30 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v31 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 31
+
+- All 40 wall HD streams have a 0.5-second first fragment, preserving 1920 × 1080, 24 fps and existing timelines. Startup media totals 5.87 MB instead of 11.35 MB (48.25% smaller).
+- A bounded byte cache preloads exact SHA256-verified startup fragments, prioritizes the selected clip, and reuses in-flight bytes. Sites serves these tiny assets on its own origin. This does not create 40 HD decoders or preload 40 full movies.
+- Fixed a real hls.js loader-contract error that caused network requests to fail and fall back to native MP4. Neighbor HD preparation no longer waits for complete low-resolution files when foreground playback is buffered safely.
+- No pause, poster mask or extra restart was added. Existing media-clock and submitted-frame checks govern continuous HD handoff.
+- All 40 selections passed local browser checks with HLS and 1080p; 19 lifecycle/stream regression suites passed. Cache-warm local timing is not a guarantee for cold public networks.
 
 ## Release 29
 

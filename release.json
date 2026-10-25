@@ -1,7 +1,7 @@
 {
-  "version": 30,
+  "version": 31,
   "published_date": "2026-10-26",
-  "release": "uniform-wall-stream-startup",
+  "release": "cached-hd-startup-fragments",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,11 +12,11 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v30",
+  "document_cache_version": "v31",
   "dataset_local_delivery": 17,
-  "review": "v30",
+  "review": "v31",
   "streaming_representations": 57,
-  "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
+  "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
   "loading_posters": 139,
   "wall_first_paint": "40 tiles, one 60,978-byte embedded first-frame WebP atlas",
@@ -37,5 +37,8 @@
   "wall_category_badge": "Inside prompt upper-left; 12.5px; no dot",
   "wall_hd_buffer_window": "Missing-buffer handoff predicts the future media window from first-data latency, with at most two bounded requests and the original PTS gate",
   "wall_preview_reset": "Selected preview remains composited below its first-frame poster while resetting to zero; no display-none decoder gate.",
-  "wall_hd_startup": "All catalogued wall clips share HLS primary transport. Foreground startup checks media-byte progress after 2.5 seconds, extends growing transfers in 1.5-second windows up to 8 seconds before first decode, and falls back to native MP4 once on a stall. The deadline bounds the HLS attempt, not total time to HD."
+  "wall_hd_startup": "SHA256-verified 0.5-second first-fragment bytes preloaded in a bounded shared cache; selected request priority; same-origin prefix assets on Sites; actual hls.js network loader timing contract preserved",
+  "wall_startup_cache_bytes": 5873109,
+  "wall_startup_cache_files": 40,
+  "wall_startup_payload_reduction_percent": 48.25
 }
