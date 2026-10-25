@@ -1,4 +1,4 @@
-import catalogue from './stream-bootstrap-data.js?v=v28';
+import catalogue from './stream-bootstrap-data.js?v=v29';
 
 // hls.js's public loader contract keeps network retries and media Range requests
 // in its original loader. Only immutable playlists/init boxes are bundled here.

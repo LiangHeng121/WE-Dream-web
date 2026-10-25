@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v28';
-import { createStreamVideo } from './stream-video.js?v=v28';
+import { seekVideo } from './video-seek.js?v=v29';
+import { createStreamVideo } from './stream-video.js?v=v29';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -466,7 +466,7 @@ export function waitWallVisibleFallback(video, { signal, isCurrent = () => true,
 
 export async function alignWallHandoff(video, preview, {
   signal, sourceStart = 0, isCurrent = () => true, start = () => video.play(), pause = () => video.pause(),
-  timeout = 7000, now = () => performance.now(), onState = () => {}, requestBuffer = null, frameTracker = null
+  timeout = 7000, now = () => performance.now(), onState = () => {}, requestBuffer = null, bufferLookahead = 0, frameTracker = null
 } = {}) {
   const deadline = now() + timeout;
   const current = () => !signal?.aborted && isCurrent() && now() < deadline;
@@ -490,10 +490,12 @@ export async function alignWallHandoff(video, preview, {
     }
     return false;
   };
-  let lead = .12, seeks = 0, stationary = false, positioned = false;
-  let observedTime = preview.currentTime, movedAt = now();
+  let lead = .12, seeks = 0, stationary = false, bufferRequests = 0, pendingBuffer = null;
+  let bufferDelay = Math.max(0, Math.min(6, Number(bufferLookahead) || 0));
+  let observedTime = preview.currentTime, movedAt = now(), previewCycle = 0;
   const observe = () => {
     const time = preview.currentTime;
+    if (time < observedTime - .1) previewCycle++;
     if (Math.abs(time - observedTime) > .015) { observedTime = time; movedAt = now(); }
     return { time, stalled: preview.paused || now() - movedAt >= 180 };
   };
@@ -509,13 +511,34 @@ export async function alignWallHandoff(video, preview, {
       // next loop supplies a fresh zero-based clock without a large seek.
       if (!stationary && time + lead + .2 >= end) return null;
       const target = sourceStart + time + (stationary ? 0 : lead);
-      if (requestBuffer && !positioned && Math.abs(target - video.currentTime) > 4 && !buffered(target, .2)) {
-        // A paused bounded HLS buffer cannot grow forever from time zero. One
-        // positioning request moves its window near the moving preview; the
-        // eventual rendezvous still waits for a genuinely buffered frame.
-        positioned = true; seeks++;
-        requestBuffer(target); onState('buffer-positioning', { seeks, lead, target });
-        return null;
+      if (requestBuffer && !buffered(target, .2)) {
+        // The paused HLS window cannot catch a preview moving faster than its
+        // fragments arrive. Ask for a future window using first-data latency;
+        // if that window still arrives late, measure it and correct once.
+        // Already-buffered targets never enter this path or pay its lookahead.
+        let arrivedEnd = 0;
+        if (pendingBuffer) for (let i = 0; i < video.buffered.length; i++) {
+          if (video.buffered.start(i) <= pendingBuffer.target && video.buffered.end(i) > pendingBuffer.target + .04) {
+            arrivedEnd = video.buffered.end(i); break;
+          }
+        }
+        if (arrivedEnd && pendingBuffer.delay === null) {
+          pendingBuffer.delay = Math.max(0, (now() - pendingBuffer.at) / 1000);
+          bufferDelay = Math.max(bufferDelay, pendingBuffer.delay);
+        }
+        const missed = pendingBuffer && ((arrivedEnd && target + .2 > arrivedEnd) || previewCycle > pendingBuffer.cycle);
+        const needsWindow = pendingBuffer ? missed : Math.abs(target - video.currentTime) > 4;
+        if (bufferRequests < 2 && needsWindow) {
+          const ahead = stationary ? 0 : Math.min(6, Math.max(.35, bufferDelay + .35));
+          // Clamp inside this source's action/loop boundary. A loop wrap can
+          // use the remaining request, but never raises the two-request cap.
+          const windowTarget = Math.min(sourceStart + end - .25, target + ahead);
+          pendingBuffer = { target: windowTarget, at: now(), delay: null, cycle: previewCycle };
+          bufferRequests++; seeks++;
+          requestBuffer(windowTarget);
+          onState('buffer-positioning', { seeks, lead, target: windowTarget, bufferRequests, bufferLead: ahead });
+          return null;
+        }
       }
       return buffered(target, Math.min(.2, Math.max(0, end - time - (stationary ? 0 : lead)))) ? { target, previewTime: time, stationary } : null;
     });
@@ -587,10 +610,10 @@ export async function alignWallHandoff(video, preview, {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v28').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v29').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v28').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v29').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -1241,6 +1264,7 @@ export async function mountHeroWall(root) {
       hd.stream.start().then(started => started && current() && alignWallHandoff(hd.video, preview, {
         signal: hd.abort.signal, sourceStart: sourceStart(units[hd.index]), isCurrent: current,
         requestBuffer: hd.stream.isStreaming ? target => { hd.video.currentTime = target; } : null,
+        bufferLookahead: Math.max(0, (Number(hd.video.dataset.hdLoadedDataAt) - hd.loadStartedAt) / 1000) || 0,
         frameTracker: hd.frames,
         pause: () => { hd.handoffPlaying = false; playback(); },
         start: () => { hd.handoffPlaying = true; playback(); },
@@ -1254,6 +1278,7 @@ export async function mountHeroWall(root) {
             previewPaused: preview.paused, hdPaused: hd.video.paused, seeking: hd.video.seeking, readyState: hd.video.readyState,
             ...(details.seekMs !== undefined ? { seekMs: Number(details.seekMs.toFixed(1)) } : {}),
             ...(details.target !== undefined ? { target: Number(details.target.toFixed(3)) } : {}),
+            ...(details.bufferRequests !== undefined ? { bufferRequests: details.bufferRequests, bufferLead: Number(details.bufferLead.toFixed(3)) } : {}),
             ...(details.frameTime !== undefined ? { frameTime: details.frameTime, frameProof: details.frameProof } : {}) });
           if (trace.length > 32) trace.shift();
           root.dataset.wallHandoffTrace = JSON.stringify(trace);
@@ -1428,7 +1453,7 @@ export async function mountHeroWall(root) {
     }
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
-    const hd = { video, index, transport: focused === index ? 'native' : 'hls', ready: false, preparing: true, aligning: false, loopSeeking: false, playbackReady: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
+    const hd = { video, index, loadStartedAt: performance.now(), transport: focused === index ? 'native' : 'hls', ready: false, preparing: true, aligning: false, loopSeeking: false, playbackReady: false, abort: new AbortController(), promise: null, resume }; preparedHd = hd;
     video.className = 'wall-hd'; video.muted = true; video.defaultMuted = true; video.playsInline = true; video.preload = 'auto';
     video.dataset.clipId = unit.item.id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.setAttribute('aria-hidden', 'true');

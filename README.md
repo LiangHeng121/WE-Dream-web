@@ -6,7 +6,14 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v28 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v29 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 29
+
+- Fix delayed HLS handoff when a moving preview outruns a paused HD buffer. Missing-buffer requests now look ahead using observed first-data latency, with at most two bounded window requests; cached targets retain their fast path.
+- The preview keeps playing continuously. HD still requires the submitted-frame PTS check, the existing 120ms clock tolerance, and cancellation/source-boundary guards before becoming visible.
+- Controlled browser comparison with 3-second latency on every HD request reproduced the old low-quality wait beyond 20 seconds. The reported white-bear and drawer clips completed handoff in about 8.2 seconds with the repair, with about 4ms media-clock difference. These are intentionally adverse test conditions, not public-site latency promises.
+- Fifteen hero/stream suites passed, including an exact old/new delayed-fragment comparison and independent review. Media encoding, cold native transport, wall arrangement, labels and styling remain unchanged.
 
 ## Release 28
 
