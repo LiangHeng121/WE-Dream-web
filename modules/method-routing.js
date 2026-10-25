@@ -49,10 +49,14 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
   text(group, 'sampled per microbatch', 177, 56, 14, { fill: '#8a9aaf' });
 
   const badges = el('g', { 'aria-hidden': 'true' }, group);
-  const badgeA = rounded(badges, 33, 292, 136, 31, { rx: 15.5, fill: `url(#${id}-allow)` });
-  const badgeB = rounded(badges, 185, 292, 136, 31, { rx: 15.5, fill: `url(#${id}-mask)` });
-  text(badges, '50% access', 101, 312, 14);
-  text(badges, '50% masked', 253, 312, 14, { fill: '#8b7c9b' });
+  const badgeY = variant === 'pulse' ? 304 : 292;
+  const badgeA = el('g', { 'data-route-badge': 'access' }, badges);
+  const badgeB = el('g', { 'data-route-badge': 'masked' }, badges);
+  rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: '#c8e1ec', 'fill-opacity': .9, stroke: '#8db4c9', 'stroke-opacity': .8 });
+  rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: '#dfd0ee', 'fill-opacity': .9, stroke: '#b29acb', 'stroke-opacity': .8 });
+  const badgeLabelA = text(badgeA, '50% access', 101, badgeY + 20, 14, { fill: '#41677e' });
+  const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#765c91' });
+  [badgeLabelA, badgeLabelB].forEach(node => { node.style.fontWeight = '600'; });
   let animate = () => {};
 
   if (variant === 'gate') {
@@ -126,9 +130,10 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
     };
     text(group, 'Illustrative samples · not a fixed schedule', 177, 336, 12, { fill: '#96a3b5' });
   } else {
-    const cell = 35, gap = 6, gx = 103, gy = 100;
+    const cell = 35, gap = 6, gx = 103, gy = 112;
     const grid = el('g', { 'data-attention-matrix': 'C,V,A,S' }, group);
-    text(group, 'Keys', 182, 72, 12, { fill: '#96a3b5' });
+    text(group, 'Keys', 182, 84, 12, { fill: '#8196aa' });
+    text(group, 'Queries', 52, 191, 12, { fill: '#8196aa', transform: 'rotate(-90 52 191)', 'dominant-baseline': 'middle' });
     ORDER.forEach((name, i) => {
       const meaning = { C: 'Observed visual context', V: 'Noisy future-video tokens', A: 'Noisy action tokens', S: 'State tokens' }[name];
       const column = text(group, name, gx + i * (cell + gap) + cell / 2, gy - 8, 16, { fill: '#7289a2' });
@@ -147,17 +152,18 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
         slash = el('path', { d: `M${cx + 10} ${cy + 21} L${cx + 21} ${cy + 10}`, stroke: '#b39cc7', 'stroke-width': 1.5, 'stroke-linecap': 'round' }, grid);
       }
     }));
-    text(group, 'Future video → action', 177, 279, 16);
-    text(group, 'C context · V video · A action · S state', 177, 347, 12, { fill: '#8295aa' });
+    text(group, 'Future video → action', 177, 291, 16);
+    text(group, 'C context · V video · A action · S state', 177, 356, 12, { fill: '#8295aa' });
     animate = ({ time, still }) => {
-      const light = still ? .5 : .5 + .5 * Math.cos(time / 4000 * Math.PI * 2);
+      // Hold each sampled route clearly, with a short smooth change between them.
+      const light = still ? .5 : clamp(.5 + 2 * Math.cos(time / 4000 * Math.PI * 2));
       setOpacity(halo, still ? .45 : .08 + light * .82);
       routed.setAttribute('fill-opacity', String(.08 + light * .92));
       routed.setAttribute('stroke-width', String(1 + light * .8));
       routed.setAttribute('data-visible', still ? 'sampled' : light >= .5 ? 'true' : 'false');
       setOpacity(slash, still ? .5 : (1 - light) * .88);
-      setOpacity(badgeA, still ? 1 : .45 + light * .55);
-      setOpacity(badgeB, still ? 1 : 1 - light * .55);
+      setOpacity(badgeA, still ? 1 : .28 + light * .72);
+      setOpacity(badgeB, still ? 1 : 1 - light * .72);
     };
   }
 
