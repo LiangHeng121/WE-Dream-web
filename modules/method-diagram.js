@@ -12,6 +12,16 @@ const NS = 'http://www.w3.org/2000/svg';
 const COLORS = ['#a291c5', '#7eaac3', '#929dc4', '#76ac9e'];
 const ACTION_COLORS = ['#c4ddeb', '#d5c9e7', '#c2ddd0'];
 let instances = 0;
+
+// Schematic world time, not measured latency: H=24 and S=12 match the G1 RTC
+// client. A ready chunk takes over at the current world step (t_new=t_old-S).
+export function sampleRTCExecution(time = 0, delaySteps = 5) {
+  const horizon = 24, stride = 12;
+  const world = 36 + Math.max(0, time) / 150;
+  const launched = Math.floor(world / stride);
+  const active = world >= launched * stride + delaySteps ? launched : launched - 1;
+  return { world, launched, active, activeStep: world - active * stride, horizon, stride, delaySteps };
+}
 function element(tag, attributes, parent) {
   const node = document.createElementNS(NS, tag);
   Object.entries(attributes || {}).forEach(([key, value]) => node.setAttribute(key, value));
@@ -231,8 +241,8 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     wire(g, `M${center} ${observationY + (mobile ? 62 : 44)} V${policyY - 3}`, 3, { id: 'context-to-policy' });
     const chunkY = mobile ? 2340 : 296;
     wire(g, `M${center} ${policyY + (mobile ? 78 : 64)} V${chunkY - (mobile ? 27 : 24)}`, 3, { id: 'policy-to-chunk' });
-    const chunk = element('g', { 'data-node': 'chunk', 'data-actions': '24', 'data-replan-stride': '12', role: 'img', 'aria-label': 'Real-time chunking: execute the current 24-action chunk while predicting the next. Replan every 12 actions, with soft guidance on the overlapping actions.' }, g);
-    element('title', {}, chunk).textContent = 'RTC overlaps prediction and execution. Each chunk contains 24 actions; replanning starts every 12 actions, with soft guidance on the overlap.';
+    const chunk = element('g', { 'data-node': 'chunk', 'data-actions': '24', 'data-replan-stride': '12', role: 'img', 'aria-label': 'Real-time chunking: 24-action prediction windows advance by 12 actions and overlap by 50%. Execution continues while a new chunk is predicted; the ready chunk takes over at the current time, without restarting. Animation timing is illustrative.' }, g);
+    element('title', {}, chunk).textContent = '24-action windows, 12-action stride, 50% prediction overlap. The line marks the current execution time; rows alternate as ready chunks take over. Guidance decays across the overlap. Inference delay is illustrative, not measured.';
     label(chunk, 'RTC · 24-action chunks', center, chunkY, { class: 'wd-vector-title', 'text-anchor': 'middle' });
     const chunkWidth = mobile ? 438 : 330;
     const pitch = chunkWidth / 36, cellW = pitch - (mobile ? 3 : 2);
@@ -240,19 +250,27 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     const rowY = [chunkY + (mobile ? 20 : 15), chunkY + (mobile ? 48 : 37)];
     const componentH = mobile ? 5 : 3.8, componentGap = mobile ? 1.4 : 1.1;
     const rowH = componentH * 3 + componentGap * 2;
-    const overlap = element('rect', { x: startX + pitch * 12 - 3, y: rowY[0] - 4, width: pitch * 12 + 4, height: rowY[1] - rowY[0] + rowH + 8, rx: 8, fill: '#c6ded4', 'fill-opacity': .16, 'data-rtc-overlap': 'true' }, chunk);
-    const rows = [[], []];
-    rows.forEach((cells, row) => {
-      const strip = element('g', { 'data-rtc-row': row === 0 ? 'executing' : 'predicting' }, chunk);
+    const localDefs = element('defs', {}, chunk);
+    const clip = element('clipPath', { id: `${prefix}-rtc-clip` }, localDefs);
+    element('rect', { x: startX, y: rowY[0] - 5, width: chunkWidth, height: rowY[1] - rowY[0] + rowH + 10, rx: 4 }, clip);
+    const window = element('g', { 'clip-path': `url(#${prefix}-rtc-clip)` }, chunk);
+    const overlap = element('rect', { x: startX, y: rowY[0] - 4, width: pitch * 12, height: rowY[1] - rowY[0] + rowH + 8, rx: 6, fill: '#c6ded4', 'fill-opacity': .2, 'data-rtc-overlap': 'true' }, window);
+    // Recycle offscreen horizons, not the execution clock. Rows alternate so the
+    // next prediction's prefix aligns exactly with the previous window's tail.
+    const strips = Array.from({ length: 4 }, () => {
+      const strip = element('g', { 'data-rtc-window': '' }, window);
+      const cells = [];
       for (let i = 0; i < 24; i++) {
         const cell = element('g', { 'data-action-step': i + 1 }, strip);
-        const cx = startX + (i + row * 12) * pitch;
-        element('rect', { x: cx, y: rowY[row], width: cellW, height: rowH, rx: 2.5, fill: row === 0 ? '#b9d4c7' : '#9dbfad', 'fill-opacity': .92, stroke: '#ffffff', 'stroke-opacity': .65, 'stroke-width': .6 }, cell);
+        element('rect', { x: i * pitch, y: 0, width: cellW, height: rowH, rx: 2.5, fill: '#a7c9b9', 'fill-opacity': .95, stroke: '#ffffff', 'stroke-opacity': .7, 'stroke-width': .6 }, cell);
         cells.push(cell);
       }
+      return { strip, cells };
     });
-    const playhead = element('path', { d: `M${startX} ${rowY[0] - 3} V${rowY[1] + rowH + 3}`, stroke: '#75a894', 'stroke-width': 1.4, 'stroke-linecap': 'round', opacity: .8, 'data-rtc-playhead': 'true' }, chunk);
-    rtc = { rows, playhead, overlap, travel: pitch * 24 };
+    const cursorX = startX + pitch * 12;
+    element('path', { d: `M${cursorX} ${rowY[0] - 4} V${rowY[1] + rowH + 4}`, stroke: '#75a894', 'stroke-width': 1.4, 'stroke-linecap': 'round', opacity: .65, 'data-rtc-playhead': 'true' }, chunk);
+    const dot = element('circle', { cx: cursorX, cy: rowY[0] + rowH / 2, r: mobile ? 4.5 : 3.3, fill: '#6c9e8b', stroke: '#ffffff', 'stroke-width': 1.3, 'data-rtc-executing': 'true' }, chunk);
+    rtc = { chunk, strips, overlap, dot, startX, pitch, rowY, rowH };
     const vectorY = mobile ? 2440 : 371;
     actionVector(g, 'deployment-action', x, vectorY, width, mobile ? 72 : 58);
     wire(g, `M${center} ${rowY[1] + rowH + 5} V${vectorY - 5}`, 3, { id: 'chunk-to-vector' });
@@ -330,14 +348,35 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     frozenMark?.render({ time, still: still || (focus !== null && focus !== 0) });
     if (rtc) {
       const moving = !still && (focus === null || focus === 3);
-      const progress = moving ? ((time % 4000) + 4000) % 4000 / 4000 : .72;
-      const predicted = Math.min(1, Math.max(0, (progress - .5) / .32));
-      // An illustrative slow cycle: execution continues while the next chunk appears.
-      rtc.rows[0].forEach((cell, i) => { cell.style.opacity = moving && i < progress * 24 ? '.36' : '1'; });
-      rtc.rows[1].forEach(cell => { cell.style.opacity = !moving ? '.9' : String(.18 + .82 * predicted); });
-      rtc.playhead.setAttribute('transform', `translate(${progress * rtc.travel} 0)`);
-      rtc.playhead.setAttribute('opacity', moving ? '.8' : '.45');
-      rtc.overlap.setAttribute('fill-opacity', moving && progress >= .5 ? '.24' : '.12');
+      const frame = sampleRTCExecution(moving ? time : 1200);
+      const { world, launched, active, stride, delaySteps } = frame;
+      const viewportStart = world - stride;
+      rtc.chunk.setAttribute('data-active-window', active);
+      rtc.chunk.setAttribute('data-active-step', frame.activeStep.toFixed(3));
+      rtc.chunk.setAttribute('data-world-step', world.toFixed(3));
+      rtc.strips.forEach(({ strip, cells }, j) => {
+        const index = launched - 2 + j, start = index * stride, age = world - start;
+        const row = index % 2;
+        const ready = Math.min(1, Math.max(0, age / delaySteps));
+        strip.setAttribute('data-rtc-window', index);
+        strip.setAttribute('data-world-start', start);
+        strip.setAttribute('data-rtc-row', row);
+        strip.setAttribute('data-state', index === active ? 'executing' : age < delaySteps ? 'predicting' : 'superseded');
+        strip.setAttribute('transform', `translate(${rtc.startX + (start - viewportStart) * rtc.pitch} ${rtc.rowY[row]})`);
+        strip.setAttribute('opacity', age < 0 ? '0' : String(.2 + .8 * ready));
+        cells.forEach((cell, i) => {
+          const step = start + i;
+          const executed = step >= start + delaySteps && step < start + stride + delaySteps && step < world;
+          // Superseded tail and latency-prefix were not executed from this chunk.
+          cell.style.opacity = executed ? '.42' : index < active || step < world ? '.19' : '1';
+        });
+      });
+      const readyAt = active * stride + delaySteps;
+      const transfer = Math.min(1, Math.max(0, (world - readyAt) / 1.2));
+      const eased = transfer * transfer * (3 - 2 * transfer);
+      const previousRow = (active - 1) % 2, nextRow = active % 2;
+      rtc.dot.setAttribute('cy', rtc.rowY[previousRow] + (rtc.rowY[nextRow] - rtc.rowY[previousRow]) * eased + rtc.rowH / 2);
+      rtc.overlap.setAttribute('x', rtc.startX + (launched * stride - viewportStart) * rtc.pitch);
     }
   }
   function resize() {

@@ -38,6 +38,7 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
     allow: ['#e4f1f6', '#dce9f1', '#e8e7f7'],
     route: ['#dcecf5', '#e7dbf4', '#f4e4ed'],
     critical: ['#e5ddf5', '#cbb7e3', '#f0daeb'],
+    muted: ['#ddeaf2', '#bed0df', '#e2e8f2'],
     mask: ['#f8f8fd', '#eceaf5', '#f6eff7'],
   };
   Object.entries(gradients).forEach(([name, colors]) => {
@@ -52,10 +53,10 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
   const badgeY = variant === 'pulse' ? 304 : 292;
   const badgeA = el('g', { 'data-route-badge': 'access' }, badges);
   const badgeB = el('g', { 'data-route-badge': 'masked' }, badges);
-  rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-critical)`, 'fill-opacity': .95, stroke: '#b397ce', 'stroke-opacity': .8 });
-  rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: '#edf2f6', 'fill-opacity': .95, stroke: '#b4c2d0', 'stroke-opacity': .8 });
+  const badgeSurfaceA = rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-critical)`, 'fill-opacity': .95, stroke: '#b397ce', 'stroke-opacity': .8 });
+  const badgeSurfaceB = rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-muted)`, 'fill-opacity': .95, stroke: '#94afc4', 'stroke-opacity': .8 });
   const badgeLabelA = text(badgeA, '50% access', 101, badgeY + 20, 14, { fill: '#765c91' });
-  const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#6f8295' });
+  const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#5e768b' });
   [badgeLabelA, badgeLabelB].forEach(node => { node.style.fontWeight = '600'; });
   let animate = () => {};
 
@@ -163,8 +164,15 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
       routed.setAttribute('stroke', light >= .5 ? '#b397ce' : '#b4c2d0');
       routed.setAttribute('data-visible', still ? 'sampled' : light >= .5 ? 'true' : 'false');
       setOpacity(slash, still ? .5 : (1 - light) * .88);
-      setOpacity(badgeA, still ? 1 : .28 + light * .72);
-      setOpacity(badgeB, still ? 1 : 1 - light * .72);
+      // Both labels stay readable; only the glass surfaces indicate the active route.
+      [badgeSurfaceA, badgeSurfaceB].forEach((surface, i) => {
+        const emphasis = still ? 1 : i === 0 ? light : 1 - light;
+        surface.setAttribute('fill-opacity', String(.32 + emphasis * .63));
+        surface.setAttribute('stroke-opacity', String(.35 + emphasis * .55));
+        surface.setAttribute('stroke-width', String(.8 + emphasis * .6));
+      });
+      badgeA.setAttribute('data-active', still ? 'sampled' : String(light >= .5));
+      badgeB.setAttribute('data-active', still ? 'sampled' : String(light < .5));
     };
   }
 
