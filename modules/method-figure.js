@@ -1,3 +1,5 @@
+import { videoFullyBuffered } from './video-warm.js?v=17.1';
+
 // Original Figure 2 regions are the visual source of truth. These overlays
 // highlight existing modules, rather than replacing the architecture.
 const FIGURES = {
@@ -38,6 +40,60 @@ const STAGES = [
   { key: 'routing', number: '02', label: 'Routed attention' },
   { key: 'control', number: '03', label: 'Action-only deployment' },
 ];
+
+// Keep the one deployment film's existing playback policy while releasing
+// incomplete network requests when the film leaves the viewport. Restoration
+// waits for metadata and the saved seek before it may resume playback.
+export function createMethodVideoController(video, { mayPlay, shouldSuspend, signal } = {}) {
+  let saved = null, restoring = false, disposed = false;
+  function suspend() {
+    if (!video.getAttribute('src') || videoFullyBuffered(video)) return;
+    if (!saved) saved = { time: Number.isFinite(video.currentTime) ? video.currentTime : 0, rate: video.playbackRate || 1 };
+    restoring = false;
+    video.pause(); video.removeAttribute('src'); video.preload = 'none'; video.load();
+  }
+  function sync() {
+    if (disposed) return;
+    if (!mayPlay()) {
+      video.pause();
+      if (shouldSuspend()) suspend();
+      return;
+    }
+    if (!video.getAttribute('src')) {
+      video.preload = 'auto'; video.src = video.dataset.src; video.load();
+    }
+    if (saved) {
+      if (video.readyState < 1) return;
+      const end = Number.isFinite(video.duration) ? Math.max(0, video.duration - .05) : saved.time;
+      const target = Math.min(saved.time, end);
+      if (!restoring) {
+        restoring = true; video.playbackRate = saved.rate;
+        if (Math.abs(video.currentTime - target) > .05) {
+          try { video.currentTime = target; } catch { restoring = false; return; }
+        }
+      }
+      if (video.seeking || video.readyState < 2 || Math.abs(video.currentTime - target) > .1) return;
+      saved = null; restoring = false;
+    }
+    if (!video.paused) return;
+    video.play().then(() => { if (disposed || !mayPlay()) video.pause(); }).catch(() => {});
+  }
+  function destroy() {
+    if (disposed) return;
+    disposed = true; saved = null;
+    video.pause();
+    if (video.getAttribute('src')) { video.removeAttribute('src'); video.load(); }
+    for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'seeked']) video.removeEventListener(event, sync);
+    video.removeEventListener('play', guard);
+    signal?.removeEventListener('abort', destroy);
+  }
+  const guard = () => { if (disposed || !mayPlay()) video.pause(); };
+  for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'seeked']) video.addEventListener(event, sync);
+  video.addEventListener('play', guard);
+  signal?.addEventListener('abort', destroy, { once: true });
+  if (signal?.aborted) destroy();
+  return { sync, destroy };
+}
 
 export function mountMethodFigure(root) {
   if (!root) return;
@@ -80,7 +136,7 @@ export function mountMethodFigure(root) {
     <div class="mf-footnote"><a href="assets/paper.pdf#page=3" target="_blank" rel="noopener">Figure 2 · Sections III-C–F ↗</a></div>
     <dialog class="mf-dialog" aria-label="Original WE-Dream architecture"><form method="dialog"><p>WE-Dream · Figure 2</p><button type="submit" aria-label="Close original figure">Close ×</button></form><div class="mf-dialog-image"><img src="${FIGURES.overview}" width="4108" height="1572" alt="Original full-resolution WE-Dream architecture from Figure 2."></div><p>Training uses mixed routing. The deployed policy uses action-only inference with real-time chunking.</p></dialog>`;
   const scene = root.querySelector('.mf-scene'), board = root.querySelector('.mf-board');
-  const videos = [...root.querySelectorAll('video')], dialog = root.querySelector('dialog');
+  const videos = [...root.querySelectorAll('.mf-execution video')], dialog = root.querySelector('dialog');
   const motionButton = root.querySelector('.mf-motion');
   const on = (target, event, callback) => target.addEventListener(event, callback, { signal });
   function videoVisible(video) {
@@ -90,17 +146,13 @@ export function mountMethodFigure(root) {
     return rect.width > 0 && rect.height > 0 && width * height >= rect.width * rect.height * .25;
   }
   function mayPlay(video) { return !destroyed && inView && !paused && !document.hidden && !dialog.open && video.isConnected && videoVisible(video); }
+  const videoControllers=videos.map(video=>createMethodVideoController(video,{mayPlay:()=>mayPlay(video),shouldSuspend:()=>document.hidden||!inView||!videoVisible(video),signal}));
   function syncMotion() {
     if (destroyed) return;
     scene.classList.toggle('is-paused', !inView || paused || document.hidden || dialog.open);
     motionButton.textContent = paused ? 'Play motion' : 'Pause motion';
     motionButton.setAttribute('aria-pressed', String(!paused));
-    videos.forEach(video => {
-      if (!mayPlay(video)) { video.pause(); return; }
-      if (!video.getAttribute('src')) { video.src = video.dataset.src; video.load(); }
-      if (!video.paused) return;
-      video.play().then(() => { if (!mayPlay(video)) video.pause(); }).catch(() => {});
-    });
+    videoControllers.forEach(controller=>controller.sync());
   }
   function selectPart(key, animate = true) {
     if (!DETAILS[key] || destroyed) return;
@@ -146,7 +198,6 @@ export function mountMethodFigure(root) {
   let scrollFrame = 0;
   on(board, 'scroll', () => { if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; syncMotion(); }); });
   on(window, 'resize', syncMotion);
-  videos.forEach(video => on(video, 'play', () => { if (!mayPlay(video)) video.pause(); }));
   on(motionButton, 'click', () => { paused = !paused; syncMotion(); });
   on(root.querySelector('.mf-expand'), 'click', () => { dialog.showModal(); syncMotion(); });
   on(dialog, 'close', syncMotion); on(dialog, 'click', event => { if (event.target === dialog) dialog.close(); });
@@ -162,5 +213,5 @@ export function mountMethodFigure(root) {
     observer.observe(scene); videos.forEach(video => observer.observe(video));
   } else inView = true;
   selectPart('routing', false); syncMotion();
-  return { selectStage: selectPart, destroy() { destroyed = true; abort.abort(); observer?.disconnect(); cancelAnimationFrame(scrollFrame); videos.forEach(video => { video.pause(); video.removeAttribute('src'); video.load(); }); if (dialog.open) dialog.close(); root.replaceChildren(); root.classList.remove('method-explorer'); } };
+  return { selectStage: selectPart, destroy() { destroyed = true; abort.abort(); observer?.disconnect(); cancelAnimationFrame(scrollFrame); videoControllers.forEach(controller=>controller.destroy()); if (dialog.open) dialog.close(); root.replaceChildren(); root.classList.remove('method-explorer'); } };
 }

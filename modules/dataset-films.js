@@ -1,6 +1,6 @@
 /* Independent SVG duration explorer, inspired by WB-WAM's linked corpus donut.
  * Source, calculation and media provenance: docs/website-research/DATASET_REBUILD_SOURCES.md. */
-import { seekVideo } from './video-seek.js?v=17';
+import { seekVideo } from './video-seek.js?v=17.1';
 const instances = new WeakMap();
 let serial = 0;
 const ns = 'http://www.w3.org/2000/svg';
@@ -25,6 +25,44 @@ function segment(start, end) {
   return `M${point(138, start)} A138,138 0 ${large} 1 ${point(138, end)} L${point(98, end)} A98,98 0 ${large} 0 ${point(98, start)} Z`;
 }
 
+export function datasetVideoFullyBuffered(video) {
+  if (!Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 2) return false;
+  let end = 0;
+  for (let i = 0; i < video.buffered.length; i++) {
+    if (video.buffered.start(i) > end + .05) return false;
+    end = Math.max(end, video.buffered.end(i));
+  }
+  return end >= video.duration - .05;
+}
+
+// Restoration uses the native buffered/range pipeline; it must not start a
+// complete-file Blob fetch that keeps running after this section is hidden.
+export async function restoreDatasetVideo(video, saved, { signal, timeout = 12000 } = {}) {
+  const wait = predicate => {
+    if (signal?.aborted || video.error) return Promise.resolve(false);
+    if (predicate()) return Promise.resolve(true);
+    return new Promise(resolve => {
+      let timer;
+      const finish = value => {
+        clearTimeout(timer);
+        for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'seeked']) video.removeEventListener(event, check);
+        video.removeEventListener('error', failed); signal?.removeEventListener('abort', failed);
+        resolve(value);
+      };
+      const check = () => { if (predicate()) finish(true); };
+      const failed = () => finish(false);
+      for (const event of ['loadedmetadata', 'loadeddata', 'canplay', 'seeked']) video.addEventListener(event, check);
+      video.addEventListener('error', failed); signal?.addEventListener('abort', failed, { once: true });
+      timer = setTimeout(failed, timeout); check();
+    });
+  };
+  if (!await wait(() => video.readyState >= 1) || signal?.aborted || !video.getAttribute('src')) return false;
+  video.playbackRate = saved.rate;
+  const target = Math.max(0, Math.min(saved.time, Math.max(0, video.duration - .05)));
+  if (Math.abs(video.currentTime - target) > .05) video.currentTime = target;
+  return wait(() => video.readyState >= 2 && !video.seeking);
+}
+
 export async function mountDatasetFilms(root) {
   if (!root) return null;
   instances.get(root)?.destroy();
@@ -33,12 +71,14 @@ export async function mountDatasetFilms(root) {
     if (!response.ok) throw new Error('Dataset information could not be loaded.');
     return response.json();
   };
-  const [media, distribution] = await Promise.all([read('data/dataset-media.json?v=17'), read('data/dataset-distribution.json?v=17')]);
+  const [media, distribution] = await Promise.all([read('data/dataset-media.json?v=17.1'), read('data/dataset-distribution.json?v=17.1')]);
   const prefix = `dataset-explorer-${++serial}`, abort = new AbortController();
   const on = (node, type, handler, signal = abort.signal) => node.addEventListener(type, handler, { signal });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let mode = 'pretraining', scale = '10k', sourceId = 'egodex', selected = 'egodex', destroyed = false;
   let allPaused = reduced.matches, tiles = [], graphItems = [], graphTotal = 0;
+  const inViewport = () => { const box = root.getBoundingClientRect(); return box.height > 0 && box.width > 0 && box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth; };
+  let sectionVisible = inViewport();
   let loadQueue = [];
   const loadingTiles = new Set();
   root.classList.add('dataset-films');
@@ -57,7 +97,7 @@ export async function mountDatasetFilms(root) {
   const $ = selector => root.querySelector(selector);
   const sourceURL = (clip, source) => clip.source_page_url || source.source_url || clip.source_url;
   const liveTiles = () => tiles.filter(tile => !tile.abort.signal.aborted);
-  const wantsPlayback = tile => !destroyed && !tile.abort.signal.aborted && tile.visible && !allPaused && !tile.paused && !document.hidden && !tile.seeking;
+  const wantsPlayback = tile => !destroyed && !tile.abort.signal.aborted && sectionVisible && tile.visible && !allPaused && !tile.paused && !document.hidden && !tile.seeking && !tile.restoring;
   function safePlay(tile) {
     if (wantsPlayback(tile) && tile.video.readyState >= 2) {
       tile.video.play().then(() => {
@@ -149,7 +189,7 @@ export async function mountDatasetFilms(root) {
     tile.queued = true; loadQueue.push(tile); pumpLoads();
   }
   function pumpLoads() {
-    if (destroyed || document.hidden) return;
+    if (destroyed || document.hidden || !sectionVisible || !inViewport()) return;
     loadQueue = loadQueue.filter(tile => !tile.abort.signal.aborted);
     loadQueue.sort((a, b) => Number(b.visible) - Number(a.visible));
     while (loadingTiles.size < 3 && loadQueue.length) {
@@ -157,21 +197,62 @@ export async function mountDatasetFilms(root) {
       if (next < 0) break;
       const [tile] = loadQueue.splice(next, 1); tile.queued = false;
       tile.loaded = true; tile.loading.hidden = false; loadingTiles.add(tile);
-      loadObserver.unobserve(tile.stage);
+      const request = { abort: new AbortController(), finishing: false }; tile.loadRequest = request;
+      tile.restoring = Boolean(tile.resume);
+      on(tile.video, 'loadeddata', () => finishTileLoad(tile, request), request.abort.signal);
+      on(tile.video, 'error', () => failTile(tile, request), request.abort.signal);
       tile.video.preload = 'auto';
       tile.video.src = tile.clip.preview?.src || tile.clip.src; tile.video.load();
-      tile.timer = setTimeout(() => failTile(tile), 30000);
+      tile.timer = setTimeout(() => failTile(tile, request), 30000);
     }
+  }
+  async function finishTileLoad(tile, request) {
+    if (request !== tile.loadRequest || request.abort.signal.aborted || request.finishing || tile.video.readyState < 2) return;
+    request.finishing = true;
+    const saved = tile.resume;
+    if (saved) {
+      const restored = await restoreDatasetVideo(tile.video, saved, { signal: request.abort.signal });
+      if (request !== tile.loadRequest || request.abort.signal.aborted) return;
+      if (restored && tile.resume === saved) tile.resume = null;
+    }
+    tile.restoring = false;
+    releaseLoad(tile); tile.loading.hidden = true; tile.error.hidden = true; tile.seek.disabled = false; safePlay(tile);
   }
   function releaseLoad(tile) {
     clearTimeout(tile.timer);
     if (loadingTiles.delete(tile)) pumpLoads();
   }
-  function failTile(tile) {
-    if (tile.abort.signal.aborted) return;
+  function failTile(tile, request) {
+    if (tile.abort.signal.aborted || request !== tile.loadRequest || request.abort.signal.aborted) return;
+    tile.restoring = false;
     releaseLoad(tile); tile.loading.hidden = true; tile.error.hidden = false;
     updatePlayback(tile);
   }
+  function suspendTile(tile) {
+    tile.video.pause();
+    tile.seekNumber += 1; tile.seekAbort?.abort(); tile.seeking = false;
+    if (datasetVideoFullyBuffered(tile.video)) return;
+    if (tile.video.getAttribute('src')) tile.resume ||= { time: Number.isFinite(tile.video.currentTime) ? tile.video.currentTime : 0, rate: tile.video.playbackRate || 1 };
+    tile.loadRequest?.abort.abort(); tile.loadRequest = null;
+    clearTimeout(tile.timer); loadingTiles.delete(tile);
+    tile.loaded = false; tile.queued = false; tile.restoring = false;
+    tile.loading.hidden = true; tile.seek.disabled = true;
+    if (tile.video.getAttribute('src')) { tile.video.removeAttribute('src'); tile.video.preload = 'none'; tile.video.load(); }
+  }
+  function syncVisibility() {
+    sectionVisible = inViewport();
+    const active = sectionVisible && !document.hidden;
+    root.dataset.mediaNetworkState = active ? 'visible' : 'suspended';
+    if (!active) {
+      loadQueue = [];
+      liveTiles().forEach(suspendTile);
+    } else {
+      liveTiles().forEach(tile => { loadTile(tile); safePlay(tile); });
+      pumpLoads();
+    }
+  }
+  const sectionObserver = new IntersectionObserver(syncVisibility, { threshold: 0 });
+  sectionObserver.observe(root);
   const loadObserver = new IntersectionObserver(entries => entries.forEach(entry => {
     const tile = tiles.find(item => item.stage === entry.target);
     if (!tile) return;
@@ -186,7 +267,7 @@ export async function mountDatasetFilms(root) {
   function clearTiles() {
     loadObserver.disconnect(); playObserver.disconnect();
     loadQueue = []; loadingTiles.clear();
-    tiles.forEach(tile => { tile.abort.abort(); clearTimeout(tile.timer); tile.video.pause(); tile.video.removeAttribute('src'); tile.video.load(); });
+    tiles.forEach(tile => { tile.abort.abort(); tile.loadRequest?.abort.abort(); tile.seekAbort?.abort(); clearTimeout(tile.timer); tile.video.pause(); tile.video.removeAttribute('src'); tile.video.load(); });
     tiles = []; $('.df-grid').replaceChildren();
   }
   function createTile(id, source, clip, title, color) {
@@ -205,8 +286,6 @@ export async function mountDatasetFilms(root) {
     if (clip.preview?.poster || clip.poster) tile.video.poster = clip.preview?.poster || clip.poster;
     tile.seek.setAttribute('aria-label', `Seek ${title}`); tile.error.querySelector('a').href = sourceURL(clip, source);
     const fullscreen = card.querySelector('.df-fullscreen'); fullscreen.setAttribute('aria-label', `Show ${title} fullscreen`);
-    on(tile.video, 'loadeddata', () => { releaseLoad(tile); tile.loading.hidden = true; tile.error.hidden = true; tile.seek.disabled = false; safePlay(tile); }, tile.abort.signal);
-    on(tile.video, 'error', () => failTile(tile), tile.abort.signal);
     on(tile.video, 'play', () => updatePlayback(tile), tile.abort.signal);
     on(tile.video, 'playing', () => {
       if (!wantsPlayback(tile)) tile.video.pause();
@@ -230,7 +309,8 @@ export async function mountDatasetFilms(root) {
     on(tile.seek, 'input', async () => {
       if (!Number.isFinite(tile.video.duration)) return;
       const ticket = ++tile.seekNumber; tile.seeking = true;
-      const ok = await seekVideo(tile.video, Number(tile.seek.value) / 1000 * tile.video.duration, { signal: tile.abort.signal });
+      tile.seekAbort?.abort(); tile.seekAbort = new AbortController();
+      const ok = await seekVideo(tile.video, Number(tile.seek.value) / 1000 * tile.video.duration, { signal: tile.seekAbort.signal });
       if (ticket !== tile.seekNumber || tile.abort.signal.aborted) return;
       tile.seeking = false;
       if (!ok) $('.df-announcement').textContent = `Seeking ${title} is unavailable. Open the original source in Sources & details.`;
@@ -342,12 +422,9 @@ export async function mountDatasetFilms(root) {
   on(root, 'pointerout', event => { if (event.target.closest('[data-composition-id]') && !event.relatedTarget?.closest?.('[data-composition-id]')) highlight(selected); });
   on(root, 'focusin', event => { const node = event.target.closest('[data-composition-id]'); if (node) highlight(node.dataset.compositionId); });
   on(root, 'focusout', event => { if (event.target.closest('[data-composition-id]')) highlight(selected); });
-  on(document, 'visibilitychange', () => {
-    liveTiles().forEach(tile => { if (document.hidden) tile.video.pause(); else safePlay(tile); });
-    if (!document.hidden) pumpLoads();
-  });
+  on(document, 'visibilitychange', syncVisibility);
   on(reduced, 'change', () => { if (reduced.matches) { allPaused = true; liveTiles().forEach(tile => tile.video.pause()); updateGlobalControl(); } });
   renderMode();
-  const controller = { destroy() { destroyed = true; abort.abort(); clearTiles(); root.replaceChildren(); instances.delete(root); } };
+  const controller = { destroy() { destroyed = true; abort.abort(); sectionObserver.disconnect(); clearTiles(); root.replaceChildren(); instances.delete(root); } };
   instances.set(root, controller); return controller;
 }

@@ -10,5 +10,7 @@
   "full_media_bytes": 358158333,
   "wall_demonstrations": 40,
   "wall_columns": 8,
-  "wall_rows": 5
+  "wall_rows": 5,
+  "patch": 1,
+  "document_cache_version": "17.1"
 }

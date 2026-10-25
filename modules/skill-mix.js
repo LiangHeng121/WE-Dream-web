@@ -1,5 +1,7 @@
 // Loose overlapping cards show the reviewed skill excerpts. Full task demos
 // stay in the main gallery; every card retains its original skill provenance.
+import { videoFullyBuffered } from './video-warm.js?v=17.1';
+
 let skillMixSerial = 0;
 const clock = seconds => `${Math.floor((seconds || 0) / 60)}:${String(Math.floor((seconds || 0) % 60)).padStart(2, '0')}`;
 
@@ -28,6 +30,44 @@ export function createSkillPlayback(video, wanted, changed = () => {}) {
   for (const event of ['pause', 'waiting', 'error']) video.addEventListener(event, changed, { signal });
   for (const event of ['loadeddata', 'canplay']) video.addEventListener(event, sync, { signal });
   return { sync, destroy() { destroyed = true; abort.abort(); video.pause(); } };
+}
+
+// Visibility owns network suspension separately from play/pause or hover intent.
+// A partially downloaded offscreen excerpt should not compete with the main demo.
+export function createSkillMediaVisibility(video, source) {
+  const abort = new AbortController(), { signal } = abort;
+  let resumeAt = 0, resumeRate = 1, restorePending = false;
+  function restore() {
+    if (signal.aborted || !restorePending || !video.getAttribute('src') || video.readyState < 1) return;
+    try {
+      video.currentTime = Number.isFinite(video.duration) ? Math.min(resumeAt, video.duration) : resumeAt;
+      video.playbackRate = resumeRate;
+      restorePending = false;
+    } catch { /* Retry when decoded data makes the saved position seekable. */ }
+  }
+  video.addEventListener('loadedmetadata', restore, { signal });
+  video.addEventListener('loadeddata', restore, { signal });
+  return {
+    sync(onScreen, selected) {
+      if (signal.aborted) return;
+      if (!onScreen) {
+        video.pause();
+        if (!video.getAttribute('src') || videoFullyBuffered(video)) return;
+        // Repeated leave/enter before metadata arrives must not overwrite the
+        // saved position with load()'s temporary zero time or default rate.
+        if (!restorePending) {
+          resumeAt = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+          resumeRate = video.playbackRate;
+        }
+        restorePending = true;
+        video.preload = 'none'; video.removeAttribute('src'); video.load();
+      } else if (selected && !video.getAttribute('src')) {
+        video.preload = 'metadata'; video.src = source;
+        restore();
+      }
+    },
+    destroy() { abort.abort(); }
+  };
 }
 
 export function createSkillMix(root, chapter, media) {
@@ -71,7 +111,8 @@ export function createSkillMix(root, chapter, media) {
     const largeVideo = video.cloneNode(false), largePlay = largeCard.querySelector('.skill-play');
     largeVideo.muted = true; largeVideo.defaultMuted = true; largeVideo.preload = 'none'; largeVideo.setAttribute('aria-label', `Enlarged skill excerpt: ${label}`);
     largeCard.querySelector('.skill-large-frame').prepend(largeVideo); floating.append(largeCard);
-    const record = { skill, excerpt, label, source, card, frame, video, button, play, largeCard, largeVideo, largePlay, controller: null, largeController: null };
+    const mediaVisibility = createSkillMediaVisibility(video, excerpt.src), largeMediaVisibility = createSkillMediaVisibility(largeVideo, excerpt.src);
+    const record = { skill, excerpt, label, source, card, frame, video, button, play, largeCard, largeVideo, largePlay, mediaVisibility, largeMediaVisibility, controller: null, largeController: null };
     record.controller = createSkillPlayback(video, () => wanted(index), () => { if (!signal.aborted && active === index) updateControls(); });
     record.largeController = createSkillPlayback(largeVideo, () => wantedLarge(index), () => { if (!signal.aborted && active === index) updateControls(); });
     card.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse' && floatingMode.matches) select(index); }, { signal });
@@ -101,12 +142,11 @@ export function createSkillMix(root, chapter, media) {
   function update() {
     if (signal.aborted) return;
     const showLarge = enlarged(); floating.hidden = !showLarge;
-    records.forEach(({ video, largeVideo, largeCard, excerpt, controller, largeController }, index) => {
+    records.forEach(({ largeCard, controller, largeController, mediaVisibility, largeMediaVisibility }, index) => {
       largeCard.hidden = !(showLarge && index === active);
-      if (index === active && visible) {
-        const target = showLarge ? largeVideo : video;
-        if (!target.getAttribute('src')) { target.preload = 'metadata'; target.src = excerpt.src; }
-      }
+      const onScreen = visible && !document.hidden;
+      mediaVisibility.sync(onScreen, index === active && !showLarge);
+      largeMediaVisibility.sync(onScreen, index === active && showLarge);
       controller.sync(); largeController.sync();
     });
     if (showLarge) positionFloating();
@@ -206,5 +246,5 @@ export function createSkillMix(root, chapter, media) {
   // Start scattered; mouse hover, keyboard, or touch can open a clear preview.
   // Original hit areas never move when the desktop floating preview opens.
   visible = inViewport(); select(active, false, false);
-  return { destroy() { abort.abort(); cancelAnimationFrame(layoutFrame); revealAnimation?.cancel(); observer.disconnect(); records.forEach(({ video, controller, largeVideo, largeController }) => { controller.destroy(); largeController.destroy(); for (const media of [video, largeVideo]) { media.removeAttribute('src'); media.load(); } }); root.replaceChildren(); root.classList.remove('skill-mix'); root.style.removeProperty('--skill-count'); } };
+  return { destroy() { abort.abort(); cancelAnimationFrame(layoutFrame); revealAnimation?.cancel(); observer.disconnect(); records.forEach(({ video, controller, largeVideo, largeController, mediaVisibility, largeMediaVisibility }) => { mediaVisibility.destroy(); largeMediaVisibility.destroy(); controller.destroy(); largeController.destroy(); for (const media of [video, largeVideo]) { media.removeAttribute('src'); media.load(); } }); root.replaceChildren(); root.classList.remove('skill-mix'); root.style.removeProperty('--skill-count'); } };
 }

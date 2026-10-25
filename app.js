@@ -1,13 +1,13 @@
-import { mountHeroWall } from './modules/hero-wall.js?v=17';
-import { createDemoDeck } from './modules/demo-deck.js?v=17';
-import { createStagePlayer } from './modules/stage-player.js?v=17';
-import { createSkillMix } from './modules/skill-mix.js?v=17';
-import { seekVideo } from './modules/video-seek.js?v=17';
-import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, monitorVideoPlayback } from './modules/video-warm.js?v=17';
-import { mountScrollReveal } from './modules/scroll-reveal.js?v=17';
-const mountMethodFigure = root => import('./modules/method-figure.js?v=17').then(m=>m.mountMethodFigure(root));
-const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17').then(m=>m.mountDatasetFilms(root));
-const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17').then(m=>m.mountResultsExplorer(root));
+import { mountHeroWall } from './modules/hero-wall.js?v=17.1';
+import { createDemoDeck } from './modules/demo-deck.js?v=17.1';
+import { createStagePlayer } from './modules/stage-player.js?v=17.1';
+import { createSkillMix } from './modules/skill-mix.js?v=17.1';
+import { seekVideo } from './modules/video-seek.js?v=17.1';
+import { warmVideo, createVideoWarmScheduler, videoFullyBuffered, monitorVideoPlayback } from './modules/video-warm.js?v=17.1';
+import { mountScrollReveal } from './modules/scroll-reveal.js?v=17.1';
+const mountMethodFigure = root => import('./modules/method-figure.js?v=17.1').then(m=>m.mountMethodFigure(root));
+const mountDatasetFilms = root => import('./modules/dataset-films.js?v=17.1').then(m=>m.mountDatasetFilms(root));
+const mountResultsExplorer = root => import('./modules/results-explorer.js?v=17.1').then(m=>m.mountResultsExplorer(root));
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -341,7 +341,7 @@ function mountNear(host,mount){
 async function boot(){
   // Start the wall before the lower-page data and gallery DOM work.
   const hero=mountHeroWall($('.hero')).catch(error=>console.error('hero',error));
-  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17'),getJSON('assets/media/manifest.json?v=17'),getJSON('data/chapters.json?v=17'),getJSON('data/skill-media.json?v=17')]);
+  const [content,media,chapterData,skillData]=await Promise.all([getJSON('data/content.json?v=17.1'),getJSON('assets/media/manifest.json?v=17.1'),getJSON('data/chapters.json?v=17.1'),getJSON('data/skill-media.json?v=17.1')]);
   manifest=media;chapters=chapterData;skillMedia=skillData;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],
