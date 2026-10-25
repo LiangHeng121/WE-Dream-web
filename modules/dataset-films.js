@@ -1,6 +1,6 @@
 /* Independent SVG duration explorer, inspired by WB-WAM's linked corpus donut.
  * Source, calculation and media provenance: docs/website-research/DATASET_REBUILD_SOURCES.md. */
-import { seekVideo } from './video-seek.js?v=v26';
+import { seekVideo } from './video-seek.js?v=v27';
 const instances = new WeakMap();
 let serial = 0;
 const ns = 'http://www.w3.org/2000/svg';
@@ -72,7 +72,7 @@ export async function mountDatasetFilms(root) {
     if (!response.ok) throw new Error('Dataset information could not be loaded.');
     return response.json();
   };
-  const [media, distribution] = await Promise.all([read('data/dataset-media.json?v=v26'), read('data/dataset-distribution.json?v=v26')]);
+  const [media, distribution] = await Promise.all([read('data/dataset-media.json?v=v27'), read('data/dataset-distribution.json?v=v27')]);
   const prefix = `dataset-explorer-${++serial}`, abort = new AbortController();
   const on = (node, type, handler, signal = abort.signal) => node.addEventListener(type, handler, { signal });
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');

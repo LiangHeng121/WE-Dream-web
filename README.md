@@ -6,7 +6,14 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v26 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v27 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 27
+
+- The 40-window opening wall now contains 21 in-domain, all 15 L1 and all 4 L2 demonstrations. All nine in-domain task types remain represented, with two or three clips each.
+- Selection and placement use a reproducible random seed. The five background-generalization clips occupy separate rows and are spaced apart; the other clips are interleaved.
+- A small category bubble at the upper-left corner of the focused prompt identifies In Domain, L1 Generalization or L2 Generalization.
+- New lightweight wall previews and first-frame posters come from the existing trimmed HD media. Full 1080p files, the v26 handoff, camera transitions and galleries are unchanged.
 
 ## Release 26
 

@@ -1,7 +1,7 @@
 {
-  "version": 26,
+  "version": 27,
   "published_date": "2026-10-25",
-  "release": "verified-frame-handoff-inline-stream-bootstrap",
+  "release": "balanced-random-wall-and-category-badges",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,14 +12,20 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v26",
+  "document_cache_version": "v27",
   "dataset_local_delivery": 17,
-  "review": "v26",
+  "review": "v27",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
   "loading_posters": 139,
-  "wall_first_paint": "40 tiles, one 61,286-byte embedded first-frame WebP atlas",
+  "wall_first_paint": "40 tiles, one 60,978-byte embedded first-frame WebP atlas",
   "wall_focus_start": "Selected preview begins at zero after camera settlement. HD stays beneath the preview until actual submitted-frame PTS matches. A ready HD first frame starts directly at zero. HLS playlists and init boxes are embedded; media fragments stay bounded and on-demand.",
-  "favicon": "Rounded gradient W ribbon and star"
+  "favicon": "Rounded gradient W ribbon and star",
+  "wall_distribution": {
+    "id": 21,
+    "l1": 15,
+    "l2": 4
+  },
+  "wall_layout": "Fixed randomized order; all five background-generalization clips separated across five rows"
 }

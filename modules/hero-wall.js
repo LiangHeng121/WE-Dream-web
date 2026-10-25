@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v26';
-import { createStreamVideo } from './stream-video.js?v=v26';
+import { seekVideo } from './video-seek.js?v=v27';
+import { createStreamVideo } from './stream-video.js?v=v27';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -587,10 +587,10 @@ export async function alignWallHandoff(video, preview, {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v26').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v27').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v26').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v27').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -1477,6 +1477,12 @@ export async function mountHeroWall(root) {
   function showPrompt(unit) {
     const clip = prompts.get(unit.item.id), text = clip?.promptExact || clip?.prompt_exact || clip?.promptDisplay;
     focusLabel.replaceChildren();
+    const level = String(clip?.level || unit.item.level || '').trim().toLowerCase();
+    const category = { id: ['id', 'In Domain'], 'in domain': ['id', 'In Domain'], l1: ['l1', 'L1 Generalization'], l2: ['l2', 'L2 Generalization'] }[level];
+    if (category) {
+      const badge = document.createElement('span'); badge.className = 'wall-level-badge';
+      badge.dataset.level = category[0]; badge.textContent = category[1]; focusLabel.append(badge);
+    }
     const label = document.createElement('span'); label.className = 'wall-prompt-label'; label.textContent = 'PROMPT'; focusLabel.append(label);
     if (clip?.promptStatus === 'provisional') {
       const draft = document.createElement('span'); draft.className = 'wall-prompt-draft'; draft.textContent = 'Draft'; focusLabel.append(draft);
