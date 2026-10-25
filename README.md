@@ -6,9 +6,11 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v21 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v22 website: HTML, CSS, JavaScript, data, figures, opening-wall previews, and complete 1080p demonstrations. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
-## Release 21
+## Release 22
+
+- Focused wall preparation no longer seeks to zero when already at the beginning: it waits for the decoded frame directly, avoiding a native full-file fallback and redundant HLS restarts. All hidden preview requests stop while the selected 1080p clip loads. Initial focus motion is 0.65 s and HD fade 0.12 s; playback still starts only after the clear frame and motion are ready.
 
 - Explore wall starts every newly selected 1080p clip from its first frame only after the clear HD frame, camera transition, and fade are ready. Rapid directional changes cancel stale playback starts; returning from an offscreen section preserves the current selection’s progress.
 - Removed the extra hero eyebrow, demonstration counter, method tagline strip, and Pause motion control. Added an original gradient W ribbon favicon with a small star. Existing layout, rounded corners, and wall navigation are retained.

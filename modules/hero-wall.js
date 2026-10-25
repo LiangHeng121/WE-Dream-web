@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v21';
-import { createStreamVideo } from './stream-video.js?v=v21';
+import { seekVideo } from './video-seek.js?v=v22';
+import { createStreamVideo } from './stream-video.js?v=v22';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -347,10 +347,10 @@ export async function waitWallVisualTransitions(element, property) {
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v21').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v22').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v21').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v22').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -741,8 +741,10 @@ export async function mountHeroWall(root) {
     if (visible && !document.hidden && networkSuspended) {
       networkSuspended = false; root.dataset.wallNetworkState = 'visible';
     }
-    if (!active || focused >= 0) suspendPreviews(active ? units[focused] : null);
-    loadQueue.setActive(active, focused >= 0 ? new Set([units[focused]]) : null);
+    // A selected tile displays its static first frame until HD is ready, so
+    // its hidden native preview must not compete with that HD request.
+    if (!active || focused >= 0) suspendPreviews();
+    loadQueue.setActive(active && focused < 0);
     if (reset) loadQueue.retry();
     root.classList.toggle('motion-paused', !active);
     root.dataset.wallIntent = paused && focused < 0 ? 'reduced-motion' : document.hidden ? 'background' : !visible ? 'offscreen' : focused >= 0 ? 'focused' : 'all-playing';
@@ -912,7 +914,9 @@ export async function mountHeroWall(root) {
     try {
       if (!await hd.stream.start()) return null;
       const time = Math.max(0, Math.min(sourceStart(unit), sourceEnd(unit) - .05, video.duration - .05));
-      if (Math.abs(video.currentTime - time) > .12 || video.readyState < 2) {
+      // Missing decoded data calls for waiting, not a seek to the same time.
+      // A redundant zero seek can restart HLS or trigger native full-file fallback.
+      if (Math.abs(video.currentTime - time) > .12) {
         if (!await seekVideo(video, time, { signal: hd.abort.signal })) return null;
       }
       if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
@@ -994,7 +998,6 @@ export async function mountHeroWall(root) {
     // A rapid reversal must reveal the current preview, not an older retained HD.
     clearRetiredFrames(index);
     focused = index;
-    loadQueue.prioritize(units[index]);
     root.classList.add('wall-focused'); root.classList.toggle('wall-focus-moving', previous >= 0);
     units.forEach(({ tile, video }, i) => {
       // The exact first-frame atlas stays visible while the selected HD loads.

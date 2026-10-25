@@ -39,7 +39,7 @@
 
 .wall-focused .is-focused video{object-fit:contain}
 .wall-focused .is-focused{border-radius:12px}
-.wall-tile .wall-hd{position:absolute;inset:0;opacity:0;transition:opacity .3s;pointer-events:none}
+.wall-tile .wall-hd{position:absolute;inset:0;opacity:0;transition:opacity .12s;pointer-events:none}
 .wall-tile .wall-hd.is-ready{opacity:1}
 @media(max-width:760px){.hero h1{font-size:clamp(54px,15.4vw,108px);white-space:nowrap}}
 /* Light hero navigation, kept here with the hero's own palette. */
@@ -53,6 +53,7 @@
 .wall-focused .is-focused .wall-video-frame,.wall-focused .was-focused .wall-video-frame{inset:auto;left:50%;top:50%;width:var(--wall-video-width);height:var(--wall-video-height);transform:translate(-50%,-50%);border-radius:var(--wall-video-radius)}
 .wall-focused .was-focused video{object-fit:contain}
 .wall-focused .was-focused{border-radius:12px}
+.wall-focused:not(.wall-focus-moving) .wall-camera{transition-duration:.65s}
 .wall-focus-moving .wall-camera{transition-duration:.52s;transition-timing-function:cubic-bezier(.22,.72,.18,1)}
 .wall-focus-navigation{position:absolute;inset:0;z-index:4;pointer-events:none;outline:none}
 .wall-focus-navigation[hidden]{display:none}

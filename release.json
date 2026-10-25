@@ -1,7 +1,7 @@
 {
-  "version": 21,
+  "version": 22,
   "published_date": "2026-10-25",
-  "release": "clear-first-frame-before-wall-playback",
+  "release": "remove-redundant-focus-loading",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -12,14 +12,14 @@
   "wall_columns": 8,
   "wall_rows": 5,
   "patch": 0,
-  "document_cache_version": "v21",
+  "document_cache_version": "v22",
   "dataset_local_delivery": 17,
-  "review": "v21",
+  "review": "v22",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
   "delivery": "Static first-frame wall; selected 1080p playback starts after camera and HD fade settle",
   "loading_posters": 139,
   "wall_first_paint": "40 tiles, one 61,286-byte embedded first-frame WebP atlas",
-  "wall_focus_start": "Each new selection starts from frame zero after decoded HD and visual transitions are ready",
+  "wall_focus_start": "No zero-time seek or hidden preview network during focused preparation; .65s first focus and .12s HD fade before first-frame playback",
   "favicon": "Rounded gradient W ribbon and star"
 }
