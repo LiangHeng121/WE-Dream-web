@@ -52,6 +52,10 @@
    matching submitted frame is verified; never reveal an unpainted HD layer. */
 .wall-focused .is-focused .wall-hd{opacity:1;z-index:1}
 .wall-focused .is-focused .wall-first-frame,.wall-focused .is-focused .wall-preview{z-index:2}
+/* Reset a selected preview behind its exact first-frame cover without removing
+   its decoder from the render tree. The hidden attribute still marks the gate;
+   releasing it restores the normal preview layer only after the zero seek. */
+.wall-focused .is-focused video.wall-preview[hidden]{display:block!important;opacity:1;z-index:0;transition:none}
 .wall-focused .is-focused .wall-hd.is-ready{z-index:3}
 @media(max-width:760px){.hero h1{font-size:clamp(54px,15.4vw,108px);white-space:nowrap}}
 /* Light hero navigation, kept here with the hero's own palette. */

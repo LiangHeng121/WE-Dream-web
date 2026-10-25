@@ -11,10 +11,10 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 0,
-  "document_cache_version": "v29",
+  "patch": 1,
+  "document_cache_version": "v29.1",
   "dataset_local_delivery": 17,
-  "review": "v29",
+  "review": "v29.1",
   "streaming_representations": 57,
   "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -35,5 +35,6 @@
   },
   "wall_hd_recovery": "Promote warming HLS on selection; at most two selection-scoped retries for preparation and submitted-frame timeout failures",
   "wall_category_badge": "Inside prompt upper-left; 12.5px; no dot",
-  "wall_hd_buffer_window": "Missing-buffer handoff predicts the future media window from first-data latency, with at most two bounded requests and the original PTS gate"
+  "wall_hd_buffer_window": "Missing-buffer handoff predicts the future media window from first-data latency, with at most two bounded requests and the original PTS gate",
+  "wall_preview_reset": "Selected preview remains composited below its first-frame poster while resetting to zero; no display-none decoder gate."
 }
