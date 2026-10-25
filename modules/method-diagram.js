@@ -102,7 +102,7 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
   `;
   let mobile = window.matchMedia('(max-width: 760px)').matches;
   let layout = geometry(mobile);
-  let root, parts = [], flows = [], chunkCells = [], routingVisual = null, frozenMark = null;
+  let root, parts = [], flows = [], rtc = null, routingVisual = null, frozenMark = null;
   let last = { focus: null, time: 0, still: false };
   let previousFocus = Symbol();
   let destroyed = false;
@@ -231,22 +231,31 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     wire(g, `M${center} ${observationY + (mobile ? 62 : 44)} V${policyY - 3}`, 3, { id: 'context-to-policy' });
     const chunkY = mobile ? 2340 : 296;
     wire(g, `M${center} ${policyY + (mobile ? 78 : 64)} V${chunkY - (mobile ? 27 : 24)}`, 3, { id: 'policy-to-chunk' });
-    const chunk = element('g', { 'data-node': 'chunk', 'data-actions': '24' }, g);
-    label(chunk, '24-action chunk', center, chunkY, { class: 'wd-vector-title', 'text-anchor': 'middle' });
+    const chunk = element('g', { 'data-node': 'chunk', 'data-actions': '24', 'data-replan-stride': '12', role: 'img', 'aria-label': 'Real-time chunking: execute the current 24-action chunk while predicting the next. Replan every 12 actions, with soft guidance on the overlapping actions.' }, g);
+    element('title', {}, chunk).textContent = 'RTC overlaps prediction and execution. Each chunk contains 24 actions; replanning starts every 12 actions, with soft guidance on the overlap.';
+    label(chunk, 'RTC · 24-action chunks', center, chunkY, { class: 'wd-vector-title', 'text-anchor': 'middle' });
     const chunkWidth = mobile ? 438 : 330;
-    const gap = mobile ? 4 : 3;
-    const cellW = (chunkWidth - gap * 23) / 24;
-    for (let i = 0; i < 24; i++) {
-      const cell = element('g', { 'data-action-step': i + 1 }, chunk);
-      const cx = center - chunkWidth / 2 + i * (cellW + gap);
-      const cy = chunkY + (mobile ? 19 : 15);
-      ACTION_COLORS.forEach((color, j) => element('rect', { x: cx, y: cy + j * (mobile ? 7 : 6), width: cellW, height: mobile ? 6 : 5, rx: 1.7, fill: `url(#${prefix}-action-glass-${j})` }, cell));
-      chunkCells.push(cell);
-    }
+    const pitch = chunkWidth / 36, cellW = pitch - (mobile ? 3 : 2);
+    const startX = center - chunkWidth / 2;
+    const rowY = [chunkY + (mobile ? 20 : 15), chunkY + (mobile ? 48 : 37)];
+    const componentH = mobile ? 5 : 3.8, componentGap = mobile ? 1.4 : 1.1;
+    const rowH = componentH * 3 + componentGap * 2;
+    const overlap = element('rect', { x: startX + pitch * 12 - 3, y: rowY[0] - 4, width: pitch * 12 + 4, height: rowY[1] - rowY[0] + rowH + 8, rx: 8, fill: '#c6ded4', 'fill-opacity': .16, 'data-rtc-overlap': 'true' }, chunk);
+    const rows = [[], []];
+    rows.forEach((cells, row) => {
+      const strip = element('g', { 'data-rtc-row': row === 0 ? 'executing' : 'predicting' }, chunk);
+      for (let i = 0; i < 24; i++) {
+        const cell = element('g', { 'data-action-step': i + 1 }, strip);
+        const cx = startX + (i + row * 12) * pitch;
+        element('rect', { x: cx, y: rowY[row], width: cellW, height: rowH, rx: 2.5, fill: row === 0 ? '#b9d4c7' : '#9dbfad', 'fill-opacity': .92, stroke: '#ffffff', 'stroke-opacity': .65, 'stroke-width': .6 }, cell);
+        cells.push(cell);
+      }
+    });
+    const playhead = element('path', { d: `M${startX} ${rowY[0] - 3} V${rowY[1] + rowH + 3}`, stroke: '#75a894', 'stroke-width': 1.4, 'stroke-linecap': 'round', opacity: .8, 'data-rtc-playhead': 'true' }, chunk);
+    rtc = { rows, playhead, overlap, travel: pitch * 24 };
     const vectorY = mobile ? 2440 : 371;
-    label(g, 'Each action token · 80D', x, vectorY - (mobile ? 17 : 14), { class: 'wd-vector-title' });
     actionVector(g, 'deployment-action', x, vectorY, width, mobile ? 72 : 58);
-    wire(g, `M${center} ${chunkY + (mobile ? 43 : 35)} V${vectorY - 5}`, 3, { id: 'chunk-to-vector' });
+    wire(g, `M${center} ${rowY[1] + rowH + 5} V${vectorY - 5}`, 3, { id: 'chunk-to-vector' });
     const controlsY = mobile ? 2560 : 472;
     const controlsH = mobile ? 60 : 48;
     const controlsW = mobile ? 226 : 176;
@@ -283,7 +292,7 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     frozenMark?.destroy();
     frozenMark = null;
     root?.remove();
-    parts = []; flows = []; chunkCells = [];
+    parts = []; flows = []; rtc = null;
     previousFocus = Symbol();
     layout = geometry(mobile);
     svg.setAttribute('viewBox', layout.viewBox.join(' '));
@@ -319,8 +328,17 @@ export function createMethodDiagram(host, { onFocus, routeVariant = 'pulse' } = 
     });
     routingVisual?.render({ time, still, active: focus === null || focus === 2 });
     frozenMark?.render({ time, still: still || (focus !== null && focus !== 0) });
-    const cursor = still ? 12 : Math.floor(((time / 100) % 24 + 24) % 24);
-    chunkCells.forEach((cell, i) => cell.style.opacity = focus === null || focus === 3 ? (i <= cursor ? '1' : '.48') : '.8');
+    if (rtc) {
+      const moving = !still && (focus === null || focus === 3);
+      const progress = moving ? ((time % 4000) + 4000) % 4000 / 4000 : .72;
+      const predicted = Math.min(1, Math.max(0, (progress - .5) / .32));
+      // An illustrative slow cycle: execution continues while the next chunk appears.
+      rtc.rows[0].forEach((cell, i) => { cell.style.opacity = moving && i < progress * 24 ? '.36' : '1'; });
+      rtc.rows[1].forEach(cell => { cell.style.opacity = !moving ? '.9' : String(.18 + .82 * predicted); });
+      rtc.playhead.setAttribute('transform', `translate(${progress * rtc.travel} 0)`);
+      rtc.playhead.setAttribute('opacity', moving ? '.8' : '.45');
+      rtc.overlap.setAttribute('fill-opacity', moving && progress >= .5 ? '.24' : '.12');
+    }
   }
   function resize() {
     if (destroyed) return;

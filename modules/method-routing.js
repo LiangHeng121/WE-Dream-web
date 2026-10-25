@@ -52,10 +52,10 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
   const badgeY = variant === 'pulse' ? 304 : 292;
   const badgeA = el('g', { 'data-route-badge': 'access' }, badges);
   const badgeB = el('g', { 'data-route-badge': 'masked' }, badges);
-  rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: '#c8e1ec', 'fill-opacity': .9, stroke: '#8db4c9', 'stroke-opacity': .8 });
-  rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: '#dfd0ee', 'fill-opacity': .9, stroke: '#b29acb', 'stroke-opacity': .8 });
-  const badgeLabelA = text(badgeA, '50% access', 101, badgeY + 20, 14, { fill: '#41677e' });
-  const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#765c91' });
+  rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-critical)`, 'fill-opacity': .95, stroke: '#b397ce', 'stroke-opacity': .8 });
+  rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: '#edf2f6', 'fill-opacity': .95, stroke: '#b4c2d0', 'stroke-opacity': .8 });
+  const badgeLabelA = text(badgeA, '50% access', 101, badgeY + 20, 14, { fill: '#765c91' });
+  const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#6f8295' });
   [badgeLabelA, badgeLabelB].forEach(node => { node.style.fontWeight = '600'; });
   let animate = () => {};
 
@@ -149,7 +149,7 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
       const node = rounded(grid, cx, cy, cell, cell, { rx: 9, fill: switched ? `url(#${id}-critical)` : visible ? `url(#${id}-allow)` : '#ffffff', 'fill-opacity': visible || switched ? .95 : .5, stroke: switched ? '#b397ce' : '#ffffff', 'stroke-opacity': .86, 'data-query': query, 'data-key': key, 'data-visible': visible ? 'true' : 'false', ...(switched ? { 'data-routed-cell': 'true' } : {}) });
       if (switched) {
         routed = node;
-        slash = el('path', { d: `M${cx + 10} ${cy + 21} L${cx + 21} ${cy + 10}`, stroke: '#b39cc7', 'stroke-width': 1.5, 'stroke-linecap': 'round' }, grid);
+        slash = el('path', { d: `M${cx + 10} ${cy + 21} L${cx + 21} ${cy + 10}`, stroke: '#8da0b3', 'stroke-width': 1.5, 'stroke-linecap': 'round' }, grid);
       }
     }));
     text(group, 'Future video → action', 177, 291, 16);
@@ -160,6 +160,7 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
       setOpacity(halo, still ? .45 : .08 + light * .82);
       routed.setAttribute('fill-opacity', String(.08 + light * .92));
       routed.setAttribute('stroke-width', String(1 + light * .8));
+      routed.setAttribute('stroke', light >= .5 ? '#b397ce' : '#b4c2d0');
       routed.setAttribute('data-visible', still ? 'sampled' : light >= .5 ? 'true' : 'false');
       setOpacity(slash, still ? .5 : (1 - light) * .88);
       setOpacity(badgeA, still ? 1 : .28 + light * .72);
