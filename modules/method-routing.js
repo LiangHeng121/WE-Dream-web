@@ -53,8 +53,8 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
   const badgeY = variant === 'pulse' ? 304 : 292;
   const badgeA = el('g', { 'data-route-badge': 'access' }, badges);
   const badgeB = el('g', { 'data-route-badge': 'masked' }, badges);
-  const badgeSurfaceA = rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-critical)`, 'fill-opacity': .95, stroke: '#b397ce', 'stroke-opacity': .8 });
-  const badgeSurfaceB = rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-muted)`, 'fill-opacity': .95, stroke: '#94afc4', 'stroke-opacity': .8 });
+  rounded(badgeA, 33, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-critical)`, 'fill-opacity': .95, stroke: '#b397ce', 'stroke-opacity': .8 });
+  rounded(badgeB, 185, badgeY, 136, 31, { rx: 15.5, fill: `url(#${id}-muted)`, 'fill-opacity': .95, stroke: '#94afc4', 'stroke-opacity': .8 });
   const badgeLabelA = text(badgeA, '50% access', 101, badgeY + 20, 14, { fill: '#765c91' });
   const badgeLabelB = text(badgeB, '50% masked', 253, badgeY + 20, 14, { fill: '#5e768b' });
   [badgeLabelA, badgeLabelB].forEach(node => { node.style.fontWeight = '600'; });
@@ -164,13 +164,9 @@ export function createRoutingVisual(parent, { prefix = 'wd-route', x = 0, y = 0,
       routed.setAttribute('stroke', light >= .5 ? '#b397ce' : '#b4c2d0');
       routed.setAttribute('data-visible', still ? 'sampled' : light >= .5 ? 'true' : 'false');
       setOpacity(slash, still ? .5 : (1 - light) * .88);
-      // Both labels stay readable; only the glass surfaces indicate the active route.
-      [badgeSurfaceA, badgeSurfaceB].forEach((surface, i) => {
-        const emphasis = still ? 1 : i === 0 ? light : 1 - light;
-        surface.setAttribute('fill-opacity', String(.32 + emphasis * .63));
-        surface.setAttribute('stroke-opacity', String(.35 + emphasis * .55));
-        surface.setAttribute('stroke-width', String(.8 + emphasis * .6));
-      });
+      // Fade each entire badge, including its text, with the routed cell.
+      setOpacity(badgeA, still ? 1 : .28 + light * .72);
+      setOpacity(badgeB, still ? 1 : 1 - light * .72);
       badgeA.setAttribute('data-active', still ? 'sampled' : String(light >= .5));
       badgeB.setAttribute('data-active', still ? 'sampled' : String(light < .5));
     };
