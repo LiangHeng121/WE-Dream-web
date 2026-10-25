@@ -6,16 +6,15 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v24 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless v25 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
-## Release 24
+## Release 25
 
-- Explore wall keeps the current lightweight preview after HD takes over, so later replay does not discard an already buffered beginning.
-- Once the active HD has at least 3 seconds of safe buffer, neighboring previews are warmed sequentially and positioned at zero. Recent navigation direction and hover intent take priority. At most the current preview and one unfinished neighbor may download at once.
-- Downloads outside that budget are cancelled. Fully cached previews stay available; unfinished requests are released when the wall leaves view or the tab is hidden. Failed neighbors do not block later candidates, and an explicit selection can retry a failed preview.
-- Every new selection still starts from zero after the camera settles. HD aligns to the moving preview and fades in after an actual presented frame; preview playback continues during alignment.
-- Under a controlled slow preview server (800 ms response latency, 32 KiB/s delivery), a cold rightward switch in v23 first played after 4.17 s. In v24, a neighbor with only its first 2.9 seconds buffered started at zero in 0.59 s, about 5 ms after the camera settled. These samples demonstrate the cache path, not a guarantee for never-loaded media or every network.
-- Eleven hero regression scripts and independent targeted review passed, covering partial buffers, request bounds, failed requests, rapid reversal, visibility and HD handoff.
+- The selected preview still begins at zero after the camera settles. HD prepares one buffered future timestamp, then joins the preview when it reaches that timestamp instead of repeatedly chasing a moving playback clock.
+- Promotion requires a decoded target frame, actual playback and clock alignment. The matched HD frame replaces the preview without a separate opacity transition; camera movement and rounded corners are unchanged.
+- One probable next HD video can prewarm a bounded HLS fragment after foreground playback and lightweight previews are safely buffered. Deadline, cancellation and failure recovery prevent speculative downloads from monopolizing the connection.
+- Under the same controlled 1.2-second HD request delay and 512 KiB/s delivery, demonstration 23 reached HD in 2.26 seconds versus 4.15 seconds in v24. Final demonstrations 15 and 23 aligned in one seek with 10 ms and 6 ms clock differences. These are controlled samples, not a guarantee for every network or cache state.
+- Eleven hero regression scripts and stream checks passed, with independent targeted review of playback, buffering, retries and rapid cancellation.
 - Media encoding remains unchanged: 57 full demonstrations and 6 skill excerpts at 1920 × 1080 H.264, 24 fps, CRF29, with MP4 faststart. HLS uses the same encoded packets without further loss.
 - Existing layout, camera motion, rounded cards, first-frame poster atlas, prompts, dataset mosaics and skill interactions are retained. Original recordings remain unchanged.
 

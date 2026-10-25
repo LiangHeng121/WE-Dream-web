@@ -1,6 +1,6 @@
 // Loose overlapping cards show the reviewed skill excerpts. Full task demos
 // stay in the main gallery; every card retains its original skill provenance.
-import { videoFullyBuffered } from './video-warm.js?v=v24';
+import { videoFullyBuffered } from './video-warm.js?v=v25';
 
 let skillMixSerial = 0;
 const clock = seconds => `${Math.floor((seconds || 0) / 60)}:${String(Math.floor((seconds || 0) % 60)).padStart(2, '0')}`;

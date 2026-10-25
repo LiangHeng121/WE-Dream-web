@@ -1,5 +1,5 @@
-import { seekVideo } from './video-seek.js?v=v24';
-import { createStreamVideo } from './stream-video.js?v=v24';
+import { seekVideo } from './video-seek.js?v=v25';
+import { createStreamVideo } from './stream-video.js?v=v25';
 /* Fullscreen title / video layering adapted from ViTacFormerPage (CC BY-SA 4.0).
  * The single reveal, independent action loops, and focus camera are WE-Dream additions.
  * See vendor/ and docs/website-research/SOURCE_REUSE.md for provenance. */
@@ -366,22 +366,136 @@ export function waitWallPresentedFrame(video, { signal, timeout = 1800 } = {}) {
     const fallback = () => { if (!video.paused && video.readyState >= 2 && !video.seeking) finish(true); };
     signal?.addEventListener('abort', abort, { once: true });
     timer = setTimeout(() => finish(false), timeout);
-    if (video.requestVideoFrameCallback) callback = video.requestVideoFrameCallback(() => finish(!video.seeking));
+    if (video.requestVideoFrameCallback) {
+      const presented = () => {
+        if (!video.paused && video.readyState >= 2 && !video.seeking && !video.error) finish(true);
+        else if (!settled) callback = video.requestVideoFrameCallback(presented);
+      };
+      callback = video.requestVideoFrameCallback(presented);
+    }
     else video.addEventListener('timeupdate', fallback);
   });
 }
 
-export async function alignWallHandoff(video, preview, { signal, sourceStart = 0, isCurrent = () => true, start = () => video.play() } = {}) {
-  for (let attempt = 0; attempt < 4 && !signal?.aborted && isCurrent(); attempt++) {
-    const target = Math.max(0, Math.min(sourceStart + preview.currentTime, video.duration - .05));
-    // This is an already decoded native/MSE element. Direct media seeking
-    // keeps Range requests progressive and never invokes whole-file Blob I/O.
-    if (Math.abs(video.currentTime - target) > .08) video.currentTime = target;
-    if (!await waitWallHdFrame(video, { signal, timeout: 2500 }) || !isCurrent()) return false;
-    const presented = waitWallPresentedFrame(video, { signal });
-    try { await start(); } catch { return false; }
-    if (!await presented || !isCurrent()) return false;
-    if (Math.abs(video.currentTime - sourceStart - preview.currentTime) <= .18) return true;
+// A completed seek already supplies the decoded target frame. Once that
+// paused target reaches the preview's clock, an actual playing event is enough
+// to start the opacity handoff; waiting for another transparent-layer rVFC can
+// delay it by hundreds of milliseconds despite continuously advancing clocks.
+export function waitWallDecodedPlayback(video, { signal, timeout = 1800 } = {}) {
+  if (signal?.aborted || video.error) return Promise.resolve(false);
+  return new Promise(resolve => {
+    let timer, settled = false, playing = false;
+    const finish = value => {
+      if (settled) return; settled = true; clearTimeout(timer);
+      for (const [event, handler] of events) video.removeEventListener(event, handler);
+      signal?.removeEventListener('abort', failed); resolve(value);
+    };
+    const check = () => { if (playing && !video.paused && video.readyState >= 2 && !video.seeking && !video.error) finish(true); };
+    const began = () => { playing = true; check(); };
+    const paused = () => { playing = false; };
+    const failed = () => finish(false);
+    const events = [['playing', began], ['pause', paused], ['waiting', paused], ['loadeddata', check], ['canplay', check], ['seeked', check], ['error', failed]];
+    for (const [event, handler] of events) video.addEventListener(event, handler);
+    signal?.addEventListener('abort', failed, { once: true });
+    timer = setTimeout(failed, timeout);
+  });
+}
+
+export async function alignWallHandoff(video, preview, {
+  signal, sourceStart = 0, isCurrent = () => true, start = () => video.play(), pause = () => video.pause(),
+  timeout = 7000, now = () => performance.now(), onState = () => {}, requestBuffer = null
+} = {}) {
+  const deadline = now() + timeout;
+  const current = () => !signal?.aborted && isCurrent() && now() < deadline;
+  const waitUntil = check => new Promise(resolve => {
+    let timer, settled = false;
+    const finish = value => { if (settled) return; settled = true; clearTimeout(timer); signal?.removeEventListener('abort', aborted); resolve(value); };
+    const aborted = () => finish(null);
+    const poll = () => {
+      if (!current()) { finish(null); return; }
+      const value = check();
+      if (value) finish(value); else timer = setTimeout(poll, 16);
+    };
+    signal?.addEventListener('abort', aborted, { once: true }); poll();
+  });
+  const buffered = (time, ahead) => {
+    for (let i = 0; i < (video.buffered?.length || 0); i++) {
+      const start = video.buffered.start(i);
+      const initialOffset = i === 0 && time - sourceStart <= .15 && start - time <= .15;
+      if ((start <= time || initialOffset) && video.buffered.end(i) >= time + ahead) return true;
+    }
+    return false;
+  };
+  let lead = .32, seeks = 0, stationary = false, positioned = false;
+  let observedTime = preview.currentTime, movedAt = now();
+  const observe = () => {
+    const time = preview.currentTime;
+    if (Math.abs(time - observedTime) > .015) { observedTime = time; movedAt = now(); }
+    return { time, stalled: preview.paused || now() - movedAt >= 180 };
+  };
+  await pause();
+  for (let attempt = 0; attempt < 3 && current(); attempt++) {
+    onState('waiting-buffer', { seeks, lead });
+    const anchor = await waitUntil(() => {
+      const sample = observe(), time = sample.time;
+      stationary = sample.stalled;
+      const end = Math.min(Number.isFinite(preview.duration) ? preview.duration : Infinity, video.duration - sourceStart);
+      // Do not choose a rendezvous across the preview's loop boundary. Its
+      // next loop supplies a fresh zero-based clock without a large seek.
+      if (!stationary && time + lead + .2 >= end) return null;
+      const target = sourceStart + time + (stationary ? 0 : lead);
+      if (requestBuffer && !positioned && Math.abs(target - video.currentTime) > 4 && !buffered(target, .2)) {
+        // A paused bounded HLS buffer cannot grow forever from time zero. One
+        // positioning request moves its window near the moving preview; the
+        // eventual rendezvous still waits for a genuinely buffered frame.
+        positioned = true; seeks++;
+        requestBuffer(target); onState('buffer-positioning', { seeks, lead, target });
+        return null;
+      }
+      return buffered(target, Math.min(.2, Math.max(0, end - time - (stationary ? 0 : lead)))) ? { target, previewTime: time, stationary } : null;
+    });
+    if (!anchor) return false;
+    await pause();
+    if (!current()) return false;
+    const seekAt = now();
+    const initialOffset = anchor.stationary && anchor.target - sourceStart <= .15 && video.currentTime - anchor.target >= 0 && video.currentTime - anchor.target <= .12;
+    if (!initialOffset && Math.abs(video.currentTime - anchor.target) > .015) { seeks++; video.currentTime = anchor.target; }
+    onState('seeking', { seeks, lead, target: anchor.target });
+    if (!await waitUntil(() => video.readyState >= 2 && !video.seeking)) return false;
+    const seekSeconds = (now() - seekAt) / 1000;
+    lead = Math.max(.32, Math.min(1.5, seekSeconds + .08));
+    onState('waiting-preview', { seeks, lead, seekMs: seekSeconds * 1000, target: anchor.target });
+    const anchorTime = anchor.target - sourceStart;
+    // A slower-than-predicted decode may miss the first rendezvous. Measure
+    // that latency and choose a later buffered point once, rather than seek
+    // repeatedly to the preview's already-obsolete position.
+    const sample = observe();
+    if (sample.time < anchor.previewTime - .1 || sample.time > anchorTime + .08) continue;
+    const reached = await waitUntil(() => {
+      const next = observe();
+      if (next.time < anchor.previewTime - .1) return 'looped';
+      if (next.time >= anchorTime - .008) return 'reached';
+      return next.stalled ? 'stalled' : null;
+    });
+    if (!reached) return false;
+    // A preview can emit playing while its media clock remains at zero. Seek
+    // its stationary frame on the next pass; never wait for an unreachable point.
+    if (reached !== 'reached' || preview.currentTime > anchorTime + .08) continue;
+    onState('presenting', { seeks, lead, target: anchor.target });
+    const playingAbort = new AbortController(), abortPlaying = () => playingAbort.abort();
+    signal?.addEventListener('abort', abortPlaying, { once: true });
+    const playback = waitWallDecodedPlayback(video, { signal: playingAbort.signal, timeout: Math.max(1, Math.min(1800, deadline - now())) });
+    let started;
+    try { started = Promise.resolve(start()).then(() => true, () => false); } catch { started = Promise.resolve(false); }
+    // A rejected/hung play cannot strand the gate. The real media event wins
+    // independently of a browser's play-promise scheduling, with a hard deadline.
+    const playing = await Promise.race([playback, started.then(ok => ok ? playback : false)]);
+    signal?.removeEventListener('abort', abortPlaying); playingAbort.abort();
+    if (!playing || !current()) return false;
+    const drift = video.currentTime - sourceStart - preview.currentTime;
+    if (Math.abs(drift) <= .12) { onState('aligned', { seeks, drift, stationary: anchor.stationary }); return true; }
+    await pause();
+    lead = Math.min(1.5, Math.max(lead, Math.abs(drift) + .08));
   }
   return false;
 }
@@ -389,10 +503,10 @@ export async function alignWallHandoff(video, preview, { signal, sourceStart = 0
 export async function mountHeroWall(root) {
   root.dataset.wallRevealState = 'loading-data';
   root.dataset.wallMountedAt = performance.now().toFixed(1);
-  const wallData = fetch('assets/media/wall-units.json?v=v24').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
+  const wallData = fetch('assets/media/wall-units.json?v=v25').then(r => { if (!r.ok) throw Error('Wall media unavailable'); return r.json(); });
   // Instructions are needed when a visitor explores a tile, not before the
   // first frame. A slower content request must not block the opening wall.
-  const contentData = fetch('data/content.json?v=v24').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
+  const contentData = fetch('data/content.json?v=v25').then(r => { if (!r.ok) throw Error('Demo instructions unavailable'); return r.json(); }).catch(error => { console.warn('[WE-Dream video wall]', error.message); return null; });
   const data = await wallData;
   const prompts = new Map();
   const camera = root.querySelector('.wall-camera');
@@ -415,7 +529,7 @@ export async function mountHeroWall(root) {
   let networkSuspended = false, resumeFocusedHd = null;
   let cameraMoveRevision = 0, cameraMoving = false, hoverTimer = null;
   let cameraTransition = Promise.resolve(), focusStart = null;
-  let preferredDirection = 'right', hoveredPreview = -1, warmPreviewIndex = -1;
+  let preferredDirection = 'right', hoveredPreview = -1, warmPreviewIndex = -1, neighborHdIntent = null;
   const retiredFrames = new Set();
   const hdStreams = new WeakMap();
   const playbackNotice = document.createElement('button');
@@ -754,7 +868,7 @@ export async function mountHeroWall(root) {
     if (focusedHd?.handingOff || focusedHd?.handoffTimer) {
       focusedHd.handoffRevision = (focusedHd.handoffRevision || 0) + 1;
       clearTimeout(focusedHd.handoffTimer); focusedHd.handoffTimer = null;
-      focusedHd.handingOff = false; focusedHd.playbackReady = false; focusedHd.selection = null;
+      focusedHd.handingOff = false; focusedHd.handoffPlaying = false; focusedHd.playbackReady = false; focusedHd.selection = null;
       focusedHd.video.hidden = true; focusedHd.video.classList.remove('is-ready');
     }
     if (preparedHd?.ready && preparedHd.stream?.isStreaming) preparedHd.stream.stop();
@@ -815,6 +929,56 @@ export async function mountHeroWall(root) {
       if (unit.warmResetAbort === abort) { unit.warmResetAbort = null; schedulePlayback(); }
     });
   }
+  function cancelNeighborHd(intent, state = 'failed', reason = state) {
+    if (!intent) return;
+    clearTimeout(intent.timer); intent.timer = null; intent.state = state; intent.reason = reason;
+    if (preparedHd?.index === intent.index && preparedHd.index !== focused && !preparedHd.ready) discardPrepared();
+    if (neighborHdIntent === intent) { root.dataset.wallHdWarmState = state; root.dataset.wallHdWarmReason = reason; }
+  }
+  function neighborHdPlan(candidates, safe) {
+    safe = safe && !cameraMoving && focusCoordinator.pendingIndex < 0;
+    const target = candidates[0] ?? -1;
+    if (neighborHdIntent && (neighborHdIntent.selection !== focusStart || neighborHdIntent.index !== target)) {
+      const previous = neighborHdIntent;
+      cancelNeighborHd(previous, 'obsolete', 'intent-changed');
+      if (preparedHd?.index === previous.index && preparedHd.index !== focused) discardPrepared();
+      neighborHdIntent = null;
+    }
+    if (target < 0) return null;
+    const intent = neighborHdIntent ||= { selection: focusStart, index: target, state: 'idle', reason: '', timer: null };
+    if (!safe && intent.state === 'loading') cancelNeighborHd(intent, 'failed', document.hidden ? 'document-hidden' : !visible ? 'offscreen' : 'foreground-unsafe');
+    if (!units[target].item.full_hls_src && intent.state === 'idle') { intent.state = 'failed'; intent.reason = 'no-playlist'; }
+    root.dataset.wallHdWarmTarget = String(intent.index); root.dataset.wallHdWarmState = intent.state; root.dataset.wallHdWarmReason = intent.reason;
+    const unit = units[target];
+    const targetReady = wallVideoFullyBuffered(unit.video) && unit.warmResetReady && !unit.video.seeking && Math.abs(unit.video.currentTime) <= .05;
+    const currentReady = wallVideoFullyBuffered(units[focused].video);
+    // Finish this direction's low preview, then its single HD fragment before
+    // proceeding to other low neighbors. A failed optional warm releases them.
+    return { intent, reserve: safe && (intent.state === 'loading' || (intent.state === 'idle' && targetReady && !units[focused].warmResetFailed)),
+      dispatch: safe && intent.state === 'idle' && targetReady && currentReady };
+  }
+  function prepareNeighborHd(intent) {
+    if (!intent || intent !== neighborHdIntent || intent.state !== 'idle') return;
+    intent.state = 'loading'; intent.reason = '';
+    const current = () => neighborHdIntent === intent && focusStart === intent.selection && focused !== intent.index;
+    root.dataset.wallHdWarmTarget = String(intent.index);
+    root.dataset.wallHdWarmState = 'loading';
+    root.dataset.wallHdWarmReason = ''; root.dataset.wallHdWarmStartedAt = performance.now().toFixed(1);
+    intent.timer = setTimeout(() => {
+      if (!current() || intent.state !== 'loading') return;
+      cancelNeighborHd(intent, 'failed', 'deadline-4000ms'); schedulePlayback();
+    }, 4000);
+    Promise.resolve().then(() => current() && intent.state === 'loading' ? prepareHd(intent.index) : null).then(hd => {
+      if (!current() || intent.state !== 'loading') return;
+      intent.state = hd?.ready && !hd.abort.signal.aborted ? 'ready' : 'failed';
+      intent.reason = intent.state === 'ready' ? '' : 'prepare-failed';
+      root.dataset.wallHdWarmState = intent.state;
+      if (intent.state === 'ready') root.dataset.wallHdWarmReadyAt = performance.now().toFixed(1);
+    }, () => { if (current() && intent.state === 'loading') { intent.state = 'failed'; intent.reason = 'prepare-rejected'; } }).finally(() => {
+      clearTimeout(intent.timer); intent.timer = null;
+      if (current()) { root.dataset.wallHdWarmState = intent.state; root.dataset.wallHdWarmReason = intent.reason; schedulePlayback(); }
+    });
+  }
   function playback(reset = false) {
     const active = (!paused || (exploring && focused >= 0)) && visible && !document.hidden;
     if ((!visible || document.hidden) && !networkSuspended) suspendNetwork();
@@ -833,11 +997,12 @@ export async function mountHeroWall(root) {
     // later direction reversal can then rewind cached bytes instead of reload.
     const previewUnit = active && focused >= 0 && focusStart ? units[focused] : null;
     const safeNeighbor = previewUnit && neighborPreviewSafe();
-    const candidates = safeNeighbor ? wallNeighborOrder(focused, preferredDirection, wallColumns(), units.length, hoveredPreview) : [];
-    warmPreviewIndex = candidates.find(index => {
+    const candidates = focused >= 0 && focusStart ? wallNeighborOrder(focused, preferredDirection, wallColumns(), units.length, hoveredPreview) : [];
+    const hdPlan = neighborHdPlan(candidates, Boolean(safeNeighbor));
+    warmPreviewIndex = safeNeighbor && !hdPlan?.reserve ? candidates.find(index => {
       const unit = units[index];
       return !unit.warmResetFailed && (!wallVideoFullyBuffered(unit.video) || !unit.warmResetReady || Math.abs(unit.video.currentTime) > .05 || unit.video.seeking);
-    }) ?? -1;
+    }) ?? -1 : -1;
     if (warmPreviewIndex >= 0) {
       units[warmPreviewIndex].suspendedPreview = null;
       if (preparedHd && preparedHd.index !== focused && !preparedHd.ready) discardPrepared();
@@ -848,6 +1013,7 @@ export async function mountHeroWall(root) {
     // neighbor starts only after the previous clip is fully cached and at zero.
     loadQueue.setActive(active && (focused < 0 || Boolean(previewUnit)), allowed);
     if (warmPreviewIndex >= 0) prepareNeighborPreview(warmPreviewIndex);
+    if (hdPlan?.dispatch) prepareNeighborHd(hdPlan.intent);
     root.dataset.wallPreviewWarmTarget = String(warmPreviewIndex);
     if (reset) loadQueue.retry();
     root.classList.toggle('motion-paused', !active);
@@ -857,7 +1023,7 @@ export async function mountHeroWall(root) {
       const wanted = active && Boolean(video.getAttribute('src')) && !units[i].resuming && !returning && (focused < 0 || selectedPreview);
       playbackController.sync(video, wanted, { reset });
     });
-    if (focusedHd) playbackController.sync(focusedHd.video, active && focusedHd.ready && (focusedHd.playbackReady || focusedHd.handingOff) && !focusedHd.loopSeeking, { reset });
+    if (focusedHd) playbackController.sync(focusedHd.video, active && focusedHd.ready && (focusedHd.playbackReady || (focusedHd.handingOff && focusedHd.handoffPlaying)) && !focusedHd.loopSeeking, { reset });
     for (const frame of retiredFrames) playbackController.sync(frame.video, active && frame.ready && frame.playbackReady && !frame.loopSeeking, { reset });
     if (active && !focusedHd && preparedHd?.index === focused && preparedHd.ready) activateHd(preparedHd);
     if (active && focusedHd?.ready && focusStart?.previewReleased && !focusStart.handedOff && !focusedHd.handingOff && !focusedHd.handoffTimer && focusedHd.selection !== focusStart) activateHd(focusedHd);
@@ -902,20 +1068,29 @@ export async function mountHeroWall(root) {
     retiredFrames.delete(hd); focusedHd = hd;
     const selection = focusStart;
     hd.selection = selection; hd.playbackReady = false;
+    if (hd.video.dataset.hdLoadedDataAt) root.dataset.wallHdLoadedDataAt = hd.video.dataset.hdLoadedDataAt;
     hd.video.hidden = false;
     if (selection?.previewReleased && !selection.handedOff) {
-      hd.handingOff = true;
+      hd.handingOff = true; hd.handoffPlaying = false;
+      if (hd.handoffAttemptSelection !== selection) { hd.handoffAttemptSelection = selection; hd.handoffAttempts = 0; }
+      hd.handoffAttempts++;
       const preview = units[hd.index].video;
       const revision = hd.handoffRevision = (hd.handoffRevision || 0) + 1;
       const current = () => !hd.abort.signal.aborted && hd.handoffRevision === revision && focusStart === selection && focusedHd === hd && focused === hd.index && visible && !document.hidden;
       const retry = () => {
         if (!current()) return;
-        hd.handingOff = false; hd.selection = null;
-        root.dataset.wallHandoffState = 'preview';
+        hd.handingOff = false; hd.handoffPlaying = false; hd.playbackReady = false;
+        hd.video.classList.remove('is-ready');
+        hd.selection = hd.handoffAttempts >= 3 ? selection : null;
+        if (hd.handoffAttempts >= 3) {
+          hd.handoffExhaustedEnd = Math.max(0, ...Array.from({ length: hd.video.buffered?.length || 0 }, (_, i) => hd.video.buffered.end(i)));
+          hd.handoffExhaustedReady = hd.video.readyState;
+        }
+        root.dataset.wallHandoffState = hd.handoffAttempts >= 3 ? 'preview-exhausted' : 'preview';
         // Preserve the same decoder/source while more bytes arrive. There is
         // only one retry timer; leaving or changing selection invalidates it.
         clearTimeout(hd.handoffTimer);
-        hd.handoffTimer = setTimeout(() => {
+        hd.handoffTimer = hd.handoffAttempts >= 3 ? null : setTimeout(() => {
           hd.handoffTimer = null;
           if (current()) activateHd(hd);
         }, 600);
@@ -924,16 +1099,43 @@ export async function mountHeroWall(root) {
       root.dataset.wallHandoffState = 'aligning';
       hd.stream.start().then(started => started && current() && alignWallHandoff(hd.video, preview, {
         signal: hd.abort.signal, sourceStart: sourceStart(units[hd.index]), isCurrent: current,
-        start: () => { playback(); }
+        requestBuffer: hd.stream.isStreaming ? target => { hd.video.currentTime = target; } : null,
+        pause: () => { hd.handoffPlaying = false; playback(); },
+        start: () => { hd.handoffPlaying = true; playback(); },
+        onState: (phase, details) => {
+          if (!current()) return;
+          const trace = selection.handoffTrace ||= [];
+          trace.push({ phase, at: Number(performance.now().toFixed(1)), preview: Number(preview.currentTime.toFixed(3)), hd: Number(hd.video.currentTime.toFixed(3)),
+            previewPaused: preview.paused, hdPaused: hd.video.paused, seeking: hd.video.seeking, readyState: hd.video.readyState,
+            ...(details.seekMs !== undefined ? { seekMs: Number(details.seekMs.toFixed(1)) } : {}),
+            ...(details.target !== undefined ? { target: Number(details.target.toFixed(3)) } : {}) });
+          if (trace.length > 32) trace.shift();
+          root.dataset.wallHandoffTrace = JSON.stringify(trace);
+          root.dataset.wallHandoffPhase = phase;
+          root.dataset.wallHandoffSeekCount = String(details.seeks);
+          if (details.seekMs !== undefined) root.dataset.wallHandoffSeekMs = details.seekMs.toFixed(1);
+          if (details.lead !== undefined) root.dataset.wallHandoffLead = details.lead.toFixed(3);
+          if (details.target !== undefined) root.dataset.wallHandoffTarget = details.target.toFixed(3);
+        }
       })).then(async aligned => {
         if (!current()) return;
         if (!aligned) { retry(); return; }
         hd.playbackReady = true;
-        root.dataset.wallHandoffPresentedAt = performance.now().toFixed(1);
+        root.dataset.wallHandoffDecodedPlayingAt = performance.now().toFixed(1);
+        root.dataset.wallHandoffFrameProof = 'decoded-target+playing';
+        const previewAtFade = preview.currentTime, hdAtFade = hd.video.currentTime;
         getComputedStyle(hd.video).opacity; hd.video.classList.add('is-ready');
         await waitWallVisualTransitions(hd.video, 'opacity');
         if (!current()) return;
-        selection.handedOff = true; hd.handingOff = false; preview.hidden = true;
+        if (hd.video.paused || hd.video.readyState < 2 || hd.video.seeking || hd.video.error) { retry(); return; }
+        const finalDrift = hd.video.currentTime - sourceStart(units[hd.index]) - preview.currentTime;
+        const stationaryTakeover = Math.abs(preview.currentTime - previewAtFade) <= .03 &&
+          hd.video.currentTime >= hdAtFade && Math.abs(hdAtFade - sourceStart(units[hd.index]) - previewAtFade) <= .12;
+        root.dataset.wallHandoffFadeDelta = finalDrift.toFixed(3);
+        // A stalled preview may legitimately stay on the frame that HD has
+        // begun playing from. Otherwise a drift during the fade must realign.
+        if (Math.abs(finalDrift) > .12 && !stationaryTakeover) { retry(); return; }
+        selection.handedOff = true; hd.handingOff = false; hd.handoffPlaying = false; preview.hidden = true;
         root.dataset.wallHandoffState = 'hd';
         root.dataset.wallHandoffAt = performance.now().toFixed(1);
         root.dataset.wallHandoffPreviewTime = preview.currentTime.toFixed(3);
@@ -991,7 +1193,19 @@ export async function mountHeroWall(root) {
     video.addEventListener('loadeddata', () => { if (foreground() && hd.ready) playback(); }, { signal });
     video.addEventListener('waiting', () => { hd.starved = true; if (foreground()) schedulePlayback(); }, { signal });
     video.addEventListener('playing', () => { hd.starved = false; if (foreground()) schedulePlayback(); }, { signal });
-    for (const event of ['progress', 'timeupdate']) video.addEventListener(event, () => { if (focusedHd === hd) schedulePlayback(); }, { signal });
+    for (const event of ['progress', 'timeupdate', 'canplay']) video.addEventListener(event, () => {
+      if (focusedHd !== hd) return;
+      // Exhaustion stops polling, not recovery. Only genuinely new bytes or a
+      // stronger decoder readiness state can re-arm this same retained source.
+      if (hd.handoffAttempts >= 3 && hd.selection === focusStart && !focusStart?.handedOff) {
+        const end = Math.max(0, ...Array.from({ length: video.buffered?.length || 0 }, (_, i) => video.buffered.end(i)));
+        if (end > hd.handoffExhaustedEnd + .1 || video.readyState > hd.handoffExhaustedReady) {
+          hd.handoffAttempts = 0; hd.selection = null;
+          root.dataset.wallHandoffState = 'buffer-resumed';
+        }
+      }
+      schedulePlayback();
+    }, { signal });
     video.addEventListener('streamfallback', () => {
       if (focused !== hd.index) hd.abort.abort();
       else if (foreground() && hd.ready) playback();
@@ -999,7 +1213,14 @@ export async function mountHeroWall(root) {
   }
   function primeHd(index) {
     clearTimeout(hoverTimer);
-    if (focused >= 0 && index !== focused) { hoveredPreview = index; playback(); }
+    if (focused >= 0) {
+      if (index === focused) return;
+      hoveredPreview = index;
+      // A fresh explicit intent can retry a failed warm; background progress
+      // alone never restarts a failed optional request on every timeupdate.
+      if (neighborHdIntent?.index === index && neighborHdIntent.state === 'failed') neighborHdIntent = null;
+      playback(); return;
+    }
     // Finish the small zero-start preview before spending bandwidth on an HD
     // hover fragment. A cold focused HD always retains foreground priority.
     if (!wallVideoFullyBuffered(units[index].video) || (focused >= 0 && (warmPreviewIndex >= 0 || !neighborPreviewSafe() || !units[index].warmResetReady))) return;
@@ -1020,9 +1241,9 @@ export async function mountHeroWall(root) {
     if (!units[index]?.item.full_src) return Promise.resolve(null);
     if (preparedHd?.index === index) {
       const decoded = preparedHd.video.readyState >= 2 && !preparedHd.video.seeking;
-      // Do not make a click wait behind an unfinished speculative HLS chain.
-      // Native requests already in flight and decoded HLS frames are reused.
-      if (focused !== index || preparedHd.transport === 'native' || decoded) return preparedHd.promise;
+      // Reuse useful bytes already arriving in the first HLS fragment. Only
+      // library/manifest-only speculation switches to the one-request MP4.
+      if (focused !== index || preparedHd.transport === 'native' || decoded || preparedHd.stream.state === 'warming') return preparedHd.promise;
     }
     discardPrepared();
     const unit = units[index], video = document.createElement('video');
@@ -1030,6 +1251,11 @@ export async function mountHeroWall(root) {
     video.className = 'wall-hd'; video.muted = true; video.defaultMuted = true; video.playsInline = true; video.preload = 'auto';
     video.dataset.clipId = unit.item.id; video.setAttribute('muted', ''); video.setAttribute('playsinline', '');
     video.setAttribute('aria-hidden', 'true');
+    video.addEventListener('loadeddata', () => {
+      const time = performance.now().toFixed(1);
+      video.dataset.hdLoadedDataAt = video.dataset.firstDataAt = time;
+      if (focused === index) root.dataset.wallHdLoadedDataAt = time;
+    }, { once: true, signal: hd.abort.signal });
     const loopAction = async () => {
       if (!visible || document.hidden || (focusedHd !== hd && !retiredFrames.has(hd)) || !hd.ready || hd.loopSeeking || video.currentTime < sourceEnd(unit) - .08) return;
       hd.loopSeeking = true; playback();
@@ -1058,8 +1284,13 @@ export async function mountHeroWall(root) {
       if (focused !== index) {
         // Only one media fragment is speculative. Calling start()/alignHd()
         // here would fill the foreground 4–6 second buffer while still hovering.
-        if (!await hd.stream.warm({ signal: hd.abort.signal })) return null;
-        if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
+        if (!await hd.stream.warm({ signal: hd.abort.signal })) {
+          // A hover may become the explicit selection while its first segment
+          // is in flight. Its optional timeout/fatal fallback must then recover
+          // as foreground I/O instead of leaving this selection at preview quality.
+          if (focused !== index || hd.abort.signal.aborted || !await hd.stream.start()) return null;
+          if (!await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true }) || !await alignHd(hd)) return null;
+        } else if (!await waitWallHdFrame(video, { signal: hd.abort.signal })) return null;
       } else {
         if (!await hd.stream.start()) return null;
         const available = await waitWallHdFrame(video, { signal: hd.abort.signal, metadataOnly: true });
@@ -1069,7 +1300,7 @@ export async function mountHeroWall(root) {
       }
       if (hd.abort.signal.aborted) return null;
       hd.ready = true; hd.preparing = false;
-      video.dataset.firstDataAt = performance.now().toFixed(1);
+      video.dataset.hdPreparedAt = performance.now().toFixed(1);
       // A slow request may complete after the bounded preview fallback. Upgrade
       // only that still-focused tile, never a stale selection.
       if (focused === index && !focusedHd && visible && !document.hidden) activateHd(hd);
@@ -1182,7 +1413,7 @@ export async function mountHeroWall(root) {
     root.dataset.wallFocusSelectedAt = performance.now().toFixed(1);
     root.dataset.wallFocusTargetStart = sourceStart(units[index]).toFixed(3);
     for (const key of ['wallCameraSettledAt', 'wallHdFadeSettledAt', 'wallFocusPlaybackReleasedAt', 'wallFocusPlaybackStartTime', 'wallFocusFirstPlayAt', 'wallFocusFirstPlayTime']) delete root.dataset[key];
-    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHandoffState', 'wallHandoffPresentedAt', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta']) delete root.dataset[key];
+    for (const key of ['wallPreviewReleasedAt', 'wallPreviewStartTime', 'wallPreviewFirstPlayAt', 'wallPreviewFirstPlayTime', 'wallPreviewResetReadyAt', 'wallPreviewWarmHit', 'wallHdLoadedDataAt', 'wallHandoffState', 'wallHandoffTrace', 'wallHandoffPhase', 'wallHandoffSeekCount', 'wallHandoffSeekMs', 'wallHandoffLead', 'wallHandoffTarget', 'wallHandoffFadeDelta', 'wallHandoffPresentedAt', 'wallHandoffDecodedPlayingAt', 'wallHandoffFrameProof', 'wallHandoffAt', 'wallHandoffPreviewTime', 'wallHandoffHdTime', 'wallHandoffDelta']) delete root.dataset[key];
     camera.setAttribute('aria-busy', 'true');
     selection.timer = setTimeout(() => {
       if (focusStart !== selection || selection.released) return;
@@ -1224,7 +1455,7 @@ export async function mountHeroWall(root) {
       // A -> B -> A may reuse the decoder, but a new selection always starts
       // at the beginning rather than inheriting the retained outgoing clock.
       clearTimeout(hd.handoffTimer); hd.handoffTimer = null;
-      hd.handoffRevision = (hd.handoffRevision || 0) + 1; hd.handingOff = false;
+      hd.handoffRevision = (hd.handoffRevision || 0) + 1; hd.handingOff = false; hd.handoffPlaying = false;
       hd.preparing = true; hd.playbackReady = false;
       playbackController.sync(hd.video, false);
       hd.video.hidden = true; hd.video.classList.remove('is-ready');

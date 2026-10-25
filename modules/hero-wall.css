@@ -39,7 +39,10 @@
 
 .wall-focused .is-focused video{object-fit:contain}
 .wall-focused .is-focused{border-radius:12px}
-.wall-tile .wall-hd{position:absolute;inset:0;opacity:0;transition:opacity .12s;pointer-events:none}
+/* The decoded HD frame replaces the preview at the same playback position.
+   Keep camera motion animated; a second video-opacity transition delays
+   compositor promotion and makes quality handoff timing unpredictable. */
+.wall-tile .wall-hd{position:absolute;inset:0;opacity:0;transition:none;pointer-events:none}
 .wall-tile .wall-hd.is-ready{opacity:1}
 @media(max-width:760px){.hero h1{font-size:clamp(54px,15.4vw,108px);white-space:nowrap}}
 /* Light hero navigation, kept here with the hero's own palette. */
