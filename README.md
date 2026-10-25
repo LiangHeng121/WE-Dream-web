@@ -6,7 +6,15 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 ## Deployment
 
-This repository contains the buildless v33 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+This repository contains the buildless research website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
+
+## Release 36
+
+- Numbered section names now lead each section, with smaller descriptive subtitles.
+- Method uses a compact connected input row; redundant training, weight-transfer and action-sum annotations are removed. Frozen LAM has a vector snowflake.
+- Attention uses the paper's C / Ṽ / Ã / S notation, enabled checks and blank masks; only the routed cell pulses in pale orange.
+- Human mosaic is half EgoDex and half EgoVerse. Robot mosaic uses four calmer active head-camera segments, selected from measured camera motion and visual review without retiming or stabilization.
+- Existing wall/gallery playback, selections and the1080 deployment video remain unchanged.
 
 ## Release 35
 

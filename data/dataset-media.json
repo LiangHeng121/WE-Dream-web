@@ -23,7 +23,7 @@
             "title": "Everyday fabric manipulation.",
             "description": "An original EgoDex episode showing first-person cloth handling and arrangement.",
             "src": "assets/media/datasets/egodex/egodex-cloths.mp4",
-            "poster": "assets/media/datasets/egodex/egodex-cloths.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/egodex-cloths.jpg?v=v36",
             "duration": 10.0,
             "width": 1920,
             "height": 1080,
@@ -44,7 +44,7 @@
             "source_page_url": "https://github.com/apple-aiml-research/ml-egodex",
             "preview": {
               "src": "assets/media/datasets/egodex/mosaic/egodex-cloths.mp4",
-              "poster": "assets/media/datasets/egodex/mosaic/egodex-cloths.jpg?v=v35",
+              "poster": "assets/media/datasets/egodex/mosaic/egodex-cloths.jpg?v=v36",
               "width": 640,
               "height": 360,
               "fps": 30.0,
@@ -74,7 +74,7 @@
             "title": "Open. Tilt. Empty.",
             "description": "An original EgoDex episode showing a person opening a small box and emptying its contents.",
             "src": "assets/media/datasets/egodex/egodex-box.mp4",
-            "poster": "assets/media/datasets/egodex/egodex-box.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/egodex-box.jpg?v=v36",
             "duration": 8.77,
             "width": 1920,
             "height": 1080,
@@ -95,7 +95,7 @@
             "source_page_url": "https://github.com/apple-aiml-research/ml-egodex",
             "preview": {
               "src": "assets/media/datasets/egodex/mosaic/egodex-box.mp4",
-              "poster": "assets/media/datasets/egodex/mosaic/egodex-box.jpg?v=v35",
+              "poster": "assets/media/datasets/egodex/mosaic/egodex-box.jpg?v=v36",
               "width": 640,
               "height": 360,
               "fps": 30.0,
@@ -125,7 +125,7 @@
             "title": "Turn a Rubik’s cube",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/egodex-cube.mp4",
-            "poster": "assets/media/datasets/egodex/egodex-cube.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/egodex-cube.jpg?v=v36",
             "duration": 3.83,
             "width": 1920,
             "height": 1080,
@@ -149,7 +149,7 @@
             "transformation": "Technical H.264 browser conversion, slow CRF29, preserving complete duration, dimensions, frame rate and frame order; no cuts, crops or speed changes.",
             "preview": {
               "src": "assets/media/datasets/egodex/mosaic/egodex-cube.mp4",
-              "poster": "assets/media/datasets/egodex/mosaic/egodex-cube.jpg?v=v35",
+              "poster": "assets/media/datasets/egodex/mosaic/egodex-cube.jpg?v=v36",
               "width": 640,
               "height": 360,
               "fps": 30.0,
@@ -179,7 +179,7 @@
             "title": "Pour between containers",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/egodex-pour.mp4",
-            "poster": "assets/media/datasets/egodex/egodex-pour.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/egodex-pour.jpg?v=v36",
             "duration": 2.5,
             "width": 1920,
             "height": 1080,
@@ -203,7 +203,7 @@
             "transformation": "Technical H.264 browser conversion, slow CRF29, preserving complete duration, dimensions, frame rate and frame order; no cuts, crops or speed changes.",
             "preview": {
               "src": "assets/media/datasets/egodex/mosaic/egodex-pour.mp4",
-              "poster": "assets/media/datasets/egodex/mosaic/egodex-pour.jpg?v=v35",
+              "poster": "assets/media/datasets/egodex/mosaic/egodex-pour.jpg?v=v36",
               "width": 640,
               "height": 360,
               "fps": 30.0,
@@ -233,7 +233,7 @@
             "title": "Zip a bag",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/mosaic/egodex-zip-bag.mp4",
-            "poster": "assets/media/datasets/egodex/mosaic/egodex-zip-bag.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/mosaic/egodex-zip-bag.jpg?v=v36",
             "duration": 3.47,
             "width": 640,
             "height": 360,
@@ -278,7 +278,7 @@
             "title": "Turn a bottle cap",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/mosaic/egodex-bottle-cap.mp4",
-            "poster": "assets/media/datasets/egodex/mosaic/egodex-bottle-cap.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/mosaic/egodex-bottle-cap.jpg?v=v36",
             "duration": 3.13,
             "width": 640,
             "height": 360,
@@ -323,7 +323,7 @@
             "title": "Use a key",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/mosaic/egodex-key-lock.mp4",
-            "poster": "assets/media/datasets/egodex/mosaic/egodex-key-lock.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/mosaic/egodex-key-lock.jpg?v=v36",
             "duration": 3.63,
             "width": 640,
             "height": 360,
@@ -368,7 +368,7 @@
             "title": "Handle a paintbrush",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/mosaic/egodex-brush.mp4",
-            "poster": "assets/media/datasets/egodex/mosaic/egodex-brush.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/mosaic/egodex-brush.jpg?v=v36",
             "duration": 4.13,
             "width": 640,
             "height": 360,
@@ -413,7 +413,7 @@
             "title": "Fold paper",
             "description": "A complete independent EgoDex publisher sample.",
             "src": "assets/media/datasets/egodex/mosaic/egodex-fold-paper.mp4",
-            "poster": "assets/media/datasets/egodex/mosaic/egodex-fold-paper.jpg?v=v35",
+            "poster": "assets/media/datasets/egodex/mosaic/egodex-fold-paper.jpg?v=v36",
             "duration": 5.73,
             "width": 640,
             "height": 360,
@@ -498,7 +498,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2025-05-08-02-34-44-740246",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-pack-peppers.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-pack-peppers.jpg?v=v36",
             "source_sha256": "d3ebac304f0a90b56c63accfb55171e1144ec77a18c70f27dd15ebd3252041d6",
             "sha256": "558b369620b3f23159ffed72bfe31989ce38fee71cea0c823777974ac748e57e",
             "source_bytes": 1441771,
@@ -574,7 +574,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-27-12-01-48-193716",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-repair-stove.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-repair-stove.jpg?v=v36",
             "sha256": "d0707f0a5724b5e49e49ba828f40f18b297dc93befd49bc23cf2afe054040bf6",
             "source_bytes": 810987,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -617,7 +617,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-27-12-01-54-618274",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-dough.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-dough.jpg?v=v36",
             "sha256": "092e1ad0ceaaa0d190f11e07230447d40b296ce4b89ee6d2ba7eb5ac0de95fd1",
             "source_bytes": 1152949,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -660,7 +660,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-10-09-28-52-879712",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-coffee.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-coffee.jpg?v=v36",
             "sha256": "f02964a3a1e94fa4ba8cfb4262b0ffbab442cff9422f2937ca08bdf7324a65fe",
             "source_bytes": 1557185,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -703,7 +703,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-26-18-14-24-818595",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-clean-mirror.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-clean-mirror.jpg?v=v36",
             "sha256": "0a8c8c8322278c048aace76e5816f4537e358a0f1bb09ba935025fd3ad41e26f",
             "source_bytes": 969785,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -746,7 +746,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-26-18-14-50-858471",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-iron-clothes.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-iron-clothes.jpg?v=v36",
             "sha256": "1c8eaa30e8f51498d4646db6a426f0e41c6d5c84f1415c3917c7909eac995b86",
             "source_bytes": 1516982,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -789,7 +789,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-29-13-57-16-589549",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-organize-fridge.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-organize-fridge.jpg?v=v36",
             "sha256": "31421d65c02cda1881e09f67c2fc19c0b4b4fecfb8477c6098b5f5bbdaec6a40",
             "source_bytes": 1362695,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -832,7 +832,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-02-11-00-34-016225",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-clean-sunglasses.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-clean-sunglasses.jpg?v=v36",
             "sha256": "bbb02587a34707edfd11892352ff207ae1e9b655e1996eb3039cb86734d7e8de",
             "source_bytes": 505768,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -875,7 +875,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-27-19-04-25-792095",
-            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-broccoli.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egoverse-human-prepare-broccoli.jpg?v=v36",
             "sha256": "583161b111c6a6846abc015a49be5dad9330037fd2f3a3e20f601a00363d16cd",
             "source_bytes": 624529,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -926,7 +926,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2025-05-08-02-45-08-499105",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-pack-peppers.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-pack-peppers.jpg?v=v36",
             "source_sha256": "2b81b7a25b2c70b6ec7b13f53b115f206bebe937c88afaecb4acc278a6a82a16",
             "sha256": "ea91a17cdcc836684e9fe58b6c27af0dc8d82d55d2e00b3d04f96964c15895f7",
             "source_bytes": 1636441,
@@ -972,7 +972,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-27-12-02-04-641867",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-wash-dishes.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-wash-dishes.jpg?v=v36",
             "sha256": "02b449eea426e1a45adcba86e5541aa8b7017c67b05569d4cb521adc5157f89f",
             "source_bytes": 1207061,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1016,7 +1016,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-10-09-29-28-926520",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-make-bed.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-make-bed.jpg?v=v36",
             "sha256": "93a9c047fa2740bcc36dbc94c78b7965d92ae904c1359682087265bbe1a7d15a",
             "source_bytes": 1888422,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1059,7 +1059,7 @@
               "confidence": "high",
               "mosaic_enabled": true
             },
-            "poster": "assets/media/datasets/egowe/egowe-human-wash-cloth.jpg?v=v35",
+            "poster": "assets/media/datasets/egowe/egowe-human-wash-cloth.jpg?v=v36",
             "sha256": "4241cbdb311c356240ad42b1e3ea22af2a3bea5e71c340afd618acb9ee8e1015",
             "source_duration": 13.4,
             "source_frames": 402,
@@ -1125,7 +1125,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-27-19-04-43-238005",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-clean-counter.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-clean-counter.jpg?v=v36",
             "sha256": "f10d3ce65fa6c39f279d0bb47f810ff3e3ec8ce832904deb0f4ccc955712c4f0",
             "source_bytes": 931615,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1169,7 +1169,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-29-13-56-03-356216",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-prepare-tea.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-prepare-tea.jpg?v=v36",
             "sha256": "19ee82a3ff6b0411e41eec04c532b6a4078d132928385bd63f0bd59aff8bcdb2",
             "source_bytes": 1119596,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1213,7 +1213,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-03-29-13-58-28-516586",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-vacuum-floor.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-vacuum-floor.jpg?v=v36",
             "sha256": "3811f73b2004752809674c4709bbfba850b4315200fbac96db58f71ff2965dc9",
             "source_bytes": 1227666,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1257,7 +1257,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-17-08-27-09-864941",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-clean-bathroom.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-clean-bathroom.jpg?v=v36",
             "sha256": "da1fe66169c61659af8038f64fd0e58f3a3269caf1ad4da3afacf52f9459dc73",
             "source_bytes": 816436,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1301,7 +1301,7 @@
               "mosaic_enabled": true
             },
             "original_src": "https://egoverse-research-workbench.vercel.app/api/media?id=2026-04-26-18-14-49-602781",
-            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-peel-vegetables.jpg?v=v35",
+            "poster": "assets/media/datasets/egoverse/delivery/egowe-human-peel-vegetables.jpg?v=v36",
             "sha256": "fb18ebc2f5322b4c7b6ce7f1d19e2c6542907c19887d1a561059239782d05094",
             "source_bytes": 891638,
             "delivery_transformation": "MP4 container relocation only: compressed video packets, frame count, frame timing, dimensions and frame rate are unchanged; no video re-encoding, trimming, crop or speed change."
@@ -1333,7 +1333,7 @@
             "title": "Pick & place",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-pick-place.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-pick-place.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-pick-place.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1402,7 +1402,7 @@
             "title": "Push a chair",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-chair.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-chair.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-chair.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1471,7 +1471,7 @@
             "title": "Arrange a pillow",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-pillow.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-pillow.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-pillow.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1540,7 +1540,7 @@
             "title": "Collect clothes",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-clothes.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-clothes.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-clothes.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1609,7 +1609,7 @@
             "title": "Dispose of rubbish",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-rubbish.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-rubbish.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-rubbish.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1678,7 +1678,7 @@
             "title": "Retrieve shoes",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-shoes.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-shoes.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-shoes.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1747,7 +1747,7 @@
             "title": "Sweep a table",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-sweep.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-sweep.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-sweep.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1816,7 +1816,7 @@
             "title": "Retrieve from a cabinet",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-cabinet.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-cabinet.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-cabinet.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
@@ -1885,7 +1885,7 @@
             "title": "Store in a drawer",
             "description": "A neck-camera training episode with its initial pre-action lead-in removed for web playback.",
             "src": "assets/media/datasets/g1-pov/g1-pov-drawer.mp4",
-            "poster": "assets/media/datasets/g1-pov/g1-pov-drawer.jpg?v=v35",
+            "poster": "assets/media/datasets/g1-pov/g1-pov-drawer.jpg?v=v36",
             "source_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "source_page_url": "https://www.modelscope.cn/datasets/hliang/g1_sonic_lerobot_0917_neckclean_merged",
             "media_kind": "robot_training_episode",
