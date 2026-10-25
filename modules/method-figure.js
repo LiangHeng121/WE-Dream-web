@@ -1,4 +1,4 @@
-import { videoFullyBuffered } from './video-warm.js?v=v22';
+import { videoFullyBuffered } from './video-warm.js?v=v23';
 
 // Original Figure 2 regions are the visual source of truth. These overlays
 // highlight existing modules, rather than replacing the architecture.
@@ -12,7 +12,7 @@ const FIGURES = {
 const MEDIA = {
   execution: {
     src: 'assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4',
-    poster: 'assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v22',
+    poster: 'assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v23',
     label: 'Policy execution',
     source: 'https://drive.google.com/file/d/1puOhktSpme4E-M6At185A0rK9V-ax5ez/view',
     alt: 'A WE-Dream humanoid rollout collecting a yellow shirt into a laundry basket.',
