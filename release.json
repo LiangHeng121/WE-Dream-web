@@ -1,5 +1,20 @@
 {
+  "version": 19,
+  "published_date": "2026-10-25",
+  "release": "foreground-priority-bounded-1080p-streaming",
+  "full_demonstrations": 57,
+  "skill_excerpts": 6,
+  "full_video_resolution": "1920x1080",
+  "full_video_fps": 24,
+  "video_encoding": "H.264 CRF29, faststart",
+  "full_media_bytes": 358158333,
+  "wall_demonstrations": 40,
+  "wall_columns": 8,
+  "wall_rows": 5,
+  "patch": 0,
+  "document_cache_version": "v19",
+  "dataset_local_delivery": 17,
   "review": "v19",
-  "date": "2026-10-25",
-  "description": "Bounded 1080p streaming, foreground media priority, lazy posters and compressed web fonts."
+  "streaming_representations": 57,
+  "streaming_video_encoding": "Original v18 H.264 packets copied into HLS fMP4 byte ranges; no additional re-encoding"
 }
