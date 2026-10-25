@@ -1,7 +1,7 @@
 // hls.js owns demuxing, MediaSource and its rolling buffer. This adapter only
 // owns request intent: one-fragment speculation versus foreground playback.
 // API: https://github.com/video-dev/hls.js/blob/v1.6.19/docs/API.md
-import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v31.1';
+import { createStreamBootstrapLoader } from './stream-bootstrap.js?v=v31.2';
 
 let libraryPromise;
 const loadLibrary = () => libraryPromise ||= import('../vendor/hls.js/hls.light.mjs');
@@ -153,6 +153,11 @@ export function createStreamVideo(video, { src, hlsSrc, canPlay = () => true, lo
           // retains its SourceBuffer, including rapid A -> B -> A navigation.
           instance.stopLoad(); loading = false; intent = 'idle';
           status('warmed'); settleWarm(true);
+        });
+        if (Hls.Events.FRAG_LOADED) instance.on(Hls.Events.FRAG_LOADED, (_event, data) => {
+          if (!current() || data?.frag?.sn !== 0 || !new URLSearchParams(location.search).has('mediaDebug')) return;
+          video.dataset.streamStartupCache = data.frag.stats?.startupCache || 'miss';
+          video.dataset.streamStartupRequest = data.frag.url;
         });
         instance.on(Hls.Events.ERROR, (_event, data) => {
           if (current() && data?.error && new URLSearchParams(location.search).has('mediaDebug')) {

@@ -10,6 +10,8 @@ This repository contains the buildless v31 website. GitHub Pages publishes from 
 
 ## Release 31
 
+- Patch 2: resolve relative HLS fragment addresses when looking up absolute prefetch cache keys, with actual vendored playlist-parser regression and cache-hit diagnostics. This removes duplicate first-fragment downloads on GitHub Pages.
+
 - Patch 1: accept HTTP gzip transfer length while checking the decoded fragment length and SHA256; this restores startup-cache reuse on GitHub Pages.
 
 - All 40 wall HD streams have a 0.5-second first fragment, preserving 1920 × 1080, 24 fps and existing timelines. Startup media totals 5.87 MB instead of 11.35 MB (48.25% smaller).

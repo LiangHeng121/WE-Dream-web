@@ -1,5 +1,5 @@
-import catalogue from './stream-bootstrap-data.js?v=v31.1';
-import { streamStartCache } from './stream-start-cache.js?v=v31.1';
+import catalogue from './stream-bootstrap-data.js?v=v31.2';
+import { streamStartCache } from './stream-start-cache.js?v=v31.2';
 
 // Immutable playlists/init boxes are bundled. A known, exact first-fragment
 // request may join the shared byte cache; all other requests/retries retain
@@ -76,6 +76,7 @@ export function createStreamBootstrapLoader(Hls) {
         }
       }
       this.requestWasUsed = true;
+      delete this.stats.startupCache;
       this.context = context;
       const pending = this.bootstrap = { context, callbacks, done: false, cancelled: false, controller: new AbortController() };
       const stats = this.stats;
@@ -96,6 +97,7 @@ export function createStreamBootstrapLoader(Hls) {
         // the delegated request must initialize a fresh network interval.
         Object.assign(stats.loading, { start: 0, first: 0, end: 0 });
         Object.assign(stats, { aborted: false, loaded: 0, total: 0, chunkCount: 0 });
+        delete stats.startupCache;
         return super.load(context, config, delegated);
       };
       const complete = response => {
@@ -105,6 +107,7 @@ export function createStreamBootstrapLoader(Hls) {
         if (!stats.loading.first) stats.loading.first = stats.loading.end;
         stats.loaded = stats.total = response.bytes;
         stats.chunkCount = 1;
+        if (typeof response.fromCache === 'boolean') stats.startupCache = response.fromCache ? 'ready' : 'inflight';
         callbacks.onProgress?.(stats, context, response.data, null);
         if (!active()) return;
         pending.done = true;
@@ -116,7 +119,17 @@ export function createStreamBootstrapLoader(Hls) {
         queueMicrotask(() => complete(response));
         return;
       }
-      const shared = streamStartCache.acquire(context, {
+      // A bundled relative playlist retains its caller URL in HLS's fragment
+      // parser. Browser requests resolve that URL against the page, while our
+      // prefetch keys are already absolute. Normalize only the lookup key;
+      // retain the original context/URL for HLS callbacks and normal loading.
+      let cacheContext = context;
+      try {
+        const base = globalThis.document?.baseURI || globalThis.location?.href;
+        const url = new URL(context.url, base).href;
+        if (url !== context.url) cacheContext = { ...context, url };
+      } catch { /* Without a browser base, an unknown relative request delegates. */ }
+      const shared = streamStartCache.acquire(cacheContext, {
         signal: pending.controller.signal,
         onProgress: progress => {
           if (!active()) return;
