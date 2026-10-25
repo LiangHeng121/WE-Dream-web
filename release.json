@@ -11,10 +11,10 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 0,
-  "document_cache_version": "v31",
+  "patch": 1,
+  "document_cache_version": "v31.1",
   "dataset_local_delivery": 17,
-  "review": "v31",
+  "review": "v31.1",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -40,5 +40,6 @@
   "wall_hd_startup": "SHA256-verified 0.5-second first-fragment bytes preloaded in a bounded shared cache; selected request priority; same-origin prefix assets on Sites; actual hls.js network loader timing contract preserved",
   "wall_startup_cache_bytes": 5873109,
   "wall_startup_cache_files": 40,
-  "wall_startup_payload_reduction_percent": 48.25
+  "wall_startup_payload_reduction_percent": 48.25,
+  "wall_startup_transfer_validation": "HTTP Content-Encoding-aware length checks; bounded decoded bytes and SHA256 remain mandatory"
 }

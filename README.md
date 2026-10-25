@@ -10,6 +10,8 @@ This repository contains the buildless v31 website. GitHub Pages publishes from 
 
 ## Release 31
 
+- Patch 1: accept HTTP gzip transfer length while checking the decoded fragment length and SHA256; this restores startup-cache reuse on GitHub Pages.
+
 - All 40 wall HD streams have a 0.5-second first fragment, preserving 1920 × 1080, 24 fps and existing timelines. Startup media totals 5.87 MB instead of 11.35 MB (48.25% smaller).
 - A bounded byte cache preloads exact SHA256-verified startup fragments, prioritizes the selected clip, and reuses in-flight bytes. Sites serves these tiny assets on its own origin. This does not create 40 HD decoders or preload 40 full movies.
 - Fixed a real hls.js loader-contract error that caused network requests to fail and fall back to native MP4. Neighbor HD preparation no longer waits for complete low-resolution files when foreground playback is buffered safely.

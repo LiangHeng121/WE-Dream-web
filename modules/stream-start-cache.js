@@ -107,10 +107,15 @@ export function createStreamStartCache({
       const contentRange = response.headers?.get?.('Content-Range');
       const match = /^bytes (\d+)-(\d+)\/(\d+|\*)$/i.exec(contentRange || '');
       const lengthHeader = response.headers?.get?.('Content-Length');
+      const encoded = (response.headers?.get?.('Content-Encoding') || '').split(',')
+        .some(value => value.trim() && value.trim().toLowerCase() !== 'identity');
       const exactRange = match && Number(match[1]) === job.start && Number(match[2]) === job.end - 1
         && (match[3] === '*' || Number(match[3]) >= job.end);
       if ((job.sourceUrl ? response.status !== 200 : response.status !== 206 || !exactRange)
-          || (lengthHeader != null && Number(lengthHeader) !== job.bytes)) {
+          // Fetch exposes decoded body bytes; Content-Length describes the
+          // compressed wire representation on hosts such as GitHub Pages.
+          // The bounded reader and checksum below still verify decoded bytes.
+          || (!encoded && lengthHeader != null && Number(lengthHeader) !== job.bytes)) {
         // A host that ignores Range may return the whole movie. Cancel it at
         // headers instead of accidentally prefetching forty complete movies.
         await response.body?.cancel?.();
