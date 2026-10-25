@@ -11,7 +11,7 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 0,
+  "patch": 1,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
   "review": "v46",
@@ -50,10 +50,10 @@
   "frozen_motion_studies": "frozen-motion-options.html",
   "dataset_presentation": "Simplified data copy and controls; robot task durations and 4.02-hour total from paper Table IX; original media snapshot retained as provenance.",
   "dataset_robot_media": {
-    "curation": "Nine carpet-free robot training episodes, selected for steadier camera motion and complete task segments",
+    "curation": "Eight reselected carpet-free robot episodes; complete original rubbish episode retained after rejecting truncated alternatives. Task completion prioritized.",
     "native_resolution": "672x384",
     "fps": 30,
-    "bytes": 8141571,
+    "bytes": 8663427,
     "previous_bytes": 10361308,
     "head_trim_seconds": "0 to 1",
     "gop_seconds": 1
