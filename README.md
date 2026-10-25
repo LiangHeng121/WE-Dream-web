@@ -8,6 +8,13 @@ Website: https://liangheng121.github.io/WE-Dream-web/
 
 This repository contains the buildless v33 website. GitHub Pages publishes from the root of `main`; `.nojekyll` bypasses Jekyll. All local links work at the `/WE-Dream-web/` project path.
 
+## Release 34
+
+- Method now uses existing first-person human and robot videos. The complete architecture remains fixed; highlighting does not restart playback.
+- Both 50% training attention routes are visible together, with only the action-query / future-video-key cell changing and both losses retained. There is one action-only deployment path, without a route selector.
+- One 80D robot action is shown as Neck 2 + Hands 14 + SONIC body 64. Neck/hands use direct targets; the 64D body component goes through SONIC. A 24-action chunk is shown separately.
+- Desktop and 390px mobile layouts, media lifecycle, scientific content and asset references verified. Other runtime modules, demo selection and video bytes are unchanged.
+
 ## Release 33
 
 - Method is a complete fixed architecture: both learning stages, shared routed attention and action-only deployment are always visible. Part selection changes emphasis only; hover/focus previews return to the pinned selection.

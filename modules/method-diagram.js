@@ -1,316 +1,360 @@
-/* Original WE-Dream overview. One permanent architecture, with focusable regions. */
+/* Original WE-Dream overview: a fixed architecture, not a sequence of slides. */
 export const METHOD_PARTS = [
-  { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn from human video.', caption: 'A frozen latent action model turns visual transitions into targets for joint video and action learning.' },
-  { key: 'posttrain', label: 'Robot post-training', title: 'Adapt to humanoid control.', caption: 'Transfer the pretrained weights and jointly optimize the model on robot demonstrations.' },
-  { key: 'routing', label: 'Routed attention', title: 'Two routes. Shared weights.', caption: 'Both training stages share this model. Only actions’ access to future video changes; both losses remain.' },
-  { key: 'deploy', label: 'Action-only deployment', title: 'Predict while the robot moves.', caption: 'Use observed context to predict action chunks, overlapping prediction and execution.' },
+  { key: 'pretrain', label: 'Latent-action pretraining', title: 'Learn actions from human video.', caption: 'A frozen latent action model extracts 32D visual-transition targets from human first-person video.' },
+  { key: 'posttrain', label: 'Robot post-training', title: 'Adapt the pretrained model to robot control.', caption: 'Transfer model weights and jointly learn from robot demonstrations, states, and 80D action targets.' },
+  { key: 'routing', label: 'Routed attention', title: 'Train with and without future-video access.', caption: 'Sample the two attention routes with equal probability per local microbatch, retaining video and action losses in both training stages.' },
+  { key: 'deploy', label: 'Action-only deployment', title: 'Execute without future-video generation.', caption: 'The same trained weights predict action chunks. Neck and hands use direct targets; the body command goes through SONIC.' },
 ];
 
 const NS = 'http://www.w3.org/2000/svg';
-const PALETTE = ['#a290c5', '#78a9c3', '#929cc6', '#72ae9e'];
-let instance = 0;
-function el(tag, attrs, parent) {
+const COLORS = ['#a291c5', '#7eaac3', '#929dc4', '#76ac9e'];
+const ACTION_COLORS = ['#c4ddeb', '#d5c9e7', '#c2ddd0'];
+let instances = 0;
+function element(tag, attributes, parent) {
   const node = document.createElementNS(NS, tag);
-  Object.entries(attrs || {}).forEach(([key, value]) => node.setAttribute(key, value));
+  Object.entries(attributes || {}).forEach(([key, value]) => node.setAttribute(key, value));
   parent?.append(node);
   return node;
 }
-function text(parent, value, x, y, attrs = {}) {
-  const node = el('text', { x, y, ...attrs }, parent);
+function label(parent, value, x, y, attributes = {}) {
+  const node = element('text', { x, y, ...attributes }, parent);
   node.textContent = value;
   return node;
 }
-function shape(parent, x, y, width, height, attrs = {}) {
-  return el('rect', { x, y, width, height, rx: 15, class: 'wd-node', ...attrs }, parent);
+function rect(parent, x, y, width, height, attributes = {}) {
+  return element('rect', { x, y, width, height, rx: 14, class: 'wd-node', fill: '#fcfdff', stroke: '#d1deea', 'stroke-width': 1.2, ...attributes }, parent);
 }
-function frame(parent, x, y, human, scale = 1) {
-  const g = el('g', { transform: `translate(${x} ${y}) scale(${scale})` }, parent);
-  el('rect', { width: 84, height: 56, rx: 12, fill: '#f7fafb', stroke: '#cadbe3' }, g);
-  el('path', { d: 'M9 42 H75', fill: 'none', stroke: '#c4d8e1', 'stroke-width': 2 }, g);
-  el('ellipse', { cx: 62, cy: 39, rx: 12, ry: 4, fill: '#dfefe8', stroke: '#b2d0c3' }, g);
-  const object = el('rect', { x: 37, y: 31, width: 12, height: 10, rx: 3, fill: '#b7acd6' }, g);
-  const arm = el('g', {}, g);
-  el('path', { d: human ? 'M15 10 Q21 18 25 20 Q32 21 38 27' : 'M15 11 L24 22 L38 24 L41 30', fill: 'none', stroke: human ? '#b7a0c9' : '#83acc3', 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, arm);
-  if (human) el('path', { d: 'M37 26 Q40 25 42 29 L46 32 M40 29 L42 34 M37 28 L38 34 M35 26 L34 31', fill: 'none', stroke: '#b7a0c9', 'stroke-width': 2.2, 'stroke-linecap': 'round' }, arm);
-  else {
-    el('circle', { cx: 24, cy: 22, r: 4, fill: '#f7fbfd', stroke: '#83acc3', 'stroke-width': 2 }, arm);
-    el('path', { d: 'M37 29 L37 34 M44 28 L45 33', fill: 'none', stroke: '#6b8fa5', 'stroke-width': 2, 'stroke-linecap': 'round' }, arm);
-  }
-  return { arm, object };
-}
-
 function geometry(mobile) {
   return mobile ? {
-    viewBox: [0, 0, 600, 1970],
+    viewBox: [0, 0, 600, 3010],
     parts: [
-      { x: 20, y: 20, w: 560, h: 270 },
-      { x: 20, y: 326, w: 560, h: 270 },
-      { x: 20, y: 652, w: 560, h: 580 },
-      { x: 20, y: 1288, w: 560, h: 662 },
+      { x: 20, y: 20, w: 560, h: 470 },
+      { x: 20, y: 550, w: 560, h: 530 },
+      { x: 20, y: 1140, w: 560, h: 820 },
+      { x: 20, y: 2020, w: 560, h: 966 },
     ],
-    video: { x: 50, y: 1654, width: 500, height: 281.25 },
+    videos: {
+      human: { x: 60, y: 115, width: 480, height: 270 },
+      robot: { x: 60, y: 645, width: 480, height: 270 },
+      execution: { x: 50, y: 2685, width: 500, height: 281.25 },
+    },
   } : {
-    viewBox: [0, 0, 1200, 660],
+    viewBox: [0, 0, 1320, 800],
     parts: [
-      { x: 18, y: 22, w: 310, h: 270 },
-      { x: 18, y: 316, w: 310, h: 322 },
-      { x: 374, y: 22, w: 380, h: 616 },
-      { x: 800, y: 22, w: 382, h: 616 },
+      { x: 20, y: 25, w: 330, h: 320 },
+      { x: 20, y: 405, w: 330, h: 370 },
+      { x: 400, y: 25, w: 430, h: 750 },
+      { x: 880, y: 25, w: 420, h: 750 },
     ],
-    video: { x: 824, y: 430, width: 334, height: 187.875 },
+    videos: {
+      human: { x: 44, y: 108, width: 282, height: 158.625 },
+      robot: { x: 44, y: 488, width: 282, height: 158.625 },
+      execution: { x: 904, y: 565, width: 372, height: 209.25 },
+    },
   };
 }
 
 export function createMethodDiagram(host, { onFocus } = {}) {
-  const prefix = `wd-overview-${++instance}`;
-  const svg = el('svg', { class: 'wd-diagram', role: 'group', 'aria-label': 'WE-Dream complete architecture: human pretraining, robot post-training, shared routed attention, and action-only deployment.', preserveAspectRatio: 'xMidYMid meet' }, host);
+  const prefix = `wd-method-${++instances}`;
+  const svg = element('svg', { class: 'wd-diagram', role: 'group', 'aria-label': 'Complete WE-Dream method: human pretraining, robot post-training, mixed training attention, and action-only deployment.', preserveAspectRatio: 'xMidYMid meet' }, host);
   svg.style.cssText = 'display:block;width:100%;height:auto;overflow:visible;';
-  const defs = el('defs', {}, svg);
-  PALETTE.forEach((tint, i) => {
-    const gradient = el('linearGradient', { id: `${prefix}-panel-${i}`, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, defs);
-    el('stop', { offset: '0%', 'stop-color': '#ffffff', 'stop-opacity': '.92' }, gradient);
-    el('stop', { offset: '100%', 'stop-color': ['#eee8f8', '#e8f3f9', '#eaedf9', '#e5f3ee'][i], 'stop-opacity': '.78' }, gradient);
-    const marker = el('marker', { id: `${prefix}-arrow-${i}`, markerWidth: 7, markerHeight: 7, refX: 6, refY: 3.5, orient: 'auto', markerUnits: 'userSpaceOnUse' }, defs);
-    el('path', { d: 'M0 0 L7 3.5 L0 7', fill: 'none', stroke: tint, 'stroke-width': 1.35, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, marker);
+  const defs = element('defs', {}, svg);
+  COLORS.forEach((color, index) => {
+    const gradient = element('linearGradient', { id: `${prefix}-panel-${index}`, x1: '0%', y1: '0%', x2: '100%', y2: '100%' }, defs);
+    element('stop', { offset: '0%', 'stop-color': '#ffffff', 'stop-opacity': '.96' }, gradient);
+    element('stop', { offset: '100%', 'stop-color': ['#f0ebf8', '#eaf4fa', '#edf0f9', '#eaf5ef'][index], 'stop-opacity': '.86' }, gradient);
+    const arrow = element('marker', { id: `${prefix}-arrow-${index}`, markerWidth: 7, markerHeight: 7, refX: 6, refY: 3.5, orient: 'auto', markerUnits: 'userSpaceOnUse' }, defs);
+    element('path', { d: 'M0 0 L7 3.5 L0 7', fill: 'none', stroke: color, 'stroke-width': 1.4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, arrow);
   });
-  const style = el('style', {}, svg);
+  const style = element('style', {}, svg);
   style.textContent = `
-    .wd-diagram text{font-family:inherit;fill:#4d6c80;font-size:18px;font-weight:500;letter-spacing:-.02em}
+    .wd-diagram text{font-family:inherit;fill:#4f6c80;font-size:18px;font-weight:500;letter-spacing:-.02em}
     .wd-diagram .wd-part{cursor:pointer;transition:opacity .28s ease}
     .wd-diagram .wd-part:focus{outline:none}
-    .wd-diagram .wd-part:focus-visible .wd-panel{stroke-width:2.5;stroke:#86a9bd}
-    .wd-diagram .wd-panel{stroke:#d8e1ed;stroke-width:1;transition:stroke .28s,stroke-width .28s}
-    .wd-diagram .wd-part-number{font-size:13px;letter-spacing:.14em;fill:#8d9fb0}
+    .wd-diagram .wd-part:focus-visible .wd-panel{stroke:#81a9bf;stroke-width:2.4}
+    .wd-diagram .wd-panel{stroke:#dce4ed;stroke-width:1;transition:stroke .28s ease,stroke-width .28s ease}
+    .wd-diagram .wd-part-number{font-size:13px;letter-spacing:.13em;fill:#92a3b1}
     .wd-diagram .wd-part-title{font-size:20px;font-weight:600}
-    .wd-diagram .wd-small{font-size:14px;fill:#8b9ead;font-weight:400;letter-spacing:0}
-    .wd-diagram .wd-core-title{font-size:20px;font-weight:600}
-    .wd-diagram .wd-token-label{font-size:17px;fill:#7892a5;font-weight:400}
-    .wd-diagram .wd-node{fill:#fcfdff;fill-opacity:.9;stroke:#d1deea;stroke-width:1.2}
+    .wd-diagram .wd-small{font-size:14px;fill:#8399aa;font-weight:400;letter-spacing:0}
+    .wd-diagram .wd-quiet{font-size:13px;fill:#92a3b1;font-weight:400;letter-spacing:0}
+    .wd-diagram .wd-core-title{font-size:24px;font-weight:600}
+    .wd-diagram .wd-mask-title{font-size:18px;font-weight:600}
+    .wd-diagram .wd-axis{font-size:16px;fill:#8c9fae}
+    .wd-diagram .wd-vector-title{font-size:17px;font-weight:500}
+    .wd-diagram .wd-component{font-size:16px}
+    .wd-diagram .wd-node{fill-opacity:.94}
     .wd-diagram .wd-wire{fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-    .wd-diagram .wd-flow-dot{stroke:#fff;stroke-width:1.5}
-    .wd-diagram[data-mobile="true"] text{font-size:23px}
-    .wd-diagram[data-mobile="true"] .wd-part-title{font-size:25px}
-    .wd-diagram[data-mobile="true"] .wd-core-title{font-size:25px}
+    .wd-diagram .wd-flow-dot{stroke:white;stroke-width:1.5}
+    .wd-diagram[data-mobile="true"] text{font-size:24px}
+    .wd-diagram[data-mobile="true"] .wd-part-title{font-size:26px}
     .wd-diagram[data-mobile="true"] .wd-part-number{font-size:16px}
-    .wd-diagram[data-mobile="true"] .wd-small{font-size:19px}
-    .wd-diagram[data-mobile="true"] .wd-token-label{font-size:22px}
+    .wd-diagram[data-mobile="true"] .wd-small{font-size:20px}
+    .wd-diagram[data-mobile="true"] .wd-quiet{font-size:18px}
+    .wd-diagram[data-mobile="true"] .wd-core-title{font-size:30px}
+    .wd-diagram[data-mobile="true"] .wd-mask-title{font-size:23px}
+    .wd-diagram[data-mobile="true"] .wd-axis{font-size:21px}
+    .wd-diagram[data-mobile="true"] .wd-vector-title{font-size:23px}
+    .wd-diagram[data-mobile="true"] .wd-component{font-size:22px}
     @media(prefers-reduced-motion:reduce){.wd-diagram .wd-part,.wd-diagram .wd-panel{transition:none}}
   `;
-  let content, parts = [], flows = [], frames = [], tokenRows = [], chunkCells = [], gate, routePath, routeStatus;
   let mobile = window.matchMedia('(max-width: 760px)').matches;
   let layout = geometry(mobile);
-  let last = { focus: null, time: 0, route: 'joint', still: false };
-  let destroyed = false;
+  let root, parts = [], flows = [], routedCells = [], chunkCells = [], dynamicDefs = [];
+  let last = { focus: null, time: 0, still: false };
   let previousFocus = Symbol();
-  let previousRoute = null;
+  let destroyed = false;
+  let vectorCount = 0;
 
-  function path(parent, d, part, { id, gated = false, opacity = .65, owners = [part] } = {}) {
-    const g = el('g', { 'aria-hidden': 'true', ...(id ? { 'data-link': id } : {}) }, parent);
-    const line = el('path', { d, class: 'wd-wire', stroke: PALETTE[part], 'stroke-opacity': opacity, 'marker-end': `url(#${prefix}-arrow-${part})` }, g);
-    const dot = el('circle', { r: mobile ? 3.3 : 2.8, fill: PALETTE[part], class: 'wd-flow-dot' }, g);
-    flows.push({ g, line, dot, part, owners, gated, length: null });
-    return line;
-  }
   function panel(index) {
     const p = layout.parts[index];
-    const g = el('g', { class: 'wd-part', 'data-part': METHOD_PARTS[index].key, transform: `translate(${p.x} ${p.y})`, role: 'button', tabindex: 0, 'aria-label': `Focus ${METHOD_PARTS[index].label}` }, content);
-    const bg = shape(g, 0, 0, p.w, p.h, { class: 'wd-panel', rx: 24, fill: `url(#${prefix}-panel-${index})` });
-    text(g, `0${index + 1}`, 24, mobile ? 32 : 27, { class: 'wd-part-number' });
-    text(g, METHOD_PARTS[index].label, 24, mobile ? 65 : 54, { class: 'wd-part-title' });
-    g.addEventListener('click', () => onFocus?.(index));
-    g.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onFocus?.(index); }
+    const group = element('g', { class: 'wd-part', 'data-part': METHOD_PARTS[index].key, role: 'button', tabindex: 0, 'aria-label': `Focus ${METHOD_PARTS[index].label}` }, root);
+    const background = rect(group, p.x, p.y, p.w, p.h, { class: 'wd-panel', rx: 23, fill: `url(#${prefix}-panel-${index})` });
+    label(group, `0${index + 1}${index === 2 ? ' / TRAINING' : index === 3 ? ' / DEPLOYMENT' : ''}`, p.x + 24, p.y + (mobile ? 32 : 27), { class: 'wd-part-number' });
+    label(group, index === 2 ? 'Routed attention · p = 0.5' : METHOD_PARTS[index].label, p.x + 24, p.y + (mobile ? 66 : 55), { class: 'wd-part-title' });
+    group.addEventListener('click', () => onFocus?.(index));
+    group.addEventListener('keydown', event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); onFocus?.(index); } });
+    parts.push({ group, background });
+    return group;
+  }
+  function wire(parent, d, part, { id, owners = [part], opacity = .7, animate = true } = {}) {
+    const group = element('g', { 'aria-hidden': 'true', ...(id ? { 'data-link': id } : {}) }, parent);
+    const path = element('path', { d, class: 'wd-wire', stroke: COLORS[part], 'stroke-opacity': opacity, 'marker-end': `url(#${prefix}-arrow-${part})` }, group);
+    const dot = element('circle', { r: mobile ? 3.1 : 2.7, class: 'wd-flow-dot', fill: COLORS[part] }, group);
+    flows.push({ group, path, dot, owners, animate, length: null });
+    return path;
+  }
+  function box(parent, id, x, y, width, height, title, sub = '', attributes = {}) {
+    const group = element('g', { 'data-node': id }, parent);
+    rect(group, x, y, width, height, attributes);
+    label(group, title, x + width / 2, y + height / 2 + (sub ? -2 : 6), { 'text-anchor': 'middle' });
+    if (sub) label(group, sub, x + width / 2, y + height / 2 + (mobile ? 25 : 19), { class: 'wd-small', 'text-anchor': 'middle' });
+    return group;
+  }
+  function videoSlot(parent, name) {
+    const slot = layout.videos[name];
+    rect(parent, slot.x, slot.y, slot.width, slot.height, { 'data-node': `${name}-video`, fill: '#e8edf0', stroke: '#dce5eb', rx: 15 });
+  }
+  function actionVector(parent, id, x, y, width, height) {
+    const group = element('g', { 'data-node': id, 'data-dimension': '80' }, parent);
+    const clip = element('clipPath', { id: `${prefix}-action-${++vectorCount}` }, defs);
+    rect(clip, x, y, width, height, { rx: 12 });
+    dynamicDefs.push(clip);
+    const cells = element('g', { 'clip-path': `url(#${clip.id})` }, group);
+    const fractions = [.20, .25, .55];
+    const names = ['Neck', 'Hands', 'SONIC token'];
+    const dimensions = [2, 14, 64];
+    let offset = 0;
+    const centers = [];
+    fractions.forEach((fraction, i) => {
+      const w = width * fraction;
+      const center = x + offset + w / 2;
+      centers.push(center);
+      element('rect', { x: x + offset, y, width: w, height, fill: ACTION_COLORS[i], 'data-action-component': ['neck', 'hands', 'body'][i], 'data-dimension': dimensions[i] }, cells);
+      if (i) element('path', { d: `M${x + offset} ${y + 7} V${y + height - 7}`, stroke: '#ffffff', 'stroke-width': 1.4, 'stroke-opacity': '.8' }, cells);
+      label(group, names[i], center, y + height / 2 - 3, { class: 'wd-component', 'text-anchor': 'middle' });
+      label(group, `${dimensions[i]}D`, center, y + height / 2 + (mobile ? 24 : 18), { class: 'wd-small', 'text-anchor': 'middle' });
+      offset += w;
     });
-    parts.push({ g, bg });
-    return g;
-  }
-  function boxLabel(parent, id, x, y, w, h, title, sub = '', attrs = {}) {
-    const g = el('g', { 'data-node': id }, parent);
-    const rect = shape(g, x, y, w, h, attrs);
-    text(g, title, x + w / 2, y + h / 2 + (sub ? -2 : 6), { 'text-anchor': 'middle' });
-    if (sub) text(g, sub, x + w / 2, y + h / 2 + (mobile ? 24 : 19), { class: 'wd-small', 'text-anchor': 'middle' });
-    return { g, rect };
-  }
-  function sourceFrames(parent, human, x, y, scale, part, gap = 12) {
-    frames.push({ ...frame(parent, x, y, human, scale), part, offset: 0 });
-    frames.push({ ...frame(parent, x + (84 + gap) * scale, y, human, scale), part, offset: 1 });
+    rect(group, x, y, width, height, { rx: 12, fill: 'none', stroke: '#c6d8d6', 'stroke-width': 1 });
+    return { direct: x + width * .225, sonic: centers[2] };
   }
 
   function drawPretrain() {
     const g = panel(0);
-    if (mobile) {
-      text(g, 'Human video', 119, 104, { 'text-anchor': 'middle', class: 'wd-token-label' });
-      sourceFrames(g, true, 26, 124, 1.02, 0, 10);
-      boxLabel(g, 'lam', 233, 127, 135, 65, 'Frozen', 'LAM', { 'stroke-dasharray': '4 4' });
-      boxLabel(g, 'latent-targets', 397, 127, 135, 65, 'Latent', 'actions', { fill: '#f6f1fa', stroke: '#d4c5e2' });
-      path(g, 'M215 159 H232', 0, { id: 'human-to-lam' });
-      path(g, 'M369 159 H396', 0, { id: 'lam-to-latent' });
-    } else {
-      text(g, 'Human video', 155, 91, { 'text-anchor': 'middle', class: 'wd-token-label' });
-      sourceFrames(g, true, 49, 106, 1.1, 0, 12);
-      boxLabel(g, 'lam', 24, 192, 134, 51, 'Frozen LAM', '', { 'stroke-dasharray': '4 4' });
-      boxLabel(g, 'latent-targets', 181, 192, 105, 51, 'Latent', 'actions', { fill: '#f6f1fa', stroke: '#d4c5e2' });
-      path(g, 'M155 168 V175 Q155 182 148 182 H98 Q91 182 91 189', 0, { id: 'human-to-lam' });
-      path(g, 'M159 217.5 H179', 0, { id: 'lam-to-latent' });
-    }
+    videoSlot(g, 'human');
+    const lam = mobile ? { x: 60, y: 416, w: 205, h: 54 } : { x: 44, y: 285, w: 124, h: 44 };
+    const target = mobile ? { x: 330, y: 416, w: 210, h: 54 } : { x: 188, y: 285, w: 138, h: 44 };
+    box(g, 'lam', lam.x, lam.y, lam.w, lam.h, 'Frozen LAM', '', { 'stroke-dasharray': '4 4' });
+    box(g, 'latent-targets', target.x, target.y, target.w, target.h, '32D latent', 'targets', { fill: '#f5eff9', stroke: '#d4c5e1' });
+    const center = mobile ? 300 : 185;
+    const end = layout.videos.human.y + layout.videos.human.height;
+    const lamCenter = lam.x + lam.w / 2;
+    const turnY = lam.y - 11;
+    wire(g, `M${center} ${end + 1} V${turnY - 5} Q${center} ${turnY} ${center - 5} ${turnY} H${lamCenter + 5} Q${lamCenter} ${turnY} ${lamCenter} ${turnY + 5} V${lam.y - 3}`, 0, { id: 'human-to-lam' });
+    wire(g, `M${lam.x + lam.w + 1} ${lam.y + lam.h / 2} H${target.x - 3}`, 0, { id: 'lam-to-latent' });
   }
   function drawPosttrain() {
     const g = panel(1);
-    if (mobile) {
-      text(g, 'Robot demonstrations', 150, 104, { 'text-anchor': 'middle', class: 'wd-token-label' });
-      sourceFrames(g, false, 45, 124, 1.15, 1, 10);
-      boxLabel(g, 'robot-targets', 337, 127, 195, 65, 'Robot actions', '', { fill: '#eff6fa' });
-      path(g, 'M260 159 H334', 1, { id: 'robot-to-action' });
-      text(g, 'Adapt pretrained weights', 280, 235, { 'text-anchor': 'middle', class: 'wd-small' });
-    } else {
-      text(g, 'Robot demonstrations', 155, 100, { 'text-anchor': 'middle', class: 'wd-token-label' });
-      sourceFrames(g, false, 49, 116, 1.1, 1, 12);
-      boxLabel(g, 'robot-targets', 61, 207, 188, 52, 'Robot actions', '', { fill: '#eff6fa' });
-      path(g, 'M155 180 V204', 1, { id: 'robot-to-action' });
-      text(g, 'Adapt pretrained weights', 155, 292, { 'text-anchor': 'middle', class: 'wd-small' });
-    }
+    videoSlot(g, 'robot');
+    const x = mobile ? 60 : 44, y = mobile ? 970 : 692, width = mobile ? 480 : 282;
+    label(g, 'Robot action · 2 + 14 + 64 = 80D', x, y - (mobile ? 20 : 14), { class: 'wd-vector-title' });
+    actionVector(g, 'robot-targets', x, y, width, mobile ? 70 : 54);
   }
-  function drawCore() {
-    const g = panel(2);
-    const core = mobile ? { x: 30, y: 110, w: 500, h: 300 } : { x: 24, y: 116, w: 332, h: 308 };
-    text(g, 'Shared by both training stages', layout.parts[2].w / 2, mobile ? 94 : 83, { class: 'wd-small', 'text-anchor': 'middle' });
-    const coreG = el('g', { 'data-node': 'core' }, g);
-    shape(coreG, core.x + 3, core.y + 5, core.w, core.h, { fill: '#b8c7dd', 'fill-opacity': '.14', stroke: 'none', rx: 20 });
-    shape(coreG, core.x, core.y, core.w, core.h, { fill: '#f6f8fd', stroke: '#c6d3e5', rx: 20 });
-    text(coreG, 'Shared world–action model', layout.parts[2].w / 2, core.y + (mobile ? 37 : 35), { class: 'wd-core-title', 'text-anchor': 'middle' });
-    const startX = mobile ? 65 : 51;
-    const firstY = mobile ? 195 : 190;
-    const rowGap = mobile ? 67 : 67;
-    const cellWidth = mobile ? 37 : 23;
-    const cellGap = mobile ? 9 : 5;
-    const tokenWidth = cellWidth * 8 + cellGap * 7;
-    ['Clean context', 'Noisy future video', 'Noisy actions'].forEach((title, i) => {
-      const row = el('g', { 'data-token-row': ['context', 'video', 'action'][i], 'data-node': ['context', 'future', 'actions'][i] }, coreG);
-      const y = firstY + i * rowGap;
-      text(row, title, startX, y, { class: 'wd-token-label' });
-      const cells = Array.from({ length: 8 }, (_, j) => el('rect', { x: startX + j * (cellWidth + cellGap), y: y + 12, width: cellWidth, height: mobile ? 23 : 20, rx: 5, fill: i === 2 ? '#c1afd9' : '#a9ccdc', 'fill-opacity': '.68', stroke: i === 2 ? '#b09bc9' : '#9abdd0', 'stroke-opacity': '.55' }, row));
-      tokenRows.push({ cells, part: 2 });
+  function mask(parent, x, y, width, height, enabled) {
+    const group = element('g', { class: 'wd-mask', 'data-attention': enabled ? 'enabled' : 'masked', 'aria-label': `${enabled ? '50 percent future-video access' : '50 percent future-video masked'}; attention matrix with query rows and key columns ordered observed video, future video, action, state.` }, parent);
+    rect(group, x, y, width, height, { fill: '#fcfdff', stroke: '#dbe3ed', rx: 15 });
+    label(group, enabled ? '50% access' : '50% masked', x + width / 2, y + (mobile ? 34 : 28), { class: 'wd-mask-title', 'text-anchor': 'middle' });
+    const cell = mobile ? 34 : 25;
+    const gap = mobile ? 5 : 4;
+    const gridWidth = cell * 4 + gap * 3;
+    const gridX = x + (width - gridWidth) / 2 + (mobile ? 8 : 7);
+    const gridY = y + (mobile ? 93 : 83);
+    ['O', 'V', 'A', 'S'].forEach((kind, i) => {
+      label(group, kind, gridX + i * (cell + gap) + cell / 2, gridY - 12, { class: 'wd-axis', 'text-anchor': 'middle' });
+      label(group, kind, gridX - (mobile ? 20 : 17), gridY + i * (cell + gap) + cell / 2 + (mobile ? 7 : 5), { class: 'wd-axis', 'text-anchor': 'middle' });
     });
-    const firstCY = firstY + (mobile ? 23.5 : 22);
-    const videoCY = firstCY + rowGap;
-    const actionCY = videoCY + rowGap;
-    const right = startX + tokenWidth;
-    const bracket = mobile ? 490 : 337;
-    const left = mobile ? 45 : 36;
-    path(coreG, `M${startX - 3} ${firstCY} H${left + 7} Q${left} ${firstCY} ${left} ${firstCY + 7} V${actionCY - 7} Q${left} ${actionCY} ${left + 7} ${actionCY} H${startX - 4}`, 2, { id: 'context-to-action', opacity: .4 });
-    routePath = path(coreG, `M${right + 3} ${videoCY} H${bracket - 7} Q${bracket} ${videoCY} ${bracket} ${videoCY + 7} V${actionCY - 7} Q${bracket} ${actionCY} ${bracket - 7} ${actionCY} H${right + 4}`, 2, { id: 'future-to-action', gated: true, opacity: .9 });
-    gate = el('g', { transform: `translate(${bracket} ${(videoCY + actionCY) / 2})`, 'data-node': 'route-gate' }, coreG);
-    el('circle', { r: mobile ? 11 : 9, fill: '#f6f4fa', stroke: '#b7a1ca', 'stroke-width': 1.2 }, gate);
-    el('path', { d: 'M-3.5 -3.5 L3.5 3.5 M3.5 -3.5 L-3.5 3.5', stroke: '#ac94c3', 'stroke-width': 1.7, 'stroke-linecap': 'round' }, gate);
-    routeStatus = text(coreG, 'Future → action enabled', layout.parts[2].w / 2, core.y + core.h - 14, { class: 'wd-small', 'text-anchor': 'middle', 'data-node': 'route-status' });
-    const outputY = mobile ? 468 : 482;
-    const width = mobile ? 238 : 154;
-    const leftX = mobile ? 30 : 24;
-    const rightX = mobile ? 292 : 202;
-    const midX = layout.parts[2].w / 2;
-    const junctionY = mobile ? 442 : 457;
-    const lMid = leftX + width / 2, rMid = rightX + width / 2;
-    path(g, `M${midX} ${core.y + core.h + 1} V${junctionY - 6} Q${midX} ${junctionY} ${midX - 6} ${junctionY} H${lMid + 6} Q${lMid} ${junctionY} ${lMid} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'video-prediction' });
-    path(g, `M${midX} ${core.y + core.h + 1} V${junctionY - 6} Q${midX} ${junctionY} ${midX + 6} ${junctionY} H${rMid - 6} Q${rMid} ${junctionY} ${rMid} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'action-prediction' });
-    boxLabel(g, 'videoLoss', leftX, outputY, width, 72, 'Video prediction', '+ video loss', { fill: '#f1f7fa' });
-    boxLabel(g, 'actionLoss', rightX, outputY, width, 72, 'Action prediction', '+ action loss', { fill: '#f4eff9' });
+    label(group, 'Keys', gridX + gridWidth / 2, gridY - (mobile ? 43 : 37), { class: 'wd-quiet', 'text-anchor': 'middle' });
+    const order = ['O', 'V', 'A', 'S'];
+    order.forEach((query, row) => order.forEach((key, col) => {
+      const routed = query === 'A' && key === 'V';
+      const visible = row === 0 ? col === 0 : row === 1 ? true : row === 2 ? col !== 1 || enabled : col === 3;
+      const px = gridX + col * (cell + gap), py = gridY + row * (cell + gap);
+      const square = rect(group, px, py, cell, cell, {
+        rx: 4,
+        fill: routed ? enabled ? '#e8b17c' : '#fff7ed' : visible ? '#c2d8e6' : '#ffffff',
+        stroke: routed ? '#d69d66' : visible ? '#b6cddd' : '#dce5ed',
+        'stroke-width': routed ? 1.7 : 1,
+        'data-query': query, 'data-key': key, 'data-visible': String(visible), ...(routed ? { 'data-routed-cell': 'true' } : {}),
+      });
+      if (routed) {
+        routedCells.push(square);
+        if (!enabled) element('path', { d: `M${px + 6} ${py + cell - 6} L${px + cell - 6} ${py + 6}`, stroke: '#d69d66', 'stroke-width': 1.7, 'stroke-linecap': 'round' }, group);
+      }
+    }));
+    label(group, 'Queries ↓', x + width / 2, y + height - (mobile ? 15 : 12), { class: 'wd-quiet', 'text-anchor': 'middle' });
+    return group;
+  }
+  function drawTraining() {
+    const g = panel(2);
+    const model = mobile ? { x: 50, y: 1245, w: 500, h: 535 } : { x: 424, y: 138, w: 382, h: 483 };
+    const center = model.x + model.w / 2;
+    const core = element('g', { 'data-node': 'core' }, g);
+    rect(core, model.x + 3, model.y + 5, model.w, model.h, { fill: '#b8c7df', 'fill-opacity': '.13', stroke: 'none', rx: 21 });
+    rect(core, model.x, model.y, model.w, model.h, { fill: '#f6f8fc', stroke: '#cbd7e7', rx: 21 });
+    label(core, 'Shared DiT', center, model.y + (mobile ? 42 : 39), { class: 'wd-core-title', 'text-anchor': 'middle' });
+    label(core, 'Both training stages', center, model.y + (mobile ? 75 : 66), { class: 'wd-small', 'text-anchor': 'middle' });
+    label(core, 'Observed video · language · state', center, model.y + (mobile ? 109 : 94), { class: 'wd-quiet', 'text-anchor': 'middle' });
+    if (mobile) {
+      mask(core, 68, 1390, 220, 282, true);
+      mask(core, 312, 1390, 220, 282, false);
+    } else {
+      mask(core, 438, 279, 170, 239, true);
+      mask(core, 622, 279, 170, 239, false);
+    }
+    const legendY = mobile ? 1705 : 549;
+    label(core, 'O observed · V future video', center, legendY, { class: 'wd-quiet', 'text-anchor': 'middle' });
+    label(core, 'A action · S state', center, legendY + (mobile ? 28 : 23), { class: 'wd-quiet', 'text-anchor': 'middle' });
+    const legendWidth = mobile ? 270 : 226;
+    const lx = center - legendWidth / 2;
+    rect(core, lx, legendY + (mobile ? 43 : 36), mobile ? 15 : 12, mobile ? 15 : 12, { rx: 3, fill: '#c2d8e6', stroke: '#b6cddd' });
+    label(core, 'visible', lx + (mobile ? 23 : 19), legendY + (mobile ? 57 : 47), { class: 'wd-quiet' });
+    rect(core, lx + (mobile ? 128 : 103), legendY + (mobile ? 43 : 36), mobile ? 15 : 12, mobile ? 15 : 12, { rx: 3, fill: '#fff', stroke: '#dce5ed' });
+    label(core, 'masked', lx + (mobile ? 151 : 122), legendY + (mobile ? 57 : 47), { class: 'wd-quiet' });
+    const outputY = mobile ? 1840 : 666;
+    const outputW = mobile ? 236 : 182;
+    const leftX = mobile ? 50 : 424, rightX = mobile ? 314 : 624;
+    const junctionY = mobile ? 1810 : 644;
+    const leftCenter = leftX + outputW / 2, rightCenter = rightX + outputW / 2;
+    wire(g, `M${center} ${model.y + model.h + 1} V${junctionY - 6} Q${center} ${junctionY} ${center - 6} ${junctionY} H${leftCenter + 6} Q${leftCenter} ${junctionY} ${leftCenter} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'video-prediction' });
+    wire(g, `M${center} ${model.y + model.h + 1} V${junctionY - 6} Q${center} ${junctionY} ${center + 6} ${junctionY} H${rightCenter - 6} Q${rightCenter} ${junctionY} ${rightCenter} ${junctionY + 6} V${outputY - 3}`, 2, { id: 'action-prediction' });
+    box(g, 'videoLoss', leftX, outputY, outputW, mobile ? 80 : 64, 'Video prediction', '+ video loss', { fill: '#f1f7fa' });
+    box(g, 'actionLoss', rightX, outputY, outputW, mobile ? 80 : 64, 'Action prediction', '+ action loss', { fill: '#f6f1fa' });
+    label(g, 'Both losses · every training microbatch', center, mobile ? 1942 : 755, { class: 'wd-quiet', 'text-anchor': 'middle' });
   }
   function drawDeployment() {
     const g = panel(3);
-    const x = mobile ? 55 : 24, w = mobile ? 450 : 334;
-    const observationY = mobile ? 103 : 100;
-    const policyY = mobile ? 198 : 213;
-    const chunkY = mobile ? 300 : 326;
-    const center = layout.parts[3].w / 2;
-    boxLabel(g, 'cached-context', x, observationY, w, 57, 'Cached observations', '', { fill: '#f3f8f7', stroke: '#c9dfd7' });
-    boxLabel(g, 'action-only-policy', x, policyY, w, 70, 'Action-only prediction', 'No future-video generation', { fill: '#edf6f2', stroke: '#bdd8cd' });
-    path(g, `M${center} ${observationY + 59} V${policyY - 3}`, 3, { id: 'observation-to-policy' });
-    path(g, `M${center} ${policyY + 72} V${chunkY - 3}`, 3, { id: 'policy-to-chunks' });
-    const chunk = el('g', { 'data-node': 'chunk' }, g);
-    text(chunk, 'Action chunks', center, chunkY + (mobile ? 18 : 16), { 'text-anchor': 'middle', class: 'wd-token-label' });
-    const cellsWidth = mobile ? 342 : 248;
-    const cellW = (cellsWidth - 3 * 23) / 24;
-    const cellX = center - cellsWidth / 2;
-    chunkCells = Array.from({ length: 24 }, (_, i) => el('rect', { x: cellX + i * (cellW + 3), y: chunkY + 29, width: cellW, height: mobile ? 17 : 14, rx: 2.5, fill: '#93c1ae', 'fill-opacity': '.65' }, chunk));
-    const videoTop = layout.video.y - layout.parts[3].y;
-    path(g, `M${center} ${chunkY + (mobile ? 49 : 47)} V${videoTop - 4}`, 3, { id: 'chunks-to-execution' });
-    shape(g, layout.video.x - layout.parts[3].x, videoTop, layout.video.width, layout.video.height, { rx: 16, fill: '#e5eee9', stroke: '#d0e0d8', 'data-node': 'execution-slot' });
+    const x = mobile ? 60 : 904, width = mobile ? 480 : 372, center = x + width / 2;
+    const observationY = mobile ? 2120 : 122;
+    const policyY = mobile ? 2220 : 197;
+    box(g, 'observed-context', x, observationY, width, mobile ? 60 : 42, 'Observed video + state', '', { fill: '#f4f8f6', stroke: '#d2e2d9' });
+    box(g, 'action-only-policy', x, policyY, width, mobile ? 76 : 62, 'Action-only prediction', 'Future video omitted', { fill: '#edf6f1', stroke: '#bfd9cb' });
+    wire(g, `M${center} ${observationY + (mobile ? 62 : 44)} V${policyY - 3}`, 3, { id: 'context-to-policy' });
+    const chunkY = mobile ? 2340 : 296;
+    wire(g, `M${center} ${policyY + (mobile ? 78 : 64)} V${chunkY - (mobile ? 27 : 24)}`, 3, { id: 'policy-to-chunk' });
+    const chunk = element('g', { 'data-node': 'chunk', 'data-actions': '24' }, g);
+    label(chunk, '24-action chunk', center, chunkY, { class: 'wd-vector-title', 'text-anchor': 'middle' });
+    const chunkWidth = mobile ? 438 : 330;
+    const gap = mobile ? 4 : 3;
+    const cellW = (chunkWidth - gap * 23) / 24;
+    for (let i = 0; i < 24; i++) {
+      const cell = element('g', { 'data-action-step': i + 1 }, chunk);
+      const cx = center - chunkWidth / 2 + i * (cellW + gap);
+      const cy = chunkY + (mobile ? 19 : 15);
+      ACTION_COLORS.forEach((color, j) => element('rect', { x: cx, y: cy + j * (mobile ? 7 : 6), width: cellW, height: mobile ? 6 : 5, rx: 1, fill: color }, cell));
+      chunkCells.push(cell);
+    }
+    const vectorY = mobile ? 2440 : 371;
+    label(g, 'Each action token · 80D', x, vectorY - (mobile ? 17 : 14), { class: 'wd-vector-title' });
+    actionVector(g, 'deployment-action', x, vectorY, width, mobile ? 72 : 58);
+    wire(g, `M${center} ${chunkY + (mobile ? 43 : 35)} V${vectorY - 5}`, 3, { id: 'chunk-to-vector' });
+    const controlsY = mobile ? 2560 : 472;
+    const controlsH = mobile ? 60 : 48;
+    const controlsW = mobile ? 226 : 176;
+    const sonicX = mobile ? 314 : 1100;
+    const directCenter = x + controlsW / 2, sonicCenter = sonicX + controlsW / 2;
+    const bottom = vectorY + (mobile ? 72 : 58);
+    wire(g, `M${directCenter} ${bottom + 1} V${controlsY - 3}`, 3, { id: 'direct-components' });
+    wire(g, `M${sonicCenter} ${bottom + 1} V${controlsY - 3}`, 3, { id: 'body-to-sonic' });
+    box(g, 'direct-control', x, controlsY, controlsW, controlsH, 'Direct targets', 'Neck + hands', { fill: '#f0f4fa' });
+    box(g, 'sonic-control', sonicX, controlsY, controlsW, controlsH, 'SONIC controller', 'Body joints', { fill: '#eff7f2' });
+    const mergeY = mobile ? 2650 : 540;
+    const video = layout.videos.execution;
+    wire(g, `M${directCenter} ${controlsY + controlsH + 1} V${mergeY - 6} Q${directCenter} ${mergeY} ${directCenter + 6} ${mergeY} H${center - 6} Q${center} ${mergeY} ${center} ${mergeY + 6} V${video.y - 4}`, 3, { id: 'direct-to-execution' });
+    wire(g, `M${sonicCenter} ${controlsY + controlsH + 1} V${mergeY - 6} Q${sonicCenter} ${mergeY} ${sonicCenter - 6} ${mergeY} H${center + 6} Q${center} ${mergeY} ${center} ${mergeY + 6} V${video.y - 4}`, 3, { id: 'sonic-to-execution' });
+    label(g, '30 Hz continuous control', video.x + video.width, video.y - (mobile ? 15 : 10), { class: 'wd-quiet', 'text-anchor': 'end' });
+    videoSlot(g, 'execution');
   }
   function drawConnections() {
-    const wires = el('g', { 'data-node': 'architecture-connections', 'aria-hidden': 'true' }, content);
+    const g = element('g', { 'data-node': 'architecture-connections', 'aria-hidden': 'true' }, root);
+    const pre = layout.parts[0], post = layout.parts[1];
+    const transferX = pre.x + pre.w / 2;
+    wire(g, `M${transferX} ${pre.y + pre.h + 3} V${post.y - 5}`, 1, { id: 'pretrained-weights', owners: [0, 1], opacity: .6 });
+    label(g, 'Pretrained weights', transferX + 16, (pre.y + pre.h + post.y) / 2 + 4, { class: 'wd-quiet' });
     if (mobile) {
-      // A single left gutter joins the two training inputs to the shared model.
-      path(wires, 'M20 171 H13 Q6 171 6 178 V482', 0, { id: 'pretrain-to-model', owners: [0, 2], opacity: .4 });
-      path(wires, 'M20 485 H7', 1, { id: 'posttrain-to-model', owners: [1, 2], opacity: .4 });
-      path(wires, 'M6 485 V835 Q6 843 14 843 H18', 2, { id: 'training-to-model', owners: [0, 1, 2], opacity: .4 });
-      path(wires, 'M300 1234 V1283', 3, { id: 'model-to-deployment', owners: [2, 3], opacity: .5 });
+      wire(g, 'M542 443 H570 Q588 443 588 461 V1470 Q588 1482 576 1482 H553', 0, { id: 'latent-to-model', owners: [0, 2], opacity: .42 });
+      wire(g, 'M542 1005 H566 Q588 1005 588 1027 V1482', 1, { id: 'robot-to-model', owners: [1, 2], opacity: .42 });
+      wire(g, 'M300 1963 V2015', 3, { id: 'trained-model-to-deployment', owners: [2, 3], opacity: .6 });
+      label(g, 'Same trained weights', 316, 1994, { class: 'wd-quiet' });
     } else {
-      path(wires, 'M305 239.5 H371', 0, { id: 'pretrain-to-model', owners: [0, 2] });
-      path(wires, 'M268 549 H343 Q351 549 351 541 V427 Q351 419 359 419 H371', 1, { id: 'posttrain-to-model', owners: [1, 2] });
-      path(wires, 'M733 270 H821', 3, { id: 'model-to-deployment', owners: [2, 3] });
+      wire(g, 'M328 307 H421', 0, { id: 'latent-to-model', owners: [0, 2] });
+      wire(g, 'M328 719 H367 Q375 719 375 711 V593 Q375 585 383 585 H421', 1, { id: 'robot-to-model', owners: [1, 2] });
+      wire(g, 'M809 228 H901', 3, { id: 'trained-model-to-deployment', owners: [2, 3] });
+      label(g, 'Same trained', 855, 201, { class: 'wd-quiet', 'text-anchor': 'middle' });
+      label(g, 'weights', 855, 217, { class: 'wd-quiet', 'text-anchor': 'middle' });
     }
   }
-
   function build() {
-    content?.remove();
-    parts = []; flows = []; frames = []; tokenRows = []; chunkCells = [];
-    previousFocus = Symbol(); previousRoute = null;
+    root?.remove();
+    dynamicDefs.forEach(node => node.remove());
+    dynamicDefs = []; parts = []; flows = []; routedCells = []; chunkCells = [];
+    vectorCount = 0;
+    previousFocus = Symbol();
     layout = geometry(mobile);
     svg.setAttribute('viewBox', layout.viewBox.join(' '));
     svg.dataset.mobile = String(mobile);
-    content = el('g', {}, svg);
-    drawPretrain(); drawPosttrain(); drawCore(); drawDeployment(); drawConnections();
+    root = element('g', {}, svg);
+    drawPretrain(); drawPosttrain(); drawTraining(); drawDeployment(); drawConnections();
   }
-  function render({ focus = null, time = 0, route = 'joint', still = false } = {}) {
+  function render({ focus = null, time = 0, still = false } = {}) {
     if (destroyed) return;
     if (![0, 1, 2, 3].includes(focus)) focus = null;
-    route = route === 'action' ? 'action' : 'joint';
-    last = { focus, time, route, still };
+    last = { focus, time, still };
     svg.dataset.focus = focus === null ? 'overview' : METHOD_PARTS[focus].key;
     if (focus !== previousFocus) {
-      parts.forEach(({ g, bg }, i) => {
-        const active = focus === null || focus === i;
-        g.style.opacity = active ? '1' : '.68';
-        g.setAttribute('aria-pressed', String(focus === i));
-        bg.style.stroke = focus === i ? PALETTE[i] : '#d8e1ed';
-        bg.style.strokeWidth = focus === i ? '1.7' : '1';
+      parts.forEach(({ group, background }, i) => {
+        group.style.opacity = focus === null || focus === i ? '1' : '.71';
+        group.setAttribute('aria-pressed', String(focus === i));
+        background.style.stroke = focus === i ? COLORS[i] : '#dce4ed';
+        background.style.strokeWidth = focus === i ? '1.8' : '1';
       });
       previousFocus = focus;
     }
-    if (route !== previousRoute) {
-      const actionOnly = route === 'action';
-      gate.style.opacity = actionOnly ? '1' : '0';
-      routePath.setAttribute('stroke-dasharray', actionOnly ? '3 5' : 'none');
-      routePath.setAttribute('stroke-opacity', actionOnly ? '.28' : '.9');
-      routeStatus.textContent = actionOnly ? 'Future → action blocked' : 'Future → action enabled';
-      svg.dataset.route = route;
-      previousRoute = route;
-    }
     flows.forEach((flow, i) => {
       const active = focus === null || flow.owners.includes(focus);
-      flow.g.style.opacity = active ? '1' : '.46';
-      const moving = active && !still && !(flow.gated && route === 'action');
-      flow.dot.style.opacity = moving ? '.85' : '0';
+      flow.group.style.opacity = active ? '1' : '.5';
+      const moving = active && !still && flow.animate;
+      flow.dot.style.opacity = moving ? '.8' : '0';
       if (!moving) return;
-      flow.length ??= flow.line.getTotalLength();
-      const progress = ((time / (2500 + i % 4 * 260) + i * .17) % 1 + 1) % 1;
-      const point = flow.line.getPointAtLength(flow.length * progress);
+      flow.length ??= flow.path.getTotalLength();
+      const progress = ((time / (2700 + i % 4 * 280) + i * .17) % 1 + 1) % 1;
+      const point = flow.path.getPointAtLength(flow.length * progress);
       flow.dot.setAttribute('cx', point.x);
       flow.dot.setAttribute('cy', point.y);
     });
-    frames.forEach(item => {
-      const active = focus === null || focus === item.part;
-      const motion = active && !still ? (Math.sin(time / 1400 + item.offset) + 1) / 2 : .4;
-      item.arm.setAttribute('transform', `translate(${motion * 5} ${motion * -1.5})`);
-      item.object.setAttribute('transform', `translate(${motion * 3} 0)`);
-    });
-    tokenRows.forEach(row => row.cells.forEach((cell, i) => {
-      const active = !still && (focus === null || focus === row.part);
-      const brightness = active ? .57 + .19 * (Math.sin(time / 650 - i * .55) + 1) / 2 : .68;
-      cell.setAttribute('fill-opacity', brightness.toFixed(3));
-    }));
-    const cursor = still ? 12 : Math.floor(((time / 70) % 24 + 24) % 24);
-    chunkCells.forEach((cell, i) => cell.setAttribute('fill-opacity', focus === null || focus === 3 ? (i <= cursor ? '.86' : '.32') : '.62'));
+    const routeActive = !still && (focus === null || focus === 2);
+    routedCells.forEach(cell => cell.setAttribute('stroke-width', routeActive ? (1.7 + .7 * (Math.sin(time / 850) + 1) / 2).toFixed(2) : '1.7'));
+    const cursor = still ? 12 : Math.floor(((time / 100) % 24 + 24) % 24);
+    chunkCells.forEach((cell, i) => cell.style.opacity = focus === null || focus === 3 ? (i <= cursor ? '1' : '.48') : '.8');
   }
   function resize() {
     if (destroyed) return;
@@ -320,5 +364,5 @@ export function createMethodDiagram(host, { onFocus } = {}) {
   }
   build();
   render(last);
-  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; svg.remove(); } };
+  return { render, resize, getLayout: () => layout, destroy() { destroyed = true; root?.remove(); dynamicDefs.forEach(node => node.remove()); svg.remove(); } };
 }

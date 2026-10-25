@@ -1,5 +1,5 @@
-import { streamStartCache } from './stream-start-cache.js?v=v33';
-import { streamStartRequest } from './stream-bootstrap.js?v=v33';
+import { streamStartCache } from './stream-start-cache.js?v=v34';
+import { streamStartRequest } from './stream-bootstrap.js?v=v34';
 
 // Prefetch compressed startup bytes, never forty video elements. The local
 // prefix files are also packaged by Sites, avoiding a second-origin round trip.

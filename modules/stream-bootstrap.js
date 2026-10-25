@@ -1,5 +1,5 @@
-import catalogue from './stream-bootstrap-data.js?v=v33';
-import { streamStartCache } from './stream-start-cache.js?v=v33';
+import catalogue from './stream-bootstrap-data.js?v=v34';
+import { streamStartCache } from './stream-start-cache.js?v=v34';
 
 // Immutable playlists/init boxes are bundled. A known, exact first-fragment
 // request may join the shared byte cache; all other requests/retries retain

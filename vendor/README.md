@@ -39,3 +39,9 @@ Retrieved and verified: 2026-10-19. The development repository's `docs/website-r
 ## Method presentation references (v32)
 
 The native method walkthrough independently implements presentation patterns studied in [Dream-1](https://dreamlabs.ai/research/dream-1/assets/wam.html) (SVG information flow and token reveal) and [FIBER](https://fiberaa.github.io/) (chapter navigation and continuous scene changes). Their research claims and artwork are not used as WE-Dream content. No website-source license was found for these references; no upstream animation code is redistributed in the site. The implementation is original, and its technical content follows WE-Dream Figure 2 and Sections III-B–F. Detailed source inspection and provenance are retained in the development repository under `docs/website-research/method-v32/references/`.
+
+## Attention presentation references (v34)
+
+- Fast-WAM: https://yuantianyuan01.github.io/FastWAM/ ; paper https://arxiv.org/abs/2603.16666 . Consulted the training/inference mask hierarchy and consistent token colors.
+- GigaWorld-Policy (original): https://arxiv.org/html/2603.17240v2#S3 . Consulted the compact attention matrix and training-to-inference relationship.
+- These are visual research references only. No figures, source code, model architecture, or media from these two works are included in WE-Dream's Method runtime. The native SVG and animation are original; scientific content follows the WE-Dream paper. Existing EgoDex, G1 head-camera and execution videos retain their original source notices.

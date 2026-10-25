@@ -5,7 +5,7 @@ export async function mountResultsExplorer(root) {
   root.classList.add('results-explorer');
   root.innerHTML='<p class="rx-loading">Loading the complete results…</p>';
   let data;
-  try {const response=await fetch('data/results-detail.json?v=v33');if(!response.ok)throw new Error('Results unavailable');data=await response.json();}
+  try {const response=await fetch('data/results-detail.json?v=v34');if(!response.ok)throw new Error('Results unavailable');data=await response.json();}
   catch {root.innerHTML='<p class="rx-loading">Read the complete results in the <a href="assets/paper.pdf#page=6" target="_blank" rel="noopener">paper ↗</a>.</p>';return;}
   let study='baselines',level='id',metric='sr',task='overall',view='chart',selected=null;
   const studies=data.studies.filter(s=>['baselines','objective','scaling'].includes(s.key));

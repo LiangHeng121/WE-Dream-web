@@ -1,5 +1,5 @@
-import { videoFullyBuffered } from './video-warm.js?v=v33';
-import { METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v33';
+import { videoFullyBuffered } from './video-warm.js?v=v34';
+import { METHOD_PARTS, createMethodDiagram } from './method-diagram.js?v=v34';
 
 export function createMethodVideoController(video, { mayPlay, shouldSuspend, signal } = {}) {
   let saved = null, restoring = false, disposed = false;
@@ -56,10 +56,10 @@ export function mountMethodFigure(root) {
   if (!root) return;
   const abort = new AbortController(), { signal } = abort;
   const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
-  let selected = null, preview, route = 'joint';
+  let selected = null, preview;
   let inView = false, destroyed = false, frame = 0, last = 0, drawn = 0, time = 0;
   const focus = () => preview === undefined ? selected : preview;
-  const overview = 'Two training stages share one model. Routed attention supports action-only deployment.';
+  const overview = 'Two training stages. A 50/50 attention route during training. One action-only policy at deployment.';
   root.classList.add('method-explorer', 'method-overview');
   root.innerHTML = `
     <div class="mf-parts" role="group" aria-label="Highlight a part of the method">
@@ -68,32 +68,40 @@ export function mountMethodFigure(root) {
     </div>
     <div class="mf-viewport">
       <div class="mf-diagram"></div>
-      <div class="mf-execution"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4" poster="assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v33" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div></div>
+      <div class="mf-method-film" data-method-film="human" data-part="0"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/datasets/egodex/egodex-cube.mp4" poster="assets/media/datasets/egodex/mosaic/egodex-cube.jpg?v=v34" aria-label="Human egocentric video: hands manipulating a cube, illustrated with EgoDex footage"></video></div></div>
+      <div class="mf-method-film" data-method-film="robot" data-part="1"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/datasets/g1-pov/g1-pov-pick-place.mp4" poster="assets/media/datasets/g1-pov/g1-pov-pick-place.jpg?v=v34" aria-label="Robot egocentric demonstration from the G1 head camera"></video></div></div>
+      <div class="mf-method-film" data-method-film="execution" data-part="3"><div class="mf-film-frame"><video muted loop playsinline preload="none" data-src="assets/media/hd1080/1puOhktSpme4E-M6At185A0rK9V-ax5ez.mp4" poster="assets/media/curated/1puOhktSpme4E-M6At185A0rK9V-ax5ez.jpg?v=v34" aria-label="WE-Dream executing a whole-body clothes collection task"></video></div></div>
     </div>
-    <div class="mf-overview-footer"><p class="mf-focus-caption"></p><div class="mf-route-controls" role="group" aria-label="Compare the two training attention routes"><span>Training route</span><button type="button" data-route="joint" aria-pressed="true">Joint</button><button type="button" data-route="action" aria-pressed="false">Action-only</button></div></div>`;
+    <div class="mf-overview-footer"><p class="mf-focus-caption"></p></div>`;
   const viewport = root.querySelector('.mf-viewport');
   const buttons = [...root.querySelectorAll('[data-focus]')];
-  const execution = root.querySelector('.mf-execution');
-  const video = execution.querySelector('video');
+  const films = [...root.querySelectorAll('[data-method-film]')];
   const on = (target,event,fn) => target.addEventListener(event,fn,{signal});
   const diagram = createMethodDiagram(root.querySelector('.mf-diagram'), {onFocus:index=>selectPart(index)});
-  function videoVisible() {
+  function videoVisible(video) {
     const r=video.getBoundingClientRect();
     return r.width>0 && r.height>0 && Math.min(r.bottom,innerHeight)-Math.max(r.top,0)>r.height*.25;
   }
-  const mayPlay = () => !destroyed && inView && (focus()===null || focus()===3) && !motionQuery.matches && !document.hidden && videoVisible();
-  const controller = createMethodVideoController(video,{mayPlay,shouldSuspend:()=>document.hidden||!inView||!videoVisible(),signal});
-  function positionVideo() {
+  const controllers = films.map(film => {
+    const video = film.querySelector('video');
+    return createMethodVideoController(video, {
+      mayPlay: () => !destroyed && inView && !motionQuery.matches && !document.hidden && videoVisible(video),
+      shouldSuspend: () => document.hidden || !inView || !videoVisible(video), signal,
+    });
+  });
+  const syncVideos = () => controllers.forEach(controller => controller.sync());
+  function positionVideos() {
     const layout=diagram.getLayout(), [,,w,h]=layout.viewBox;
-    const box=layout.video;
-    execution.style.left=`${box.x/w*100}%`;execution.style.top=`${box.y/h*100}%`;
-    execution.style.width=`${box.width/w*100}%`;execution.style.height=`${box.height/h*100}%`;
+    films.forEach(film => {
+      const box=layout.videos[film.dataset.methodFilm];
+      film.style.left=`${box.x/w*100}%`;film.style.top=`${box.y/h*100}%`;
+      film.style.width=`${box.width/w*100}%`;film.style.height=`${box.height/h*100}%`;
+    });
   }
   function render() {
     const active=focus();
     root.dataset.methodFocus=active===null?'all':METHOD_PARTS[active].key;
-    root.dataset.methodRoute=route;
-    diagram.render({focus:active,time,route,still:motionQuery.matches});
+    diagram.render({focus:active,time,still:motionQuery.matches});
   }
   function updateFocus() {
     const active=focus();
@@ -102,10 +110,9 @@ export function mountMethodFigure(root) {
       button.setAttribute('aria-pressed',String(index===selected));
       button.classList.toggle('is-active',index===active);
     });
-    execution.classList.toggle('is-muted',active!==null&&active!==3);
+    films.forEach(film => film.classList.toggle('is-muted',active!==null && active!==Number(film.dataset.part)));
     root.querySelector('.mf-focus-caption').textContent=active===null?overview:METHOD_PARTS[active].caption;
-    root.querySelectorAll('[data-route]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.route===route)));
-    render();controller.sync();
+    render();syncVideos();
   }
   function selectPart(index) {
     if(index!==null&&(!Number.isInteger(index)||index<0||index>=METHOD_PARTS.length))return;
@@ -126,7 +133,6 @@ export function mountMethodFigure(root) {
     event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?buttons.length-1:(index+(event.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;
     buttons[next].focus({preventScroll:true});
   });
-  root.querySelectorAll('[data-route]').forEach(button=>on(button,'click',()=>{route=button.dataset.route;updateFocus();}));
   function tick(now) {
     frame=0;if(destroyed||!inView||document.hidden||motionQuery.matches){last=0;return;}
     time+=last?Math.min(100,now-last):0;last=now;
@@ -135,17 +141,17 @@ export function mountMethodFigure(root) {
   }
   function sync() {
     if(destroyed)return;
-    controller.sync();
+    syncVideos();
     if(!inView||document.hidden||motionQuery.matches){cancelAnimationFrame(frame);frame=0;last=0;}
     else if(!frame){last=0;frame=requestAnimationFrame(tick);}
   }
   on(document,'visibilitychange',sync);
   on(motionQuery,'change',()=>{render();sync();});
-  on(window,'resize',()=>{diagram.resize();positionVideo();render();sync();});
-  on(window,'scroll',()=>{if(inView)controller.sync();});
+  on(window,'resize',()=>{diagram.resize();positionVideos();render();sync();});
+  on(window,'scroll',()=>{if(inView)syncVideos();});
   let observer;
   if('IntersectionObserver' in window){observer=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;sync();},{threshold:0});observer.observe(viewport);}
   else inView=true;
-  positionVideo();updateFocus();sync();
-  return {selectStage(key){if(key==='all'){selectPart(null);return;}const i=METHOD_PARTS.findIndex(s=>s.key===key);if(i>=0)selectPart(i);},destroy(){destroyed=true;abort.abort();observer?.disconnect();cancelAnimationFrame(frame);controller.destroy();diagram.destroy();root.replaceChildren();root.classList.remove('method-explorer','method-overview');}};
+  positionVideos();updateFocus();sync();
+  return {selectStage(key){if(key==='all'){selectPart(null);return;}const i=METHOD_PARTS.findIndex(s=>s.key===key);if(i>=0)selectPart(i);},destroy(){destroyed=true;abort.abort();observer?.disconnect();cancelAnimationFrame(frame);controllers.forEach(controller=>controller.destroy());diagram.destroy();root.replaceChildren();root.classList.remove('method-explorer','method-overview');}};
 }
