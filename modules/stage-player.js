@@ -5,7 +5,7 @@ export function createStagePlayer(root, chapter, video, {requestPlay=()=>{},canP
   const abort=new AbortController(),{signal}=abort;
   let current=-1,pending=0;
   root.classList.add('stage-explorer');
-  const heading=document.createElement('div');heading.className='stage-heading';heading.innerHTML='<span>FOLLOW THE ROUTINE</span><span>Jump to a moment ↗</span>';
+  const heading=document.createElement('div');heading.className='stage-heading';heading.innerHTML='<span>TASK STAGES</span>';
   const strip=document.createElement('div');strip.className='stage-strip';strip.setAttribute('aria-label',`${chapter.title} stages`);
   root.replaceChildren(heading,strip);
   const buttons=chapter.stages.map((stage,index)=>{
