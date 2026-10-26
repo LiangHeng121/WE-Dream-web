@@ -22,9 +22,9 @@ const element = (tag, className, text) => {
 function segment(start, end) {
   if (end - start < 1e-6) return '';
   const point = (radius, angle) => `${160 + radius * Math.cos(angle)},${160 + radius * Math.sin(angle)}`;
-  const gap = Math.min(.009, (end - start) / 8);
+  const gap = Math.min(.0025, (end - start) / 8);
   start += gap; end -= gap;
-  const corner = Math.min(7, (end - start) * 98 / 3);
+  const corner = Math.min(2, (end - start) * 98 / 3);
   const outer = corner / 138, inner = corner / 98;
   return `M${point(138, start + outer)} A138,138 0 ${end - start - 2 * outer > Math.PI ? 1 : 0} 1 ${point(138, end - outer)}
     Q${point(138, end)} ${point(138 - corner, end)} L${point(98 + corner, end)}
@@ -225,7 +225,7 @@ export async function mountDatasetFilms(root) {
       const next = angle + item.value / graphTotal * Math.PI * 2, mid = (angle + next) / 2;
       const label = `${item.label}, ${(item.value / graphTotal * 100).toFixed(1)} percent of duration, ${amount(item)}. ${mode === 'pretraining' ? 'Show source mosaic.' : 'Highlight video.'}`;
       const group = svgNode('g', item.value > 0 ? { class: 'df-slice', role: 'button', tabindex: '-1', 'data-composition-id': item.id, 'aria-label': label } : { class: 'df-slice', 'aria-hidden': 'true', 'pointer-events': 'none' });
-      group.style.setProperty('--slice-x', `${Math.cos(mid) * 8}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 8}px`);
+      group.style.setProperty('--slice-x', `${Math.cos(mid) * 2}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 2}px`);
       group.style.setProperty('--slice-color', item.color);
       const path = svgNode('path', { d: segment(angle, next), fill: `url(#${gradientId})` });
       graphAngles.set(item.id, [angle, next]);
