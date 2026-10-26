@@ -8,11 +8,11 @@ export async function mountResultsExplorer(root) {
   root.innerHTML = '<p class="rx-loading">Loading results…</p>';
   let data;
   try {
-    const response = await fetch('data/results-detail.json?copy=v57&v=v38');
+    const response = await fetch('data/results-detail.json?copy=v58&v=v38');
     if (!response.ok) throw new Error('Results unavailable');
     data = await response.json();
   } catch {
-    root.innerHTML = '<p class="rx-loading">Read the results in the <a href="assets/paper.pdf#page=6" target="_blank" rel="noopener">paper ↗</a>.</p>';
+    root.innerHTML = '<p class="rx-loading">Results could not be loaded. Please refresh the page.</p>';
     return;
   }
   const studies = data.studies.filter(s => VISIBLE_STUDIES.includes(s.key));
@@ -26,21 +26,22 @@ export async function mountResultsExplorer(root) {
   const getLevel = () => data.levels.find(l => l.key === level);
   const records = () => {
     const keys = getStudy().methods;
-    // Keep the paper's WAM/VLA order stable across settings, with ours first.
-    const order = study === 'baselines' ? ['we-dream-10k', ...keys.filter(k => k !== 'we-dream-10k')] : keys;
+    // Keep the same ID-success ranking across levels, metrics and task selections.
+    const idScore = key => lookup.get(`${key}:id`)?.overall.sr ?? -1;
+    const order = study === 'scaling' ? keys : [...keys].sort((a, b) => idScore(b) - idScore(a));
     return order.map(k => lookup.get(`${k}:${level}`)).filter(Boolean);
   };
   const valueFor = r => task === 'overall' ? r.overall[metric] : r.tasks[task]?.[metric];
   const labelFor = r => getStudy().labels?.[r.method] || methods[r.method].label;
   root.innerHTML = `
-    <div class="rx-overview-head"><span class="rx-summary-model"></span><span class="rx-summary-metric"></span></div>
-    <div class="rx-level-cards" role="group" aria-label="Evaluation setting">${data.levels.map(l => `<button type="button" class="rx-level-card" data-level="${l.key}" aria-pressed="false"><span class="rx-level-code">${esc(l.short)}</span><span class="rx-level-name">${esc(l.label)}</span><strong><span class="rx-level-value"></span><small>%</small></strong></button>`).join('')}</div>
     <div class="rx-studies" role="group" aria-label="Experiment">${studies.map(s => `<button type="button" data-study="${s.key}">${esc(s.label)}</button>`).join('')}</div>
     <div class="rx-heading"><h3></h3><p></p></div>
-    <div class="rx-toolbar"><div class="rx-chart-label"><span></span><button type="button" class="rx-reset" hidden>Overall ↗</button></div><div class="rx-metrics" role="group" aria-label="Metric"><button type="button" data-metric="sr">Success rate</button><button type="button" data-metric="progress">Task progress</button></div></div>
+    <div class="rx-overview-head"><span class="rx-summary-model"></span><div class="rx-metrics" role="group" aria-label="Metric"><button type="button" data-metric="sr">Success rate</button><button type="button" data-metric="progress">Task progress</button></div></div>
+    <div class="rx-level-cards" role="group" aria-label="Choose an evaluation setting">${data.levels.map(l => `<button type="button" class="rx-level-card" data-level="${l.key}" aria-pressed="false"><span class="rx-level-code">${esc(l.short)}</span><span class="rx-level-choice" aria-hidden="true"></span><span class="rx-level-name">${esc(l.label)}</span><strong><span class="rx-level-value"></span><small>%</small></strong></button>`).join('')}</div>
+    <div class="rx-toolbar"><div class="rx-chart-label"><span></span><button type="button" class="rx-reset" hidden>Overall ↗</button></div></div>
     <div class="rx-chart"></div>
     <details class="rx-per-task"><summary>Per-task results</summary><div class="rx-table-wrap" tabindex="0" role="region" aria-label="Per-task results; scroll horizontally for more tasks"></div><div class="rx-task-detail" aria-live="polite" hidden></div></details>
-    <div class="rx-foot"><p class="rx-definition"></p><a class="rx-source" target="_blank" rel="noopener">Paper ↗</a></div>`;
+    <div class="rx-foot"><p class="rx-definition"></p></div>`;
   const chart = root.querySelector('.rx-chart');
   const table = root.querySelector('.rx-table-wrap');
   const detail = root.querySelector('.rx-task-detail');
@@ -138,12 +139,11 @@ export async function mountResultsExplorer(root) {
     root.dataset.level = level; root.dataset.study = study;
     const summaryKey = study === 'objective' ? 'latent-2k' : 'we-dream-10k';
     root.querySelector('.rx-summary-model').textContent = methods[summaryKey].label;
-    root.querySelector('.rx-summary-metric').textContent = data.metrics[metric].label;
     root.querySelectorAll('.rx-level-card').forEach(b => {
       const result = lookup.get(`${summaryKey}:${b.dataset.level}`).overall[metric];
       b.querySelector('.rx-level-value').textContent = pct(result);
       b.setAttribute('aria-pressed', String(b.dataset.level === level));
-      b.setAttribute('aria-label', `${data.levels.find(l => l.key === b.dataset.level).label}: ${methods[summaryKey].label}, ${pct(result)}% ${data.metrics[metric].label.toLowerCase()}`);
+      b.setAttribute('aria-label', `Show ${data.levels.find(l => l.key === b.dataset.level).label}: ${methods[summaryKey].label}, ${pct(result)}% ${data.metrics[metric].label.toLowerCase()}`);
     });
     root.querySelectorAll('[data-study]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.study === study)));
     root.querySelectorAll('[data-metric]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.metric === metric)));
@@ -153,11 +153,12 @@ export async function mountResultsExplorer(root) {
     root.querySelector('.rx-reset').hidden = task === 'overall';
     if (study === 'scaling') renderScaling(list); else renderBars(list);
     if (rebuildTable) renderTable(list);
-    const definition = metric === 'sr' ? 'Success rate counts fully completed tasks.' : 'Task progress measures the fraction of stages completed.';
-    root.querySelector('.rx-definition').textContent = `${definition} ${task === 'overall' ? `N = ${l.n} per model; tasks weighted equally.` : '10 trials per model.'}`;
-    const page = metric === 'progress' ? 13 : level !== 'id' ? 7 : study === 'objective' ? 5 : 6;
-    const source = root.querySelector('.rx-source'); source.href = `assets/paper.pdf#page=${page}`;
-    source.setAttribute('aria-label', `Read the reported results in the paper, page ${page}`);
+    const definition = metric === 'sr' ? 'Success rate measures fully completed trials.' : 'Task progress is the average fraction of task stages completed.';
+    const unit = level === 'l1' ? 'condition' : level === 'l2' ? 'task composition' : 'task';
+    const protocol = task === 'overall'
+      ? `Each model is evaluated 10 times per ${unit} (${l.tasks.length} ${unit}s in total).`
+      : `Each model is evaluated 10 times for this ${unit}.`;
+    root.querySelector('.rx-definition').textContent = `${protocol} ${definition}`;
   }
   root.querySelectorAll('[data-level]').forEach(b => b.addEventListener('click', () => { level = b.dataset.level; task = 'overall'; render(); }, { signal }));
   root.querySelectorAll('[data-study]').forEach(b => b.addEventListener('click', () => { study = b.dataset.study; task = 'overall'; render(); }, { signal }));

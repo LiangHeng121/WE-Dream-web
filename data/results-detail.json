@@ -17670,7 +17670,7 @@
     {
       "key": "baselines",
       "label": "Policy comparison",
-      "title": "Comparison with WAMs and VLAs",
+      "title": "Comparison with baselines",
       "description": "Against world-action models (WAMs) and vision-language-action models (VLAs), WE-Dream achieves the strongest overall success and task progress in each evaluation setting. All methods share the same 4.02 hours of robot demonstrations; L2 tests new task compositions without further training.",
       "methods": [
         "cosmos3",
