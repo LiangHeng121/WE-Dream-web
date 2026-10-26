@@ -1,7 +1,7 @@
 {
-  "version": 50,
+  "version": 51,
   "published_date": "2026-10-26",
-  "release": "dataset-ring-hover-color-interpolation",
+  "release": "paper-grounded-demo-overview-copy",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v50",
+  "review": "v51",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -59,5 +59,6 @@
   },
   "dataset_interaction": "Human source legend/donut switch the nine-film mosaic on 140ms hover dwell, or immediately on focus/click. Pointer exit retains the source. Robot task hover highlights the matching film. Existing three-transfer cap and one cached group retained.",
   "dataset_loading": "Intentional Data navigation prewarms the first three videos; completed native video buffers are reused even when a neighboring tile was incomplete; three-transfer limit and hidden-request cancellation remain.",
-  "dataset_motion": "Tight idle gaps and small corners retained; restored 8px selected-sector lift. Explicit matched RGB shadow endpoints keep source-colored glow smooth without near-black intermediate filter frames. Existing source hover switching and video behavior unchanged."
+  "dataset_motion": "Tight idle gaps and small corners retained; restored 8px selected-sector lift. Explicit matched RGB shadow endpoints keep source-colored glow smooth without near-black intermediate filter frames. Existing source hover switching and video behavior unchanged.",
+  "demo_overview": "Real-world evaluation: Generalizable whole-body control. A single humanoid world-action model, from learned tasks to new conditions and unseen skill compositions. Entries: ID / In-distribution; L1 / Seen-task generalization; L2 / Compositional generalization."
 }
