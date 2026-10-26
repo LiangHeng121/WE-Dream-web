@@ -1,7 +1,7 @@
 {
-  "version": 60,
+  "version": 61,
   "published_date": "2026-10-26",
-  "release": "straight-bars-and-selected-level-accent",
+  "release": "subtle-bar-corners-and-inset-selection-line",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v60",
+  "review": "v61",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -74,5 +74,5 @@
   ],
   "skill_preview_playback": "One video element and buffer per skill across small and enlarged frames. Native reparent pause resumes only while requested. Explicit pause control retained; opening click cannot toggle pause after hover enlargement.",
   "results_presentation": "Real-world performance. Experiment-first hierarchy; no circular level selectors. Darker explanatory text and translucent gradient bars, with mint-blue-purple ours fill. Comparison wording uses other WAMs and VLAs. DiT4DiT remains WAM per paper and user confirmation. Fixed descending ID success order, numerical results and 10-trial descriptions unchanged. No Results Paper links or routed/efficiency studies.",
-  "results_selection": "Selected ID/L1/L2 card has a category-colored gradient underline and soft lower glow; no circular selectors. Bar tracks and fills have square endpoints; translucent gradients retained."
+  "results_selection": "Selected ID/L1/L2 card has a category-colored gradient underline: 60% width up to 160px, 2px high, inset 8px above the bottom (6px on phones). Bars have subtle 4px corners (3px on phones); translucent gradients retained. No circular selectors."
 }
