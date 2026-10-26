@@ -443,8 +443,8 @@ async function boot(){
   });
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
   const chapterData=getJSON('data/chapters.json?v=v38').then(data=>{chapters=data;});
-  const skillData=getJSON('data/skill-media.json?preview=v54&v=v38').then(data=>{skillMedia=data;});
-  const [content,media]=await Promise.all([getJSON('data/content.json?v=v38'),getJSON('assets/media/manifest.json?v=v38')]);
+  const skillData=getJSON('data/skill-media.json?preview=v55&v=v38').then(data=>{skillMedia=data;});
+  const [content,media]=await Promise.all([getJSON('data/content.json?order=v55&v=v38'),getJSON('assets/media/manifest.json?v=v38')]);
   manifest=media;
   const galleryMounts=new Map([
     ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-distribution tasks',badge:'In-distribution',level:'id'}))],

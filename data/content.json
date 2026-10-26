@@ -1810,6 +1810,53 @@
     ],
     "l2": [
       {
+        "key": "collect-clothes",
+        "label": "Collect clothes",
+        "title": "Collect clothes",
+        "description": "Kneel to gather clothes, then carry them to the laundry basket.",
+        "skills": [
+          "Kneeling",
+          "Cloth handling",
+          "Basket placement"
+        ],
+        "result": {
+          "successRate": 60,
+          "trials": 10,
+          "paperPage": 7,
+          "paperLocator": "Figure 8b"
+        },
+        "clips": [
+          {
+            "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
+            "title": "Collect clothes",
+            "description": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "summary": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "task_summary": "Kneel to gather clothes, then carry them to the laundry basket.",
+            "promptExact": null,
+            "promptDisplay": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
+            "promptText": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
+            "promptStatus": "source-matched",
+            "captionType": "source_matched_instruction",
+            "captionLabel": "Prompt",
+            "sourceUrl": "https://drive.google.com/file/d/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4/view?usp=drivesdk",
+            "skills": [
+              "Kneeling",
+              "Cloth handling",
+              "Basket placement"
+            ],
+            "duration": 35.17,
+            "level": "L2",
+            "category": "composition",
+            "task": "shoe_cloth_cloth",
+            "taskLabel": "Collect clothes",
+            "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+            "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
+            "thumb": "assets/media/thumbs/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
+            "hls_src": "assets/media/stream1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4_start31/index.m3u8"
+          }
+        ]
+      },
+      {
         "key": "discard-bottle",
         "label": "Discard a bottle",
         "title": "Discard a bottle",
@@ -1900,53 +1947,6 @@
             "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg?v=v38",
             "thumb": "assets/media/thumbs/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg?v=v38",
             "hls_src": "assets/media/stream1080/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT_start31/index.m3u8"
-          }
-        ]
-      },
-      {
-        "key": "collect-clothes",
-        "label": "Collect clothes",
-        "title": "Collect clothes",
-        "description": "Kneel to gather clothes, then carry them to the laundry basket.",
-        "skills": [
-          "Kneeling",
-          "Cloth handling",
-          "Basket placement"
-        ],
-        "result": {
-          "successRate": 60,
-          "trials": 10,
-          "paperPage": 7,
-          "paperLocator": "Figure 8b"
-        },
-        "clips": [
-          {
-            "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
-            "title": "Collect clothes",
-            "description": "Kneel to gather clothes, then carry them to the laundry basket.",
-            "summary": "Kneel to gather clothes, then carry them to the laundry basket.",
-            "task_summary": "Kneel to gather clothes, then carry them to the laundry basket.",
-            "promptExact": null,
-            "promptDisplay": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
-            "promptText": "kneel down, gather up the yellow trousers, turn around and put it into the laundry basket",
-            "promptStatus": "source-matched",
-            "captionType": "source_matched_instruction",
-            "captionLabel": "Prompt",
-            "sourceUrl": "https://drive.google.com/file/d/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4/view?usp=drivesdk",
-            "skills": [
-              "Kneeling",
-              "Cloth handling",
-              "Basket placement"
-            ],
-            "duration": 35.17,
-            "level": "L2",
-            "category": "composition",
-            "task": "shoe_cloth_cloth",
-            "taskLabel": "Collect clothes",
-            "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
-            "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
-            "thumb": "assets/media/thumbs/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
-            "hls_src": "assets/media/stream1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4_start31/index.m3u8"
           }
         ]
       },

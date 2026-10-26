@@ -1,7 +1,7 @@
 {
-  "version": 54,
+  "version": 55,
   "published_date": "2026-10-26",
-  "release": "clearer-prompts-and-antialiased-skill-thumbnails",
+  "release": "refine-enlarged-skills-and-l2-order",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v54",
+  "review": "v55",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -64,5 +64,12 @@
   "evaluation_terminology": "In-distribution (ID), consistently following the paper across section heading, gallery badges and accessibility labels, focused wall prompt badge, and result context/sort labels. Existing internal media keys and anchors retained.",
   "demo_sections": "Paper-aligned ID, L1 seen-task generalization, and L2 compositional generalization headings; task selection wording; shared wall-style badges; reduced helper copy. Learned skills retained specifically for L2 composition.",
   "gallery_prompt": "14px with stronger blue-gray contrast; Original links removed from gallery captions.",
-  "skill_thumbnail_rendering": "Six dedicated 1920x1080/24fps thumbnail renditions: Gaussian sigma2/3steps, CRF24, matching first-frame posters; exact excerpt frame timelines preserved. Enlarged preview continues using original HD excerpts."
+  "skill_thumbnail_rendering": "Six antialiased 1920x1080/24fps renditions with matching first-frame posters shared by stacked and enlarged skill previews; Gaussian sigma2/3steps, CRF24; exact excerpt frame timelines preserved.",
+  "demo_section_title": "Shared section headings: clamp(26px,2.75vw,36px); mobile clamp(22px,5.8vw,28px).",
+  "l2_demo_order": [
+    "Collect clothes",
+    "Discard a bottle",
+    "Pack chips",
+    "Organize medicine"
+  ]
 }

@@ -87,6 +87,8 @@ export function createSkillMix(root, chapter, media) {
   const records = skills.map((skill, index) => {
     const excerpt = media.clips[skill.key];
     if (!excerpt) throw new Error(`Missing reviewed skill excerpt: ${skill.key}`);
+    const playbackSource = excerpt.preview?.src || excerpt.src;
+    const playbackPoster = excerpt.preview?.poster || excerpt.poster;
     const [label, source] = skill.label.split(' · from ');
     const sourceTask = source ? source.charAt(0).toUpperCase() + source.slice(1) : 'Learned task';
     const card = document.createElement('article'); card.className = 'skill-card'; card.id = `${prefix}-card-${index}`;
@@ -101,7 +103,7 @@ export function createSkillMix(root, chapter, media) {
     button.setAttribute('aria-controls', card.id); button.setAttribute('aria-label', `${label}${source ? `, from ${source}` : ''}`);
     card.querySelector('.skill-card-badge').textContent = sourceTask;
     card.querySelector('.skill-name').textContent = label;
-    const video = document.createElement('video'); video.muted = true; video.defaultMuted = true; video.playsInline = true; video.loop = true; video.preload = 'none'; video.poster = excerpt.preview?.poster || excerpt.poster; video.draggable = false;
+    const video = document.createElement('video'); video.muted = true; video.defaultMuted = true; video.playsInline = true; video.loop = true; video.preload = 'none'; video.poster = playbackPoster; video.draggable = false;
     video.setAttribute('muted', ''); video.setAttribute('playsinline', ''); video.setAttribute('aria-label', `Skill excerpt: ${label}`); video.dataset.skill = skill.key;
     frame.prepend(video); stack.append(card);
     const largeCard = document.createElement('div'); largeCard.className = 'skill-large-card'; largeCard.hidden = true;
@@ -109,9 +111,9 @@ export function createSkillMix(root, chapter, media) {
     largeCard.querySelector('.skill-card-badge').textContent = sourceTask;
     largeCard.querySelector('.skill-name').textContent = label;
     const largeVideo = video.cloneNode(false), largePlay = largeCard.querySelector('.skill-play');
-    largeVideo.muted = true; largeVideo.defaultMuted = true; largeVideo.preload = 'none'; largeVideo.poster = excerpt.poster; largeVideo.setAttribute('aria-label', `Enlarged skill excerpt: ${label}`);
+    largeVideo.muted = true; largeVideo.defaultMuted = true; largeVideo.preload = 'none'; largeVideo.poster = playbackPoster; largeVideo.setAttribute('aria-label', `Enlarged skill excerpt: ${label}`);
     largeCard.querySelector('.skill-large-frame').prepend(largeVideo); floating.append(largeCard);
-    const mediaVisibility = createSkillMediaVisibility(video, excerpt.preview?.src || excerpt.src), largeMediaVisibility = createSkillMediaVisibility(largeVideo, excerpt.src);
+    const mediaVisibility = createSkillMediaVisibility(video, playbackSource), largeMediaVisibility = createSkillMediaVisibility(largeVideo, playbackSource);
     const record = { skill, excerpt, label, source, card, frame, video, button, play, largeCard, largeVideo, largePlay, mediaVisibility, largeMediaVisibility, controller: null, largeController: null };
     record.controller = createSkillPlayback(video, () => wanted(index), () => { if (!signal.aborted && active === index) updateControls(); });
     record.largeController = createSkillPlayback(largeVideo, () => wantedLarge(index), () => { if (!signal.aborted && active === index) updateControls(); });

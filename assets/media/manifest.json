@@ -868,6 +868,23 @@
       "poster_ready": true,
       "thumb": "assets/media/thumbs/1RjDGIfwgJy5e9kE13FcmInf_Ts-EZpwP.jpg?v=v38"
     },
+    "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4": {
+      "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
+      "duration": 35.17,
+      "width": 1920,
+      "height": 1080,
+      "bytes": 5467581,
+      "fps": 24.0,
+      "codec": "h264",
+      "has_audio": false,
+      "ready": true,
+      "status": "ready",
+      "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
+      "hls_src": "assets/media/stream1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4_start31/index.m3u8",
+      "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
+      "poster_ready": true,
+      "thumb": "assets/media/thumbs/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38"
+    },
     "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako": {
       "id": "15xQAZXaPU0w-eViDLR-ycqyZFhvVlako",
       "duration": 46.58,
@@ -901,23 +918,6 @@
       "poster": "assets/media/curated/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg?v=v38",
       "poster_ready": true,
       "thumb": "assets/media/thumbs/1dYvRgl5-JYYP2uJJ7Gnzmn-hTLI8aPLT.jpg?v=v38"
-    },
-    "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4": {
-      "id": "19Bb8INo78RDFojXfnNJb44DeLkKVmTG4",
-      "duration": 35.17,
-      "width": 1920,
-      "height": 1080,
-      "bytes": 5467581,
-      "fps": 24.0,
-      "codec": "h264",
-      "has_audio": false,
-      "ready": true,
-      "status": "ready",
-      "src": "assets/media/hd1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.mp4",
-      "hls_src": "assets/media/stream1080/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4_start31/index.m3u8",
-      "poster": "assets/media/curated/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38",
-      "poster_ready": true,
-      "thumb": "assets/media/thumbs/19Bb8INo78RDFojXfnNJb44DeLkKVmTG4.jpg?v=v38"
     },
     "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD": {
       "id": "1qLP7NcyxXTbyU05i82TmoR2LMQjuM7vD",
