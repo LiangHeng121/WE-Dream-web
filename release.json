@@ -1,7 +1,7 @@
 {
-  "version": 53,
+  "version": 54,
   "published_date": "2026-10-26",
-  "release": "refine-evaluation-demo-sections",
+  "release": "clearer-prompts-and-antialiased-skill-thumbnails",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v53",
+  "review": "v54",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -62,5 +62,7 @@
   "dataset_motion": "Tight idle gaps and small corners retained; restored 8px selected-sector lift. Explicit matched RGB shadow endpoints keep source-colored glow smooth without near-black intermediate filter frames. Existing source hover switching and video behavior unchanged.",
   "demo_overview": "Real-world evaluation: Generalizable whole-body control. A single humanoid world-action model, from learned tasks to new conditions and unseen skill compositions. Entries: ID / In-distribution; L1 / Seen-task generalization; L2 / Compositional generalization.",
   "evaluation_terminology": "In-distribution (ID), consistently following the paper across section heading, gallery badges and accessibility labels, focused wall prompt badge, and result context/sort labels. Existing internal media keys and anchors retained.",
-  "demo_sections": "Paper-aligned ID, L1 seen-task generalization, and L2 compositional generalization headings; task selection wording; shared wall-style badges; reduced helper copy. Learned skills retained specifically for L2 composition."
+  "demo_sections": "Paper-aligned ID, L1 seen-task generalization, and L2 compositional generalization headings; task selection wording; shared wall-style badges; reduced helper copy. Learned skills retained specifically for L2 composition.",
+  "gallery_prompt": "14px with stronger blue-gray contrast; Original links removed from gallery captions.",
+  "skill_thumbnail_rendering": "Six dedicated 1920x1080/24fps thumbnail renditions: Gaussian sigma2/3steps, CRF24, matching first-frame posters; exact excerpt frame timelines preserved. Enlarged preview continues using original HD excerpts."
 }

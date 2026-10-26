@@ -66,7 +66,7 @@ function mountGallery(root, groups, {label, badge, level, single = false, long =
     const children=l1Tasks[i].map((task,j)=>`<button type="button" class="l1-task-row" data-l1-condition="${i}" data-l1-task="${j}" aria-controls="${root.id}-content"><img src="${html(thumbnail(task.clips[0]))}" alt="" loading="lazy" fetchpriority="low" decoding="async"><span class="l1-task-text"><span class="l1-task-name">${html(task.label)}</span><span class="l1-task-meta">${task.clips.length} demos</span></span><span class="l1-task-progress" aria-hidden="true"></span></button>`).join('');
     return `<div class="l1-condition"><div class="l1-condition-heading">${tab}</div><div class="l1-subtasks" id="${root.id}-tasks-${i}" role="group" aria-labelledby="${root.id}-tab-${i}" ${i===0?'':'hidden'}>${children}</div></div>`;
   }).join('');
-  const caption='<div class="gallery-caption"><div><p class="caption-label">PROMPT</p><h3 class="caption-title"></h3><p class="caption-copy"></p></div><a class="original-video-link" target="_blank" rel="noopener" aria-label="Open the original video">Original ↗</a></div>';
+  const caption='<div class="gallery-caption"><div><p class="caption-label">PROMPT</p><h3 class="caption-title"></h3><p class="caption-copy"></p></div></div>';
   const taskPaging=groups.length>4&&!long?'<div class="task-paging"><button type="button" class="task-page-prev" aria-label="Scroll to previous tasks">↑</button><button type="button" class="task-page-next" aria-label="Scroll to more tasks">↓</button></div>':'';
   root.innerHTML=`<div class="gallery-shell"><div class="gallery-main" id="${root.id}-content" role="${isL1?'region':'tabpanel'}" aria-labelledby="${root.id}-tab-0"><div class="deck-host"></div>${caption}${!long&&!stages?'<div class="stage-host"></div>':''}</div><aside class="gallery-aside"><div class="gallery-nav-heading"><span>${long?'TWO EXTENDED ROUTINES':stages?'UNSEEN COMPOSITIONS':'CHOOSE A '+(isL1?'CONDITION':'TASK')}</span><span>${String(groups.length).padStart(2,'0')}</span></div><div class="task-rail ${long?'long-tabs':''} ${groups.length>4?'task-rail-scroll':''}" role="${isL1?'group':'tablist'}" aria-label="${html(label)}" ${isL1?'':'aria-orientation="vertical"'}>${navigation}</div>${taskPaging}${long||stages?'<div class="stage-host"></div>':''}</aside></div>`;
   const tabs=[...root.querySelectorAll('.task-tab')], panel=$('.gallery-main',root), stageRoot=$('.stage-host',root),rail=$('.task-rail',root);
@@ -191,7 +191,6 @@ function mountGallery(root, groups, {label, badge, level, single = false, long =
     if(item.promptStatus==='provisional'){
       const draft=document.createElement('span');draft.className='prompt-draft';draft.textContent='Draft';draft.title='Provisional instruction; replace with the recorded prompt when available.';$('.caption-copy',root).append(draft);
     }
-    $('.original-video-link',root).href=item.sourceUrl;
     if(long&&chapters.clips[item.id]){
       // Chapter controls can mount with posters; playback gets bandwidth once visible.
       if(visible)activePlayer.load();
@@ -444,7 +443,7 @@ async function boot(){
   });
   mountNear($('#results-root'),()=>mountResultsExplorer($('#results-root')));
   const chapterData=getJSON('data/chapters.json?v=v38').then(data=>{chapters=data;});
-  const skillData=getJSON('data/skill-media.json?v=v38').then(data=>{skillMedia=data;});
+  const skillData=getJSON('data/skill-media.json?preview=v54&v=v38').then(data=>{skillMedia=data;});
   const [content,media]=await Promise.all([getJSON('data/content.json?v=v38'),getJSON('assets/media/manifest.json?v=v38')]);
   manifest=media;
   const galleryMounts=new Map([

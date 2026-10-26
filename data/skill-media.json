@@ -44,7 +44,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 0.9,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/cabinet.mp4",
+        "poster": "assets/media/skills-preview-v54/cabinet.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     },
     "storage": {
       "key": "storage",
@@ -87,7 +95,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 4.75,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/storage.mp4",
+        "poster": "assets/media/skills-preview-v54/storage.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     },
     "rubbish": {
       "key": "rubbish",
@@ -130,7 +146,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 2.9,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/rubbish.mp4",
+        "poster": "assets/media/skills-preview-v54/rubbish.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     },
     "shoe": {
       "key": "shoe",
@@ -173,7 +197,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 1.65,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/shoe.mp4",
+        "poster": "assets/media/skills-preview-v54/shoe.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     },
     "cloth": {
       "key": "cloth",
@@ -216,7 +248,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 0.0,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/cloth.mp4",
+        "poster": "assets/media/skills-preview-v54/cloth.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     },
     "pnp": {
       "key": "pnp",
@@ -259,7 +299,15 @@
         "policy": "preserve_reviewed_head_cuts_complete_remaining_actions_and_speed"
       },
       "full_source_head_trim": 3.15,
-      "codec": "h264"
+      "codec": "h264",
+      "preview": {
+        "src": "assets/media/skills-preview-v54/pnp.mp4",
+        "poster": "assets/media/skills-preview-v54/pnp.jpg?v=v38",
+        "width": 1920,
+        "height": 1080,
+        "fps": 24,
+        "purpose": "Antialiased rendition for small rotated skill cards. Enlarged preview uses the original HD excerpt."
+      }
     }
   }
 }
