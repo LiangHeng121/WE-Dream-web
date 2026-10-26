@@ -1,7 +1,6 @@
 {
   "version": 1,
   "sourcePolicy": "Paper first; spreadsheet supplements matching data.",
-  "lastChecked": "2026-10-19",
   "metrics": {
     "sr": {
       "label": "Success rate",
@@ -17803,32 +17802,6 @@
     "paper": "assets/paper.pdf",
     "spreadsheet": "https://docs.google.com/spreadsheets/d/1PnI_paxmky7aHMpXqa070LhfizBcozTt_Rea5w8Z1iQ/edit"
   },
-  "audit": [
-    {
-      "level": "id",
-      "methods": 16,
-      "trialRows": 1440,
-      "groups": 144,
-      "tenTrialsPerGroup": true,
-      "summaryAndPaperAgreement": true
-    },
-    {
-      "level": "l1",
-      "methods": 10,
-      "trialRows": 600,
-      "groups": 60,
-      "tenTrialsPerGroup": true,
-      "summaryAndPaperAgreement": true
-    },
-    {
-      "level": "l2",
-      "methods": 10,
-      "trialRows": 400,
-      "groups": 40,
-      "tenTrialsPerGroup": true,
-      "summaryAndPaperAgreement": true
-    }
-  ],
   "deployment": {
     "gpu": "RTX 5090",
     "actionOnlyLatencyMs": 260,
