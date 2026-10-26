@@ -1,7 +1,7 @@
 {
-  "version": 47,
+  "version": 48,
   "published_date": "2026-10-26",
-  "release": "dataset-bimanual-complete-demos-and-soft-motion",
+  "release": "dataset-hover-source-switch-and-glass-glow",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v47",
+  "review": "v48",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -57,7 +57,7 @@
     "head_trim_seconds": "0 to 1",
     "gop_seconds": 1
   },
-  "dataset_interaction": "Chart, legend and robot film respond together to hover and keyboard focus, without restarting videos.",
+  "dataset_interaction": "Human source legend/donut switch the nine-film mosaic on 140ms hover dwell, or immediately on focus/click. Pointer exit retains the source. Robot task hover highlights the matching film. Existing three-transfer cap and one cached group retained.",
   "dataset_loading": "Intentional Data navigation prewarms the first three videos; completed native video buffers are reused even when a neighboring tile was incomplete; three-transfer limit and hidden-request cancellation remain.",
-  "dataset_motion": "Sliding translucent training-stage capsule, continuous donut proportions on scale changes, soft color-linked card glow; reduced-motion supported."
+  "dataset_motion": "Rounded translucent gradient donut sectors; stronger source-colored hover glow on films, legend and sectors. Directional grid/heading shell entry on actual Human source changes; reduced-motion supported."
 }

@@ -22,8 +22,14 @@ const element = (tag, className, text) => {
 function segment(start, end) {
   if (end - start < 1e-6) return '';
   const point = (radius, angle) => `${160 + radius * Math.cos(angle)},${160 + radius * Math.sin(angle)}`;
-  const large = end - start > Math.PI ? 1 : 0;
-  return `M${point(138, start)} A138,138 0 ${large} 1 ${point(138, end)} L${point(98, end)} A98,98 0 ${large} 0 ${point(98, start)} Z`;
+  const gap = Math.min(.009, (end - start) / 8);
+  start += gap; end -= gap;
+  const corner = Math.min(7, (end - start) * 98 / 3);
+  const outer = corner / 138, inner = corner / 98;
+  return `M${point(138, start + outer)} A138,138 0 ${end - start - 2 * outer > Math.PI ? 1 : 0} 1 ${point(138, end - outer)}
+    Q${point(138, end)} ${point(138 - corner, end)} L${point(98 + corner, end)}
+    Q${point(98, end)} ${point(98, end - inner)} A98,98 0 ${end - start - 2 * inner > Math.PI ? 1 : 0} 0 ${point(98, start + inner)}
+    Q${point(98, start)} ${point(98 + corner, start)} L${point(138 - corner, start)} Q${point(138, start)} ${point(138, start + outer)} Z`;
 }
 
 export function datasetVideoFullyBuffered(video) {
@@ -79,6 +85,7 @@ export async function mountDatasetFilms(root) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let mode = 'pretraining', scale = '10k', sourceId = 'egodex', selected = 'egodex', destroyed = false;
   let allPaused = reduced.matches, tiles = [], graphItems = [], graphTotal = 0;
+  let sourceHoverTimer = null, sourceHoverId = null, datasetAnimations = [];
   let graphMode = null, graphAnimation = 0;
   const graphAngles = new Map();
   const prewarmMargin = 600, prewarmCount = 1;
@@ -141,10 +148,45 @@ export async function mountDatasetFilms(root) {
     });
     highlight(selected);
   }
+  function cancelSourceHover() {
+    clearTimeout(sourceHoverTimer); sourceHoverTimer = null; sourceHoverId = null;
+  }
+  function scheduleSourceHover(id) {
+    if (destroyed || mode !== 'pretraining' || sourceId === id || !graphItems.some(item => item.id === id)) { cancelSourceHover(); return; }
+    if (sourceHoverId === id) return;
+    cancelSourceHover(); sourceHoverId = id;
+    sourceHoverTimer = setTimeout(() => {
+      cancelSourceHover();
+      if (!destroyed && mode === 'pretraining' && sourceId !== id && graphItems.some(item => item.id === id)) selectItem(id);
+    }, 140);
+  }
+  function stopDatasetChange() {
+    datasetAnimations.forEach(animation => animation.cancel()); datasetAnimations = [];
+  }
+  function animateDatasetChange(previousSource) {
+    stopDatasetChange();
+    if (reduced.matches) return;
+    const order = distribution.pretraining.sources.map(item => item.id);
+    const direction = order.indexOf(sourceId) > order.indexOf(previousSource) ? 1 : -1;
+    const mobile = innerWidth < 720;
+    for (const [selector, offset, duration, opacity, scale] of [
+      ['.df-grid', mobile ? 18 : 24, mobile ? 320 : 380, .8, .985],
+      ['.df-feature-heading', 10, 300, .65, 1]
+    ]) {
+      const node = $(selector);
+      if (!node?.animate) continue;
+      datasetAnimations.push(node.animate([
+        { transform: `translateX(${direction * offset}px) scale(${scale})`, opacity },
+        { transform: 'translateX(0) scale(1)', opacity: 1 }
+      ], { duration, easing: 'cubic-bezier(.16,1,.3,1)' }));
+    }
+  }
   function selectItem(id, focusCard = false) {
+    cancelSourceHover();
     selected = id;
     if (mode === 'pretraining' && sourceId !== id) {
-      sourceId = id; buildTiles();
+      const previousSource = sourceId;
+      sourceId = id; buildTiles(); animateDatasetChange(previousSource);
     }
     refreshSelection();
     const tile = tiles.find(item => item.id === id);
@@ -179,11 +221,12 @@ export async function mountDatasetFilms(root) {
     visualItems.forEach(item => {
       const gradientId = `${prefix}-${mode}-${item.id}`;
       const gradient = svgNode('linearGradient', { id: gradientId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' });
-      gradient.append(svgNode('stop', { offset: '0%', 'stop-color': item.color, 'stop-opacity': '.7' }), svgNode('stop', { offset: '100%', 'stop-color': item.color })); defs.append(gradient);
+      gradient.append(svgNode('stop', { offset: '0%', 'stop-color': '#ffffff', 'stop-opacity': '.65' }), svgNode('stop', { offset: '35%', 'stop-color': item.color, 'stop-opacity': '.55' }), svgNode('stop', { offset: '100%', 'stop-color': item.color, 'stop-opacity': '.92' })); defs.append(gradient);
       const next = angle + item.value / graphTotal * Math.PI * 2, mid = (angle + next) / 2;
       const label = `${item.label}, ${(item.value / graphTotal * 100).toFixed(1)} percent of duration, ${amount(item)}. ${mode === 'pretraining' ? 'Show source mosaic.' : 'Highlight video.'}`;
       const group = svgNode('g', item.value > 0 ? { class: 'df-slice', role: 'button', tabindex: '-1', 'data-composition-id': item.id, 'aria-label': label } : { class: 'df-slice', 'aria-hidden': 'true', 'pointer-events': 'none' });
-      group.style.setProperty('--slice-x', `${Math.cos(mid) * 5}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 5}px`);
+      group.style.setProperty('--slice-x', `${Math.cos(mid) * 8}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 8}px`);
+      group.style.setProperty('--slice-color', item.color);
       const path = svgNode('path', { d: segment(angle, next), fill: `url(#${gradientId})` });
       graphAngles.set(item.id, [angle, next]);
       transitions.push({ id: item.id, path, from: previousAngles.get(item.id) || [angle, angle], to: [angle, next] });
@@ -472,6 +515,7 @@ export async function mountDatasetFilms(root) {
     refreshSelection();
   }
   function renderComposition() {
+    cancelSourceHover();
     const pre = mode === 'pretraining';
     $('.df-eyebrow').textContent = pre ? 'Egocentric human video' : 'Humanoid demonstrations';
     $('.df-total').textContent = pre ? `≈${scale} hours` : `${distribution.posttraining.hours.toFixed(2)} hours`;
@@ -484,6 +528,7 @@ export async function mountDatasetFilms(root) {
     buildGraph();
   }
   function renderMode() {
+    cancelSourceHover(); stopDatasetChange();
     const pre = mode === 'pretraining'; root.dataset.mode = mode; selected = pre ? sourceId : null;
     root.querySelectorAll('[data-mode]').forEach(button => { const active = button.dataset.mode === mode; button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; });
     $('.df-workspace').setAttribute('aria-labelledby', `${prefix}-${pre ? 'pre' : 'post'}`);
@@ -514,21 +559,37 @@ export async function mountDatasetFilms(root) {
       root.querySelector(`[data-mode="${next}"]`).click(); root.querySelector(`[data-mode="${next}"]`).focus();
     }
   });
-  // Preview the same task across chart, legend and film, without selecting,
-  // scrolling, rebuilding a source group or restarting any video.
+  // Human sources switch after a brief dwell; robot tasks only preview their
+  // corresponding card. Leaving either control restores the current selection.
   const linkedNode = target => target?.closest?.(mode === 'posttraining' ? '[data-composition-id], .df-card' : '[data-composition-id]');
   const linkedId = node => node?.dataset.compositionId || node?.dataset.cardId;
   on(root, 'pointerover', event => {
     const node = linkedNode(event.target);
-    if (node && event.pointerType !== 'touch') highlight(linkedId(node));
+    if (!node || event.pointerType === 'touch') return;
+    const id = linkedId(node); highlight(id);
+    if (mode === 'pretraining') scheduleSourceHover(id);
   });
   on(root, 'pointerout', event => {
-    if (linkedNode(event.target) && !linkedNode(event.relatedTarget)) highlight(selected);
+    const node = linkedNode(event.target), next = linkedNode(event.relatedTarget);
+    if (!node) return;
+    if (linkedId(node) !== linkedId(next)) cancelSourceHover();
+    if (!next) highlight(selected);
   });
-  on(root, 'focusin', event => { const node = linkedNode(event.target); if (node) highlight(linkedId(node)); });
-  on(root, 'focusout', event => { if (linkedNode(event.target) && !linkedNode(event.relatedTarget)) highlight(selected); });
-  on(document, 'visibilitychange', syncVisibility);
-  on(reduced, 'change', () => { if (reduced.matches) { allPaused = true; liveTiles().forEach(tile => tile.video.pause()); } });
+  on(root, 'focusin', event => {
+    const node = linkedNode(event.target); if (!node) return;
+    const id = linkedId(node);
+    if (mode === 'pretraining') selectItem(id); else highlight(id);
+  });
+  on(root, 'focusout', event => {
+    const node = linkedNode(event.target), next = linkedNode(event.relatedTarget);
+    if (!node) return;
+    if (linkedId(node) !== linkedId(next)) cancelSourceHover();
+    if (!next) highlight(selected);
+  });
+  on(document, 'visibilitychange', () => { if (document.hidden) cancelSourceHover(); syncVisibility(); });
+  on(reduced, 'change', () => {
+    if (reduced.matches) { stopDatasetChange(); allPaused = true; liveTiles().forEach(tile => tile.video.pause()); }
+  });
   renderMode();
   root.dataset.mountReadyAt = performance.now().toFixed(1);
   const controller = {
@@ -540,7 +601,7 @@ export async function mountDatasetFilms(root) {
       navigationWarmTimer = setTimeout(() => { navigationWarmUntil = 0; syncVisibility(); }, 6000);
       syncVisibility();
     },
-    destroy() { destroyed = true; abort.abort(); cancelAnimationFrame(graphAnimation); clearTimeout(navigationWarmTimer); sectionObserver.disconnect(); approachObserver.disconnect(); clearTiles(); if (cachedGroup) disposeTiles(cachedGroup.tiles); cachedGroup = null; root.replaceChildren(); instances.delete(root); }
+    destroy() { destroyed = true; cancelSourceHover(); stopDatasetChange(); abort.abort(); cancelAnimationFrame(graphAnimation); clearTimeout(navigationWarmTimer); sectionObserver.disconnect(); approachObserver.disconnect(); clearTiles(); if (cachedGroup) disposeTiles(cachedGroup.tiles); cachedGroup = null; root.replaceChildren(); instances.delete(root); }
   };
   instances.set(root, controller); return controller;
 }
