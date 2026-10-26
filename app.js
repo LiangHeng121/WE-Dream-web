@@ -448,7 +448,7 @@ async function boot(){
   const [content,media]=await Promise.all([getJSON('data/content.json?v=v38'),getJSON('assets/media/manifest.json?v=v38')]);
   manifest=media;
   const galleryMounts=new Map([
-    ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-domain tasks',badge:'IN-DOMAIN'}))],
+    ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-distribution tasks',badge:'IN-DISTRIBUTION'}))],
     ['#level-one',mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'}))],
     ['#level-two',mountNear($('#l2-gallery'),()=>Promise.all([chapterData,skillData]).then(()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true})))],
     ['#long-horizon',mountNear($('#long-gallery'),()=>chapterData.then(()=>mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true})))]

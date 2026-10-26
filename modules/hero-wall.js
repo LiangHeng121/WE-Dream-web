@@ -1559,7 +1559,7 @@ export async function mountHeroWall(root) {
     const header = document.createElement('span'); header.className = 'wall-prompt-header';
     const meta = document.createElement('span'); meta.className = 'wall-prompt-meta';
     const level = String(clip?.level || unit.item.level || '').trim().toLowerCase();
-    const category = { id: ['id', 'In Domain'], 'in domain': ['id', 'In Domain'], l1: ['l1', 'L1 Generalization'], l2: ['l2', 'L2 Generalization'] }[level];
+    const category = { id: ['id', 'In-distribution'], 'in domain': ['id', 'In-distribution'], l1: ['l1', 'L1 Generalization'], l2: ['l2', 'L2 Generalization'] }[level];
     if (category) {
       const badge = document.createElement('span'); badge.className = 'wall-level-badge';
       badge.dataset.level = category[0]; badge.textContent = category[1]; header.append(badge);

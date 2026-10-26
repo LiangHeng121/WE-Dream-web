@@ -21,7 +21,7 @@ export async function mountResultsExplorer(root) {
   <div class="rx-studies" role="group" aria-label="Experiment">${studies.map(s=>`<button type="button" data-study="${s.key}">${esc(s.label)}</button>`).join('')}</div>
   <div class="rx-heading"><h3></h3><p></p></div>
   <div class="rx-controls"><div class="rx-levels" role="group" aria-label="Evaluation setting">${data.levels.map(l=>`<button type="button" data-level="${l.key}">${esc(l.short)}</button>`).join('')}</div><div class="rx-metrics" role="group" aria-label="Metric"><button type="button" data-metric="sr">Success</button><button type="button" data-metric="progress">Progress</button></div><label class="rx-select-label">Task<select class="rx-task" aria-label="Task or condition"></select></label><div class="rx-views" role="group" aria-label="Chart or table"><button type="button" data-view="chart" aria-label="Show chart">Chart</button><button type="button" data-view="table" aria-label="Show complete task table">All tasks</button></div></div>
-  <div class="rx-plot-header"><p class="rx-context"></p><span class="rx-sort-note">Ordered by in-domain success ↓</span></div>
+  <div class="rx-plot-header"><p class="rx-context"></p><span class="rx-sort-note">Ordered by in-distribution success ↓</span></div>
   <div class="rx-visual"></div><div class="rx-detail" aria-live="polite"></div>
   <div class="rx-foot"><p class="rx-definition"></p><p class="rx-source"></p></div>`;
   const visual=root.querySelector('.rx-visual');
