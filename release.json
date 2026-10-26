@@ -1,7 +1,7 @@
 {
-  "version": 56,
+  "version": 57,
   "published_date": "2026-10-26",
-  "release": "reuse-skill-video-through-expansion",
+  "release": "paper-grounded-results-explorer",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v56",
+  "review": "v57",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -72,5 +72,6 @@
     "Pack chips",
     "Organize medicine"
   ],
-  "skill_preview_playback": "One video element and buffer per skill across small and enlarged frames. Native reparent pause resumes only while requested. Explicit pause control retained; opening click cannot toggle pause after hover enlargement."
+  "skill_preview_playback": "One video element and buffer per skill across small and enlarged frames. Native reparent pause resumes only while requested. Explicit pause control retained; opening click cannot toggle pause after hover enlargement.",
+  "results_presentation": "Real-world performance. Three visible studies only: policy comparison, pretraining objective, and data scaling. Blue/lavender/mint ID/L1/L2 summary cards, matched 2k objective attribution, stable model order, responsive curves and collapsible per-task results. Routed-attention and efficiency results remain excluded."
 }

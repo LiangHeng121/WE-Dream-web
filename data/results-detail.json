@@ -18,7 +18,7 @@
   "levels": [
     {
       "key": "id",
-      "label": "In-distribution · ID",
+      "label": "In-distribution",
       "short": "ID",
       "n": 90,
       "tasks": [
@@ -29,70 +29,70 @@
         },
         {
           "key": "chair",
-          "label": "Chair",
+          "label": "Push a chair",
           "group": "Whole body"
         },
         {
           "key": "pillow",
-          "label": "Pillow",
+          "label": "Arrange a pillow",
           "group": "Whole body"
         },
         {
           "key": "clothes",
-          "label": "Clothes",
+          "label": "Collect clothes",
           "group": "Manipulation"
         },
         {
           "key": "rubbish",
-          "label": "Rubbish",
+          "label": "Dispose of rubbish",
           "group": "Whole body"
         },
         {
           "key": "shoes",
-          "label": "Shoes",
+          "label": "Retrieve shoes",
           "group": "Whole body"
         },
         {
           "key": "sweep",
-          "label": "Sweep",
+          "label": "Sweep a table",
           "group": "Manipulation"
         },
         {
           "key": "cabinet",
-          "label": "Cabinet",
+          "label": "Retrieve from a cabinet",
           "group": "Furniture"
         },
         {
           "key": "drawer",
-          "label": "Drawer",
+          "label": "Store in a drawer",
           "group": "Furniture"
         }
       ]
     },
     {
       "key": "l1",
-      "label": "New conditions · L1",
+      "label": "Seen-task generalization",
       "short": "L1",
       "n": 60,
       "tasks": [
         {
           "key": "clothes",
-          "label": "Clothes",
+          "label": "Collect clothes",
           "group": "Position"
         },
         {
           "key": "chair",
-          "label": "Chair",
+          "label": "Push a chair",
           "group": "Position"
         },
         {
           "key": "pillow",
-          "label": "Pillow",
+          "label": "Arrange a pillow",
           "group": "Object"
         },
         {
           "key": "shoes",
-          "label": "Shoes",
+          "label": "Retrieve shoes",
           "group": "Object"
         },
         {
@@ -102,14 +102,14 @@
         },
         {
           "key": "rubbish",
-          "label": "Rubbish",
+          "label": "Dispose of rubbish",
           "group": "Background"
         }
       ]
     },
     {
       "key": "l2",
-      "label": "Skill compositions · L2",
+      "label": "Compositional generalization",
       "short": "L2",
       "n": 40,
       "tasks": [
@@ -17670,8 +17670,8 @@
     {
       "key": "baselines",
       "label": "Policy comparison",
-      "title": "Across world-action and vision-language-action policies.",
-      "description": "All evaluated external baselines, compared with WE-Dream-10k on the same robot benchmark.",
+      "title": "Comparison with WAMs and VLAs",
+      "description": "Against world-action models (WAMs) and vision-language-action models (VLAs), WE-Dream achieves the strongest overall success and task progress in each evaluation setting. All methods share the same 4.02 hours of robot demonstrations; L2 tests new task compositions without further training.",
       "methods": [
         "cosmos3",
         "dreamzero",
@@ -17691,8 +17691,8 @@
     {
       "key": "objective",
       "label": "Pretraining objective",
-      "title": "What should human-video pretraining predict?",
-      "description": "Compare no additional human-video pretraining with action-free video, hand-pose, and latent-action targets at the nominal 2k-hour scale.",
+      "title": "Latent actions improve humanoid transfer",
+      "description": "With the same 2k hours of egocentric video and a matched training protocol, latent actions outperform hand-pose supervision and action-free video pretraining. Their advantage extends from demonstrated tasks to both generalization settings, while Wan base provides a reference without additional egocentric pretraining.",
       "methods": [
         "wan-base",
         "action-free",
@@ -17708,8 +17708,8 @@
     {
       "key": "scaling",
       "label": "Data scaling",
-      "title": "More human experience, stronger transfer.",
-      "description": "Latent-action pretraining at 2k, 5k, and 10k hours, with the same robot post-training protocol.",
+      "title": "Scaling egocentric pretraining",
+      "description": "Increasing latent-action pretraining from 2k to 10k hours raises in-distribution success from 81.1% to 90.0% under the same robot post-training protocol. Performance also improves in both generalization settings, showing how broader human experience supports transfer to new conditions and task compositions.",
       "methods": [
         "latent-2k",
         "we-dream-5k",
