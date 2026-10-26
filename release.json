@@ -1,7 +1,7 @@
 {
-  "version": 46,
+  "version": 47,
   "published_date": "2026-10-26",
-  "release": "dataset-curation-linked-hover-and-loading",
+  "release": "dataset-bimanual-complete-demos-and-soft-motion",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -11,10 +11,10 @@
   "wall_demonstrations": 40,
   "wall_columns": 8,
   "wall_rows": 5,
-  "patch": 1,
+  "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v46",
+  "review": "v47",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -50,14 +50,14 @@
   "frozen_motion_studies": "frozen-motion-options.html",
   "dataset_presentation": "Simplified data copy and controls; robot task durations and 4.02-hour total from paper Table IX; original media snapshot retained as provenance.",
   "dataset_robot_media": {
-    "curation": "Eight reselected carpet-free robot episodes; complete original rubbish episode retained after rejecting truncated alternatives. Task completion prioritized.",
+    "curation": "Clothes episode301 with explicit user-approved carpet exception for bimanual action; rubbish episode508 with complete object release; sweep episode495 with brown brush and complete tool pickup-to-finish sequence. Other six episodes unchanged.",
     "native_resolution": "672x384",
     "fps": 30,
-    "bytes": 8663427,
-    "previous_bytes": 10361308,
+    "bytes": 9243828,
     "head_trim_seconds": "0 to 1",
     "gop_seconds": 1
   },
   "dataset_interaction": "Chart, legend and robot film respond together to hover and keyboard focus, without restarting videos.",
-  "dataset_loading": "Intentional Data navigation prewarms the first three videos; completed native video buffers are reused even when a neighboring tile was incomplete; three-transfer limit and hidden-request cancellation remain."
+  "dataset_loading": "Intentional Data navigation prewarms the first three videos; completed native video buffers are reused even when a neighboring tile was incomplete; three-transfer limit and hidden-request cancellation remain.",
+  "dataset_motion": "Sliding translucent training-stage capsule, continuous donut proportions on scale changes, soft color-linked card glow; reduced-motion supported."
 }

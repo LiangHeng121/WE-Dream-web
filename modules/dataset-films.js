@@ -20,6 +20,7 @@ const element = (tag, className, text) => {
   return node;
 };
 function segment(start, end) {
+  if (end - start < 1e-6) return '';
   const point = (radius, angle) => `${160 + radius * Math.cos(angle)},${160 + radius * Math.sin(angle)}`;
   const large = end - start > Math.PI ? 1 : 0;
   return `M${point(138, start)} A138,138 0 ${large} 1 ${point(138, end)} L${point(98, end)} A98,98 0 ${large} 0 ${point(98, start)} Z`;
@@ -78,6 +79,8 @@ export async function mountDatasetFilms(root) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let mode = 'pretraining', scale = '10k', sourceId = 'egodex', selected = 'egodex', destroyed = false;
   let allPaused = reduced.matches, tiles = [], graphItems = [], graphTotal = 0;
+  let graphMode = null, graphAnimation = 0;
+  const graphAngles = new Map();
   const prewarmMargin = 600, prewarmCount = 1;
   const inViewport = (margin = 0) => { const box = root.getBoundingClientRect(); return box.height > 0 && box.width > 0 && box.bottom > -margin && box.top < innerHeight + margin && box.right > 0 && box.left < innerWidth; };
   let sectionVisible = inViewport(), sectionNear = inViewport(prewarmMargin);
@@ -153,6 +156,10 @@ export async function mountDatasetFilms(root) {
     $('.df-announcement').textContent = mode === 'pretraining' ? `${media.pretraining.sources.find(source => source.id === sourceId).name}. ${tiles.length} independent preview videos shown.` : `${tile?.title || id} highlighted. All robot videos remain visible.`;
   }
   function buildGraph() {
+    cancelAnimationFrame(graphAnimation); graphAnimation = 0;
+    const previousAngles = graphMode === mode ? new Map(graphAngles) : new Map();
+    graphAngles.clear();
+    graphMode = mode;
     graphItems = graphRows(); graphTotal = graphItems.reduce((sum, item) => sum + item.value, 0);
     if (!graphItems.some(item => item.id === selected)) {
       selected = mode === 'pretraining' ? graphItems[0].id : null;
@@ -166,15 +173,22 @@ export async function mountDatasetFilms(root) {
     chart.append(center);
     const legend = $('.df-legend'); legend.replaceChildren();
     let angle = -Math.PI / 2;
-    graphItems.forEach(item => {
+    const transitions = [];
+    // Keep zero-width sources in the geometry so adjacent boundaries stay shared.
+    const visualItems = mode === 'pretraining' ? distribution.pretraining.sources.map(item => ({ ...item, value: distribution.pretraining.scales.find(setting => setting.id === scale).hours[item.id] || 0 })) : graphItems;
+    visualItems.forEach(item => {
       const gradientId = `${prefix}-${mode}-${item.id}`;
       const gradient = svgNode('linearGradient', { id: gradientId, x1: '0%', y1: '0%', x2: '100%', y2: '100%' });
       gradient.append(svgNode('stop', { offset: '0%', 'stop-color': item.color, 'stop-opacity': '.7' }), svgNode('stop', { offset: '100%', 'stop-color': item.color })); defs.append(gradient);
       const next = angle + item.value / graphTotal * Math.PI * 2, mid = (angle + next) / 2;
       const label = `${item.label}, ${(item.value / graphTotal * 100).toFixed(1)} percent of duration, ${amount(item)}. ${mode === 'pretraining' ? 'Show source mosaic.' : 'Highlight video.'}`;
-      const group = svgNode('g', { class: 'df-slice', role: 'button', tabindex: '-1', 'data-composition-id': item.id, 'aria-label': label });
+      const group = svgNode('g', item.value > 0 ? { class: 'df-slice', role: 'button', tabindex: '-1', 'data-composition-id': item.id, 'aria-label': label } : { class: 'df-slice', 'aria-hidden': 'true', 'pointer-events': 'none' });
       group.style.setProperty('--slice-x', `${Math.cos(mid) * 5}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 5}px`);
-      group.append(svgNode('path', { d: segment(angle, next), fill: `url(#${gradientId})` })); chart.append(group); angle = next;
+      const path = svgNode('path', { d: segment(angle, next), fill: `url(#${gradientId})` });
+      graphAngles.set(item.id, [angle, next]);
+      transitions.push({ id: item.id, path, from: previousAngles.get(item.id) || [angle, angle], to: [angle, next] });
+      group.append(path); chart.append(group); angle = next;
+      if (item.value <= 0) return;
       const button = element('button', 'df-legend-item'); button.type = 'button'; button.dataset.compositionId = item.id;
       button.style.setProperty('--source-color', item.color); button.setAttribute('aria-label', label);
       const dot = element('i'); dot.setAttribute('aria-hidden', 'true');
@@ -183,6 +197,21 @@ export async function mountDatasetFilms(root) {
       legend.append(button);
     });
     $('.df-donut').replaceChildren(chart); refreshSelection();
+    // Interpolate angles, not SVG path strings: large-arc flags change at 180°.
+    // Only a scale change animates; video elements and their timing stay intact.
+    if (previousAngles.size && !reduced.matches) {
+      const started = performance.now();
+      const frame = now => {
+        const progress = reduced.matches ? 1 : Math.min(1, (now - started) / 360);
+        const eased = 1 - (1 - progress) ** 3;
+        transitions.forEach(({ id, path, from, to }) => {
+          const angles = [from[0] + (to[0] - from[0]) * eased, from[1] + (to[1] - from[1]) * eased];
+          graphAngles.set(id, angles); path.setAttribute('d', segment(...angles));
+        });
+        graphAnimation = progress < 1 ? requestAnimationFrame(frame) : 0;
+      };
+      frame(started);
+    }
   }
   function ensurePoster(tile) {
     if (!tile.posterSrc || tile.posterAssigned) return;
@@ -511,7 +540,7 @@ export async function mountDatasetFilms(root) {
       navigationWarmTimer = setTimeout(() => { navigationWarmUntil = 0; syncVisibility(); }, 6000);
       syncVisibility();
     },
-    destroy() { destroyed = true; abort.abort(); clearTimeout(navigationWarmTimer); sectionObserver.disconnect(); approachObserver.disconnect(); clearTiles(); if (cachedGroup) disposeTiles(cachedGroup.tiles); cachedGroup = null; root.replaceChildren(); instances.delete(root); }
+    destroy() { destroyed = true; abort.abort(); cancelAnimationFrame(graphAnimation); clearTimeout(navigationWarmTimer); sectionObserver.disconnect(); approachObserver.disconnect(); clearTiles(); if (cachedGroup) disposeTiles(cachedGroup.tiles); cachedGroup = null; root.replaceChildren(); instances.delete(root); }
   };
   instances.set(root, controller); return controller;
 }
