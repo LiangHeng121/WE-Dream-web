@@ -1,7 +1,7 @@
 {
-  "version": 59,
+  "version": 60,
   "published_date": "2026-10-26",
-  "release": "soft-glass-results-and-readable-copy",
+  "release": "straight-bars-and-selected-level-accent",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v59",
+  "review": "v60",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -73,5 +73,6 @@
     "Organize medicine"
   ],
   "skill_preview_playback": "One video element and buffer per skill across small and enlarged frames. Native reparent pause resumes only while requested. Explicit pause control retained; opening click cannot toggle pause after hover enlargement.",
-  "results_presentation": "Real-world performance. Experiment-first hierarchy; no circular level selectors. Darker explanatory text and translucent rounded gradient bars, with mint-blue-purple ours fill. Comparison wording uses other WAMs and VLAs. DiT4DiT remains WAM per paper and user confirmation. Fixed descending ID success order, numerical results and 10-trial descriptions unchanged. No Results Paper links or routed/efficiency studies."
+  "results_presentation": "Real-world performance. Experiment-first hierarchy; no circular level selectors. Darker explanatory text and translucent gradient bars, with mint-blue-purple ours fill. Comparison wording uses other WAMs and VLAs. DiT4DiT remains WAM per paper and user confirmation. Fixed descending ID success order, numerical results and 10-trial descriptions unchanged. No Results Paper links or routed/efficiency studies.",
+  "results_selection": "Selected ID/L1/L2 card has a category-colored gradient underline and soft lower glow; no circular selectors. Bar tracks and fills have square endpoints; translucent gradients retained."
 }
