@@ -182,10 +182,19 @@
 @media(max-width:760px){.gallery-root:empty{min-height:630px}#method-root:empty{min-height:740px}#dataset-root:empty{min-height:820px}}
 
 /* Section names lead; descriptive copy stays quiet underneath. */
-.section-heading .section-title{font-size:clamp(30px,3.5vw,48px);line-height:1.16;font-weight:550;letter-spacing:-.035em;text-transform:uppercase}
+.section-heading .section-title{font-size:clamp(28px,3.15vw,42px);line-height:1.16;font-weight:550;letter-spacing:-.035em;text-transform:uppercase}
 .section-heading .section-title .section-number{font-size:inherit;font-weight:400;color:#8ba8bd;letter-spacing:-.035em;white-space:nowrap;margin-right:10px}
 .section-heading .section-subtitle{font-size:16px;line-height:1.55;font-weight:400;color:#7893a8;margin:13px 0 0;letter-spacing:0;text-transform:none}
 .section-heading .heading-row{align-items:center;gap:40px}
 .section-heading-copy{min-width:0}
 :is(#in-domain,#level-one,#level-two) .section-title{color:var(--level-ink)}
-@media(max-width:760px){.section-heading .section-title{font-size:clamp(25px,6.6vw,36px);line-height:1.22}.section-heading .section-title .section-number{margin-right:5px}.section-heading .section-subtitle{font-size:14px;margin-top:9px}.section-heading .section-intro{margin-top:14px}}
+@media(max-width:760px){.section-heading .section-title{font-size:clamp(24px,6.2vw,32px);line-height:1.22}.section-heading .section-title .section-number{margin-right:5px}.section-heading .section-subtitle{font-size:14px;margin-top:9px}.section-heading .section-intro{margin-top:14px}}
+
+/* Complete evaluation names share a baseline and wrap after the section number. */
+.gallery-section .section-title{display:flex;align-items:baseline;gap:10px}
+.gallery-section .section-title .section-number{flex:none;margin-right:0}
+.gallery-section .section-title-label{min-width:0;text-wrap:balance}
+.gallery-section .section-title-term{white-space:nowrap}
+/* Keep carousel announcements for assistive technology without a visible footer. */
+.gallery-root:not(.long-layout) .demo-deck-footer{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:760px){.gallery-section .section-title{gap:7px}}

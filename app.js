@@ -47,7 +47,7 @@ function buildL1TaskGroups(groups) {
   });
 }
 
-function mountGallery(root, groups, {label, badge, single = false, long = false, stages = false} = {}) {
+function mountGallery(root, groups, {label, badge, level, single = false, long = false, stages = false} = {}) {
   root.dataset.mountAt=performance.now().toFixed(1);
   let groupIndex=0, activeItem=null, activeCard=null, activePlayer=null, visible=false, stageController=null;
   const players=[];
@@ -67,8 +67,8 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     return `<div class="l1-condition"><div class="l1-condition-heading">${tab}</div><div class="l1-subtasks" id="${root.id}-tasks-${i}" role="group" aria-labelledby="${root.id}-tab-${i}" ${i===0?'':'hidden'}>${children}</div></div>`;
   }).join('');
   const caption='<div class="gallery-caption"><div><p class="caption-label">PROMPT</p><h3 class="caption-title"></h3><p class="caption-copy"></p></div><a class="original-video-link" target="_blank" rel="noopener" aria-label="Open the original video">Original ↗</a></div>';
-  const taskPaging=groups.length>4&&!long?'<div class="task-paging"><span>Browse tasks</span><button type="button" class="task-page-prev" aria-label="Scroll to previous tasks">↑</button><button type="button" class="task-page-next" aria-label="Scroll to more tasks">↓</button></div>':'';
-  root.innerHTML=`<div class="gallery-shell"><div class="gallery-main" id="${root.id}-content" role="${isL1?'region':'tabpanel'}" aria-labelledby="${root.id}-tab-0"><div class="deck-host"></div>${caption}${!long&&!stages?'<div class="stage-host"></div>':''}</div><aside class="gallery-aside"><div class="gallery-nav-heading"><span>${long?'TWO EXTENDED ROUTINES':stages?'UNSEEN COMPOSITIONS':'CHOOSE A '+(isL1?'CONDITION':'SKILL')}</span><span>${String(groups.length).padStart(2,'0')}</span></div><div class="task-rail ${long?'long-tabs':''} ${groups.length>4?'task-rail-scroll':''}" role="${isL1?'group':'tablist'}" aria-label="${html(label)}" ${isL1?'':'aria-orientation="vertical"'}>${navigation}</div>${taskPaging}${long||stages?'<div class="stage-host"></div>':''}</aside></div>`;
+  const taskPaging=groups.length>4&&!long?'<div class="task-paging"><button type="button" class="task-page-prev" aria-label="Scroll to previous tasks">↑</button><button type="button" class="task-page-next" aria-label="Scroll to more tasks">↓</button></div>':'';
+  root.innerHTML=`<div class="gallery-shell"><div class="gallery-main" id="${root.id}-content" role="${isL1?'region':'tabpanel'}" aria-labelledby="${root.id}-tab-0"><div class="deck-host"></div>${caption}${!long&&!stages?'<div class="stage-host"></div>':''}</div><aside class="gallery-aside"><div class="gallery-nav-heading"><span>${long?'TWO EXTENDED ROUTINES':stages?'UNSEEN COMPOSITIONS':'CHOOSE A '+(isL1?'CONDITION':'TASK')}</span><span>${String(groups.length).padStart(2,'0')}</span></div><div class="task-rail ${long?'long-tabs':''} ${groups.length>4?'task-rail-scroll':''}" role="${isL1?'group':'tablist'}" aria-label="${html(label)}" ${isL1?'':'aria-orientation="vertical"'}>${navigation}</div>${taskPaging}${long||stages?'<div class="stage-host"></div>':''}</aside></div>`;
   const tabs=[...root.querySelectorAll('.task-tab')], panel=$('.gallery-main',root), stageRoot=$('.stage-host',root),rail=$('.task-rail',root);
   const l1Panels=[...root.querySelectorAll('.l1-subtasks')],l1Rows=[...root.querySelectorAll('.l1-task-row')];
   const previousTasks=$('.task-page-prev',root),nextTasks=$('.task-page-next',root);
@@ -106,7 +106,7 @@ function mountGallery(root, groups, {label, badge, single = false, long = false,
     if(playerCache.has(item.id))return playerCache.get(item.id).frame;
     const media=manifest.videos[item.id]||{};
     const frame=document.createElement('div');frame.className='demo-card-inner';
-    frame.innerHTML=`<video class="demo-video" muted loop playsinline preload="none" aria-label="${html(item.title)} — complete demonstration"></video><iframe class="drive-video" title="${html(item.title)} — original demonstration" allow="autoplay; fullscreen" allowfullscreen hidden></iframe><span class="video-tag">${html(badge)} · FULL SEQUENCE</span><div class="video-controls" data-deck-no-drag><button class="play-button" type="button" aria-label="Play video">▶</button><span class="video-time">0:00 / ${clock(media.duration||item.duration)}</span><div class="video-progress"><input class="video-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress" disabled></div><button class="speed-button" type="button" aria-label="Playback speed 1 times">1×</button><button class="fullscreen-button" type="button" aria-label="Enter fullscreen">⛶</button></div><div class="video-error" hidden><p>This video could not load.</p><a href="${html(item.sourceUrl)}" target="_blank" rel="noopener">Watch the full original ↗</a></div>`;
+    frame.innerHTML=`<video class="demo-video" muted loop playsinline preload="none" aria-label="${html(item.title)} — complete demonstration"></video><iframe class="drive-video" title="${html(item.title)} — original demonstration" allow="autoplay; fullscreen" allowfullscreen hidden></iframe><span class="video-tag${long?'':' wall-level-badge'}"${level?` data-level="${level}"`:''}>${html(badge)}${long?' · FULL SEQUENCE':''}</span><div class="video-controls" data-deck-no-drag><button class="play-button" type="button" aria-label="Play video">▶</button><span class="video-time">0:00 / ${clock(media.duration||item.duration)}</span><div class="video-progress"><input class="video-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Video progress" disabled></div><button class="speed-button" type="button" aria-label="Playback speed 1 times">1×</button><button class="fullscreen-button" type="button" aria-label="Enter fullscreen">⛶</button></div><div class="video-error" hidden><p>This video could not load.</p><a href="${html(item.sourceUrl)}" target="_blank" rel="noopener">Watch the full original ↗</a></div>`;
     const video=$('video',frame),remote=$('iframe',frame),play=$('.play-button',frame),seek=$('.video-seek',frame),time=$('.video-time',frame);
     video.dataset.clipId=item.id;
     const poster=(media.ready||media.poster_ready?media.poster:item.poster)||'';
@@ -448,9 +448,9 @@ async function boot(){
   const [content,media]=await Promise.all([getJSON('data/content.json?v=v38'),getJSON('assets/media/manifest.json?v=v38')]);
   manifest=media;
   const galleryMounts=new Map([
-    ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-distribution tasks',badge:'IN-DISTRIBUTION'}))],
-    ['#level-one',mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 generalization',badge:'L1 · GENERALIZATION'}))],
-    ['#level-two',mountNear($('#l2-gallery'),()=>Promise.all([chapterData,skillData]).then(()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 skill compositions',badge:'L2 · COMPOSITION',single:true,stages:true})))],
+    ['#in-domain',mountNear($('#id-gallery'),()=>mountGallery($('#id-gallery'),content.groups.id,{label:'In-distribution tasks',badge:'In-distribution',level:'id'}))],
+    ['#level-one',mountNear($('#l1-gallery'),()=>mountGallery($('#l1-gallery'),content.groups.l1,{label:'L1 seen-task generalization',badge:'L1 Generalization',level:'l1'}))],
+    ['#level-two',mountNear($('#l2-gallery'),()=>Promise.all([chapterData,skillData]).then(()=>mountGallery($('#l2-gallery'),content.groups.l2,{label:'L2 compositional generalization',badge:'L2 Generalization',level:'l2',single:true,stages:true})))],
     ['#long-horizon',mountNear($('#long-gallery'),()=>chapterData.then(()=>mountGallery($('#long-gallery'),content.longHorizon.map(c=>({label:c.title,clips:[c]})),{label:'Long-horizon routines',badge:'LONG HORIZON',single:true,long:true,stages:true})))]
   ]);
   for(const [hash,run] of galleryMounts){
