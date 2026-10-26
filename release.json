@@ -1,7 +1,7 @@
 {
-  "version": 63,
+  "version": 64,
   "published_date": "2026-10-26",
-  "release": "simplified-paper-footer-and-trousers-prompt",
+  "release": "remove-visible-footer-credits",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v63",
+  "review": "v64",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -77,5 +77,5 @@
   "results_selection": "Selected ID/L1/L2 card has a category-colored gradient underline: 60% width up to 160px, 2px high, inset 8px above the bottom (6px on phones). Bars have subtle 6px corners (5px on phones); translucent gradients retained. No circular selectors.",
   "long_horizon_presentation": "Complete section heading, concise training-context subtitle, shared frosted Long-horizon badge; redundant helpers removed; task and chapter navigation preserved.",
   "prompt_review": "All 57 demos reviewed with sampled frames. Nine prompt edits: three recovered source prompts, one user-approved brown-shoe adaptation, two white-cat toy corrections, medicine sequence, and white brush. No provisional prompts or visible Draft labels remain. L1 task label is Pillows. L2 first prompt uses yellow trousers per user request; 55 source-matched and two approved source adaptations, with zero provisional prompts. Source matching is distinct from runtime-log verification.",
-  "paper_footer": "08 / PAPER, one full-title paper card and one arrow; repeated research labels, reading CTA and footer slogan removed. Concise collapsed Credits retain source and license links."
+  "paper_footer": "08 / PAPER, one full-title paper card and one arrow; repeated labels and footer slogan removed. Credits disclosure removed per user request."
 }
