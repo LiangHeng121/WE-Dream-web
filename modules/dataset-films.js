@@ -225,8 +225,9 @@ export async function mountDatasetFilms(root) {
       const next = angle + item.value / graphTotal * Math.PI * 2, mid = (angle + next) / 2;
       const label = `${item.label}, ${(item.value / graphTotal * 100).toFixed(1)} percent of duration, ${amount(item)}. ${mode === 'pretraining' ? 'Show source mosaic.' : 'Highlight video.'}`;
       const group = svgNode('g', item.value > 0 ? { class: 'df-slice', role: 'button', tabindex: '-1', 'data-composition-id': item.id, 'aria-label': label } : { class: 'df-slice', 'aria-hidden': 'true', 'pointer-events': 'none' });
-      group.style.setProperty('--slice-x', `${Math.cos(mid) * 2}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 2}px`);
-      group.style.setProperty('--slice-color', item.color);
+      group.style.setProperty('--slice-x', `${Math.cos(mid) * 8}px`); group.style.setProperty('--slice-y', `${Math.sin(mid) * 8}px`);
+      // Explicit RGB endpoints avoid near-black intermediate color-mix filter frames.
+      group.style.setProperty('--slice-rgb', [1, 3, 5].map(start => parseInt(item.color.slice(start, start + 2), 16)).join(','));
       const path = svgNode('path', { d: segment(angle, next), fill: `url(#${gradientId})` });
       graphAngles.set(item.id, [angle, next]);
       transitions.push({ id: item.id, path, from: previousAngles.get(item.id) || [angle, angle], to: [angle, next] });

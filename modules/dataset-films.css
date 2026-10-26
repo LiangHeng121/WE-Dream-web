@@ -21,9 +21,9 @@
 .dataset-films .df-donut-core{fill:#ffffff9c;stroke:#dfe9ef;stroke-width:1}
 .dataset-films .df-donut-value{font:650 35px var(--sans,Arial,sans-serif);letter-spacing:-1px;fill:#24445b}
 .dataset-films .df-donut-label{font:500 16px var(--sans,Arial,sans-serif);fill:#536d7e}
-.dataset-films .df-slice{cursor:pointer;transform:translate(0,0);transition:transform .3s cubic-bezier(.2,.7,.2,1),filter .3s;transform-box:view-box;transform-origin:160px 160px}
+.dataset-films .df-slice{cursor:pointer;transform:translate(0,0);filter:drop-shadow(0 0 0 #33556e00) drop-shadow(0 0 0 rgba(var(--slice-rgb),0));transition:transform .3s cubic-bezier(.2,.7,.2,1),filter .3s;transform-box:view-box;transform-origin:160px 160px}
 .dataset-films .df-slice path{stroke:#ffffffc9;stroke-width:.75;stroke-linejoin:round}
-.dataset-films .df-slice.is-highlighted{transform:translate(var(--slice-x),var(--slice-y));filter:drop-shadow(0 3px 3px #33556e14) drop-shadow(0 0 10px color-mix(in srgb,var(--slice-color) 64%,transparent))}
+.dataset-films .df-slice.is-highlighted{transform:translate(var(--slice-x),var(--slice-y));filter:drop-shadow(0 3px 3px #33556e14) drop-shadow(0 0 10px rgba(var(--slice-rgb),.64))}
 .dataset-films .df-slice:focus{outline:none}.dataset-films .df-slice:focus-visible path{stroke:#24445b;stroke-width:3}
 .dataset-films .df-legend{display:grid;grid-template-columns:1fr;gap:6px}.dataset-films[data-mode=posttraining] .df-legend{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
 .dataset-films .df-legend-item{display:flex;align-items:center;gap:9px;text-align:left;padding:8px 10px;border:1px solid transparent;border-radius:12px;background:transparent;font-size:14px;line-height:1.35;transition:background .25s,border-color .25s,box-shadow .25s,transform .25s}
