@@ -8,7 +8,7 @@ export async function mountResultsExplorer(root) {
   root.innerHTML = '<p class="rx-loading">Loading results…</p>';
   let data;
   try {
-    const response = await fetch('data/results-detail.json?copy=v58&v=v38');
+    const response = await fetch('data/results-detail.json?copy=v59&v=v38');
     if (!response.ok) throw new Error('Results unavailable');
     data = await response.json();
   } catch {
@@ -37,7 +37,7 @@ export async function mountResultsExplorer(root) {
     <div class="rx-studies" role="group" aria-label="Experiment">${studies.map(s => `<button type="button" data-study="${s.key}">${esc(s.label)}</button>`).join('')}</div>
     <div class="rx-heading"><h3></h3><p></p></div>
     <div class="rx-overview-head"><span class="rx-summary-model"></span><div class="rx-metrics" role="group" aria-label="Metric"><button type="button" data-metric="sr">Success rate</button><button type="button" data-metric="progress">Task progress</button></div></div>
-    <div class="rx-level-cards" role="group" aria-label="Choose an evaluation setting">${data.levels.map(l => `<button type="button" class="rx-level-card" data-level="${l.key}" aria-pressed="false"><span class="rx-level-code">${esc(l.short)}</span><span class="rx-level-choice" aria-hidden="true"></span><span class="rx-level-name">${esc(l.label)}</span><strong><span class="rx-level-value"></span><small>%</small></strong></button>`).join('')}</div>
+    <div class="rx-level-cards" role="group" aria-label="Choose an evaluation setting">${data.levels.map(l => `<button type="button" class="rx-level-card" data-level="${l.key}" aria-pressed="false"><span class="rx-level-code">${esc(l.short)}</span><span class="rx-level-name">${esc(l.label)}</span><strong><span class="rx-level-value"></span><small>%</small></strong></button>`).join('')}</div>
     <div class="rx-toolbar"><div class="rx-chart-label"><span></span><button type="button" class="rx-reset" hidden>Overall ↗</button></div></div>
     <div class="rx-chart"></div>
     <details class="rx-per-task"><summary>Per-task results</summary><div class="rx-table-wrap" tabindex="0" role="region" aria-label="Per-task results; scroll horizontally for more tasks"></div><div class="rx-task-detail" aria-live="polite" hidden></div></details>
@@ -67,6 +67,7 @@ export async function mountResultsExplorer(root) {
       const family = row.querySelector('.rx-family');
       family.hidden = study !== 'baselines' || methods[r.method].ours;
       family.textContent = methods[r.method].family;
+      family.title = { WAM: 'World-Action Model', VLA: 'Vision-Language-Action Model' }[methods[r.method].family] || methods[r.method].family;
       const value = valueFor(r), available = Number.isFinite(value);
       row.querySelector('.rx-fill').style.width = `${available ? value : 0}%`;
       row.querySelector('strong').innerHTML = available ? `${pct(value)}<small>%</small>` : '—';

@@ -1,7 +1,7 @@
 {
-  "version": 58,
+  "version": 59,
   "published_date": "2026-10-26",
-  "release": "results-hierarchy-and-id-ranking",
+  "release": "soft-glass-results-and-readable-copy",
   "full_demonstrations": 57,
   "skill_excerpts": 6,
   "full_video_resolution": "1920x1080",
@@ -14,7 +14,7 @@
   "patch": 0,
   "document_cache_version": "v38",
   "dataset_local_delivery": 17,
-  "review": "v58",
+  "review": "v59",
   "streaming_representations": 57,
   "streaming_video_encoding": "40 wall HLS encodes at 1920x1080, 24fps, CRF29 with a 0.5-second first fragment; 17 other HLS representations unchanged",
   "delivery": "Selected wall preview restarts at zero after the camera settles, then hands off continuously to 1080p",
@@ -73,5 +73,5 @@
     "Organize medicine"
   ],
   "skill_preview_playback": "One video element and buffer per skill across small and enlarged frames. Native reparent pause resumes only while requested. Explicit pause control retained; opening click cannot toggle pause after hover enlargement.",
-  "results_presentation": "Real-world performance. Three studies only; experiment selection precedes evaluation-setting cards with explicit selected indicators. Comparison with baselines; fixed descending ID success ranking for comparison bars/tables; original mint-blue-purple ours gradient. Explicit 10 trials per task/condition/composition; Results paper links removed. Numerical data unchanged."
+  "results_presentation": "Real-world performance. Experiment-first hierarchy; no circular level selectors. Darker explanatory text and translucent rounded gradient bars, with mint-blue-purple ours fill. Comparison wording uses other WAMs and VLAs. DiT4DiT remains WAM per paper and user confirmation. Fixed descending ID success order, numerical results and 10-trial descriptions unchanged. No Results Paper links or routed/efficiency studies."
 }
