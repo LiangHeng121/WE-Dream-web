@@ -27,7 +27,11 @@ export function createSkillPlayback(video, wanted, changed = () => {}) {
     changed();
   }
   for (const event of ['play', 'playing']) video.addEventListener(event, () => { if (!allowed()) video.pause(); changed(); }, { signal });
-  for (const event of ['pause', 'waiting', 'error']) video.addEventListener(event, changed, { signal });
+  // Moving the same element between its card and floating frame can pause it
+  // in WebKit. Resume only while playback is still requested; an explicit user
+  // pause clears that intent before pause() is called.
+  video.addEventListener('pause', () => { changed(); if (allowed()) sync(); }, { signal });
+  for (const event of ['waiting', 'error']) video.addEventListener(event, changed, { signal });
   for (const event of ['loadeddata', 'canplay']) video.addEventListener(event, sync, { signal });
   return { sync, destroy() { destroyed = true; abort.abort(); video.pause(); } };
 }
@@ -82,8 +86,6 @@ export function createSkillMix(root, chapter, media) {
   function inViewport() { const rect = records[active].frame.getBoundingClientRect(); return rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth; }
   function allowed(index) { return !signal.aborted && index === active && visible && !document.hidden && !userPaused && (!reduced.matches || manualPlay); }
   function enlarged() { return floatingMode.matches && expanded; }
-  function wanted(index) { return allowed(index) && !enlarged(); }
-  function wantedLarge(index) { return allowed(index) && enlarged(); }
   const records = skills.map((skill, index) => {
     const excerpt = media.clips[skill.key];
     if (!excerpt) throw new Error(`Missing reviewed skill excerpt: ${skill.key}`);
@@ -110,46 +112,48 @@ export function createSkillMix(root, chapter, media) {
     largeCard.innerHTML = '<div class="skill-large-frame"><span class="skill-card-badge" aria-hidden="true"></span><div class="skill-preview-controls"><button type="button" class="skill-play" aria-label="Pause skill preview">Ⅱ</button><span class="skill-time"></span><progress class="skill-progress" max="1" value="0" aria-hidden="true"></progress></div><p class="skill-error" hidden>Preview unavailable.</p></div><div class="skill-large-caption"><span class="skill-name"></span></div>';
     largeCard.querySelector('.skill-card-badge').textContent = sourceTask;
     largeCard.querySelector('.skill-name').textContent = label;
-    const largeVideo = video.cloneNode(false), largePlay = largeCard.querySelector('.skill-play');
-    largeVideo.muted = true; largeVideo.defaultMuted = true; largeVideo.preload = 'none'; largeVideo.poster = playbackPoster; largeVideo.setAttribute('aria-label', `Enlarged skill excerpt: ${label}`);
-    largeCard.querySelector('.skill-large-frame').prepend(largeVideo); floating.append(largeCard);
-    const mediaVisibility = createSkillMediaVisibility(video, playbackSource), largeMediaVisibility = createSkillMediaVisibility(largeVideo, playbackSource);
-    const record = { skill, excerpt, label, source, card, frame, video, button, play, largeCard, largeVideo, largePlay, mediaVisibility, largeMediaVisibility, controller: null, largeController: null };
-    record.controller = createSkillPlayback(video, () => wanted(index), () => { if (!signal.aborted && active === index) updateControls(); });
-    record.largeController = createSkillPlayback(largeVideo, () => wantedLarge(index), () => { if (!signal.aborted && active === index) updateControls(); });
+    const largeFrame = largeCard.querySelector('.skill-large-frame'), largePlay = largeCard.querySelector('.skill-play');
+    // One decoder and buffer per skill. Expanding only moves its existing video;
+    // a matching poster keeps the vacated small frame visually intact.
+    frame.style.backgroundImage = `url(${JSON.stringify(playbackPoster)})`;
+    frame.style.backgroundSize = 'cover';
+    floating.append(largeCard);
+    const mediaVisibility = createSkillMediaVisibility(video, playbackSource);
+    const record = { skill, excerpt, label, source, card, frame, video, button, play, largeCard, largeFrame, largePlay, mediaVisibility, controller: null };
+    record.controller = createSkillPlayback(video, () => allowed(index), () => { if (!signal.aborted && active === index) updateControls(); });
     card.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse' && floatingMode.matches) select(index); }, { signal });
     card.addEventListener('click', event => { if (performance.now() >= suppressClickUntil && !event.target.closest('.skill-play')) select(index); }, { signal });
     button.addEventListener('focus', () => select(index), { signal });
     play.addEventListener('click', event => { event.stopPropagation(); toggle(); }, { signal });
     largePlay.addEventListener('click', toggle, { signal });
-    largeVideo.addEventListener('click', toggle, { signal });
-    largeVideo.addEventListener('timeupdate', () => { if (active === index) updateControls(); }, { signal });
-    largeVideo.addEventListener('loadedmetadata', () => { if (active === index) updateControls(); }, { signal });
+    // Keep pause on the explicit control: a click that begins on a thumbnail
+    // may finish after pointerenter has moved this video into the large frame.
     video.addEventListener('timeupdate', () => { if (active === index) updateControls(); }, { signal });
     video.addEventListener('loadedmetadata', () => { if (active === index) updateControls(); }, { signal });
     return record;
   });
   function updateControls() {
     if (signal.aborted || !records.length) return;
-    const record = records[active], playing = allowed(active);
-    for (const [surface, video, play] of [[record.card, record.video, record.play], [record.largeCard, record.largeVideo, record.largePlay]]) {
+    const record = records[active], video = record.video, playing = allowed(active);
+    for (const [surface, play] of [[record.card, record.play], [record.largeCard, record.largePlay]]) {
       play.textContent = playing ? 'Ⅱ' : '▶'; play.setAttribute('aria-label', playing ? 'Pause skill preview' : 'Play skill preview');
       surface.querySelector('.skill-time').textContent = `${clock(video.currentTime)} / ${clock(Number.isFinite(video.duration) ? video.duration : record.excerpt.duration)}`;
       surface.querySelector('.skill-progress').value = Number.isFinite(video.duration) && video.duration > 0 ? video.currentTime / video.duration : 0;
       surface.querySelector('.skill-error').hidden = !video.error;
     }
-    const video = enlarged() ? record.largeVideo : record.video;
-    root.dataset.playback = video.error ? 'error' : playing ? video.paused ? 'loading' : 'playing' : userPaused ? 'user-paused' : document.hidden ? 'background' : !visible ? 'offscreen' : 'reduced-motion';
+    root.dataset.playback = video.error ? 'error' : playing ? video.paused || video.readyState < 3 ? 'loading' : 'playing' : userPaused ? 'user-paused' : document.hidden ? 'background' : !visible ? 'offscreen' : 'reduced-motion';
   }
   function update() {
     if (signal.aborted) return;
     const showLarge = enlarged(); floating.hidden = !showLarge;
-    records.forEach(({ largeCard, controller, largeController, mediaVisibility, largeMediaVisibility }, index) => {
-      largeCard.hidden = !(showLarge && index === active);
-      const onScreen = visible && !document.hidden;
-      mediaVisibility.sync(onScreen, index === active && !showLarge);
-      largeMediaVisibility.sync(onScreen, index === active && showLarge);
-      controller.sync(); largeController.sync();
+    records.forEach(({ frame, video, largeCard, largeFrame, controller, mediaVisibility, label }, index) => {
+      const large = showLarge && index === active;
+      largeCard.hidden = !large;
+      const target = large ? largeFrame : frame;
+      if (video.parentNode !== target) target.prepend(video);
+      video.setAttribute('aria-label', `${large ? 'Enlarged skill excerpt' : 'Skill excerpt'}: ${label}`);
+      mediaVisibility.sync(visible && !document.hidden, index === active);
+      controller.sync();
     });
     if (showLarge) positionFloating();
     updateControls();
@@ -248,5 +252,5 @@ export function createSkillMix(root, chapter, media) {
   // Start scattered; mouse hover, keyboard, or touch can open a clear preview.
   // Original hit areas never move when the desktop floating preview opens.
   visible = inViewport(); select(active, false, false);
-  return { destroy() { abort.abort(); cancelAnimationFrame(layoutFrame); revealAnimation?.cancel(); observer.disconnect(); records.forEach(({ video, controller, largeVideo, largeController, mediaVisibility, largeMediaVisibility }) => { mediaVisibility.destroy(); largeMediaVisibility.destroy(); controller.destroy(); largeController.destroy(); for (const media of [video, largeVideo]) { media.removeAttribute('src'); media.load(); } }); root.replaceChildren(); root.classList.remove('skill-mix'); root.style.removeProperty('--skill-count'); } };
+  return { destroy() { abort.abort(); cancelAnimationFrame(layoutFrame); revealAnimation?.cancel(); observer.disconnect(); records.forEach(({ video, controller, mediaVisibility }) => { mediaVisibility.destroy(); controller.destroy(); video.removeAttribute('src'); video.load(); }); root.replaceChildren(); root.classList.remove('skill-mix'); root.style.removeProperty('--skill-count'); } };
 }
